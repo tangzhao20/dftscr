@@ -1,0 +1,19 @@
+#python cache 
+*.pyc
+*/*.pyc
+__pycache__
+*/__pycache__
+
+#excutable
+*.x
+*.o
+
+#tar
+*.tar
+*.tar.gz
+
+#tmp
+*.swp
+
+#example
+example
