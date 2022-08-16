@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 class POSCAR:
     # lc[3][3]

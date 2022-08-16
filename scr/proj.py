@@ -1,9 +1,11 @@
 #!/bin/python3
 
-# python proj.py atoms orbitals
+#proj.py atoms orbitals (E1) (E2)
+#if E2 exist, the energy range is (E1,E2)
+#if only E1 exists, the energy range is (-E1,E1)
+#if neither exists, the energy range is (-5 eV, 5 eV)
 
 import sys
-#sys.path.append("/user/ztang5/codes/headers")
 from dftscr.vaspfiles import *
 import matplotlib.pyplot as plt
 

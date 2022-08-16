@@ -2,16 +2,15 @@
 
 # print the distortion coordinate (out-of-plane displacement of the central atom)
 # and the total energy
-from vasp import filein
+from dftscr.vaspfiles import *
 
 N=41
 
 # True: total energy
 # False: band energy
-is_toten=False
+is_toten=True
 
-poscar_0=filein.POSCAR("POSCAR_i")
-
+poscar_0=poscar.POSCAR("POSCAR_i")
 
 energy=[]
 pos=[]
@@ -25,7 +24,8 @@ for i in range(N) :
         word=line[-1].split()
         energy.append(float(word[2]))
     else :
-        eigenval_1=filein.EIGENVAL(str(i+1)+"/EIGENVAL")
+        #not needed
+        eigenval_1=eigenval.EIGENVAL(str(i+1)+"/EIGENVAL")
         energy0=[]
         for ispin in range(2) :
             for ib in range(140,145) :
@@ -33,14 +33,17 @@ for i in range(N) :
         energy.append(energy0)
         del energy0
 
-    poscar_1=filein.POSCAR(str(i+1)+"/POSCAR")
+    poscar_1=poscar.POSCAR(str(i+1)+"/POSCAR")
     
 
-##  Q = Renormalization factor:
+##   Q = Renormalization factor:
 #    pos.append(poscar_1.total_distance(poscar_0))
 
-#   Q = displacement of the central factor
-    pos.append(poscar_1.lc[2][2]*poscar_1.ap[35][2])
+#   Q = Generalized coordinates (renormalization factor weighted by atomic mass)
+    pos.append(poscar_1.general_q(poscar_0))
+
+##   Q = Displacement of the central factor
+#    pos.append(poscar_1.lc[2][2]*poscar_1.ap[35][2])
 
     del poscar_1
 
@@ -65,12 +68,17 @@ for i in range(N):
     energy_out.append(energy[i])
 
 if is_toten :
+    fout=open("toten_fit.dat","w")
+    fout.write("Q toten(eV)\n")
     for i in range(2*N-1):
-        print(pos_out[i],energy_out[i])
+        fout.write("%.6f"%pos_out[i]+" %.6f\n"%energy_out[i])
+    fout.close()
 else :
-    fout=open("post.out","w")
+    # not needed
+    fout=open("eig_fit.dat","w")
     for i in range(2*N-1):
         fout.write("%.6f"%pos_out[i])
         for j in range(len(energy_out[i])) :
             fout.write(" %.6f"%energy_out[i][j])
         fout.write("\n")
+    fout.close()

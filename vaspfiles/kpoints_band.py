@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 
 class KPOINTS_band :
     def __init__(self, filename="KPOINTS") :
