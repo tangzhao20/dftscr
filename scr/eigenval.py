@@ -1,23 +1,22 @@
 #!/bin/python3
 import sys
-#sys.path.append("/user/ztang5/codes/headers")
-import dftscr.vaspfiles as vaspfiles
+from dftscr.vaspfiles import *
 #import vaspfiles
 import matplotlib.pyplot as plt
 
-poscar1=vaspfiles.poscar.POSCAR()
+poscar1=poscar.POSCAR()
 #poscar1=filein.POSCAR("CONTCAR")
 rlc=poscar1.reclc_out()
 
-eigenval1=vaspfiles.eigenval.EIGENVAL()
-kpoints1=vaspfiles.kpoints_band.KPOINTS_band()
+eigenval1=eigenval.EIGENVAL()
+kpoints1=kpoints_band.KPOINTS_band()
 
 if eigenval1.is_semic==True :
     vbm=eigenval1.vbm
     eigenval1.eigshift(vbm)
     eigenval1.writegap(kpoints1)
 else :
-    doscar1=vaspfiles.doscar.DOSCAR()
+    doscar1=doscar.DOSCAR()
     ef=doscar1.ef_out()
     eigenval1.eigshift(ef)
 
@@ -28,16 +27,21 @@ kphout=kpoints1.kphout_out(rlc)
 kphlabel=kpoints1.kphl_out()
 
 # make plot
-plt.gca().grid(axis="x",linewidth=0.75, color="silver")
-plt.axhline(linewidth=0.75,color="silver")
+
+fig=plt.figure(figsize=(4,3))
+gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.15,right=0.95,top=0.95, bottom=0.15)
+ax0=gs0.subplots()
+
+ax0.grid(axis="x",linewidth=0.75, color="silver")
+ax0.axhline(linewidth=0.75,color="silver")
 
 spinlabel=["spin up","spin down"]
 for s in range(eigenval1.Ns) :
     for b in range(eigenval1.Nb) :
         if eigenval1.Ns==2 and b==0 :
-            plt.plot(x,eigout[s][b],color="C"+str(s),label=spinlabel[s])
+            ax0.plot(x,eigout[s][b],color="C"+str(s),label=spinlabel[s])
         else :
-            plt.plot(x,eigout[s][b],color="C"+str(s))
+            ax0.plot(x,eigout[s][b],color="C"+str(s))
 
 f3=open("eigenval.dat","w")
 if eigenval1.Ns==2 :
@@ -63,16 +67,17 @@ elif len(sys.argv)==2 :
 else :
     ymax=5.0
     ymin=-5.0
-plt.ylim(ymin,ymax)
-plt.xlim(x[0],x[len(x)-1])
-plt.xticks(kphout,kphlabel)
+ax0.set_ylim(ymin,ymax)
+ax0.set_xlim(x[0],x[len(x)-1])
+ax0.set_xticks(kphout,kphlabel)
+ax0.set_ylabel("Energy (eV)")
 
 f2=open("label.dat","w")
 for i in range(len(kphout)):
     f2.write(str(kphout[i])+" "+kphlabel[i]+"\n")
 f2.close()
-plt.ylabel("Energy (eV)")
-plt.savefig("bs.png",dpi=300)
+
+fig.savefig("bs.png",dpi=300)
 #plt.show()
            
  

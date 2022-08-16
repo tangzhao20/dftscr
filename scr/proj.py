@@ -4,17 +4,17 @@
 
 import sys
 #sys.path.append("/user/ztang5/codes/headers")
-from dftscr.vaspfiles as vaspfiles
+from dftscr.vaspfiles import *
 import matplotlib.pyplot as plt
 
-poscar1=vaspfiles.POSCAR("CONTCAR")
+poscar1=poscar.POSCAR("CONTCAR")
 rlc=poscar1.reclc_out()
 
-doscar1=vaspfiles.DOSCAR()
+doscar1=doscar.DOSCAR()
 ef=doscar1.ef_out()
 
-eigenval1=vaspfiles.EIGENVAL()
-kpoints1=vaspfiles.KPOINTS_band()
+eigenval1=eigenval.EIGENVAL()
+kpoints1=kpoints_band.KPOINTS_band()
 
 
 if eigenval1.is_semic==True :
@@ -22,7 +22,7 @@ if eigenval1.is_semic==True :
     eigenval1.eigshift(vbm)
     eigenval1.writegap(kpoints1)
 else :
-    doscar1=vaspfiles.DOSCAR()
+    doscar1=doscar.DOSCAR()
     ef=doscar1.ef_out()
     eigenval1.eigshift(ef)
 
@@ -30,7 +30,7 @@ if eigenval1.Ns==2 :
     print("Spin polarized projected band structure not supported yet.\n")
     sys.exit()
 
-procar1=vaspfiles.PROCAR()
+procar1=procar.PROCAR()
 atomlist=sys.argv[1]
 orblist=sys.argv[2]
 orbflag=procar1.readorblist(orblist)
