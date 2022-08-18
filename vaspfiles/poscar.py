@@ -165,6 +165,28 @@ class POSCAR:
         self.movetobox()
         self.lc[2][2]=newz
 
+    def displacement(self, Pright):
+        # find the displacement vector of two POSCARs
+        # designed for a structural difference (poscar1.displacement(poscar2))
+        disp=[]
+        # disp[Na][3]
+        for i in range(self.Natom) :
+            disp0=[0.0,0.0,0.0]
+            for j in range(3) :
+                d=self.ap[i][j]-Pright.ap[i][j]
+                while (True):
+                   if d > 0.5+1.e-6 :
+                       d=d-1.0
+                   elif d < -0.5-1.e-6 :
+                       d=d+1.0
+                   else :
+                       break
+                disp0[0]=disp0[0]+d*self.lc[0][j]
+                disp0[1]=disp0[1]+d*self.lc[1][j]
+                disp0[2]=disp0[2]+d*self.lc[2][j]
+            disp.append(disp0)
+        return disp 
+
     def total_distance(self, Pright):
         # calculate the total distance (to zero) of a poscar
         # designed for a structural difference (poscar1.total_distance(poscar2))

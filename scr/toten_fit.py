@@ -7,7 +7,7 @@ from dftscr.vaspfiles import *
 N=41
 
 # True: total energy
-# False: band energy
+# False: eigenvalues
 is_toten=True
 
 poscar_0=poscar.POSCAR("POSCAR_i")
