@@ -1,19 +1,20 @@
 #!/bin/python3
 
-#proj.py atoms orbitals (E1) (E2)
-#if E2 exist, the energy range is (E1,E2)
-#if only E1 exists, the energy range is (-E1,E1)
-#if neither exists, the energy range is (-5 eV, 5 eV)
+# proj.py atoms orbitals (E1) (E2)
+# Make the projected band structure plot
+
+# if E2 exist, the energy range is (E1,E2)
+# if only E1 exists, the energy range is (-E1,E1)
+# if neither exists, the energy range is (-5 eV, 5 eV)
+
+# Input: POSCAR, EIGENVAL, KPOINTS, PROCAR, (DOSCAR)
 
 import sys
 from dftscr.vaspfiles import *
 import matplotlib.pyplot as plt
 
-poscar1=poscar.POSCAR("CONTCAR")
+poscar1=poscar.POSCAR()
 rlc=poscar1.reclc_out()
-
-doscar1=doscar.DOSCAR()
-ef=doscar1.ef_out()
 
 eigenval1=eigenval.EIGENVAL()
 kpoints1=kpoints_band.KPOINTS_band()

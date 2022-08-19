@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+# Calculate the projection of a distortin onto the phonon modes,
+# and use it as the weight to average the frequency
+
+# Input: qpoints.yaml, POSCAR_i, POSCAR_f
+
 import yaml
 import matplotlib.pyplot as plt
 from dftscr.vaspfiles import *

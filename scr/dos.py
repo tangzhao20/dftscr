@@ -1,4 +1,9 @@
 #!/bin/python3
+
+# print DOS
+
+# Input: INCAR, DOSCAR
+
 import sys
 import matplotlib.pyplot as plt
 

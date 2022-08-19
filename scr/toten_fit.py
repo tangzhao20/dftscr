@@ -1,7 +1,9 @@
 #!/bin/python3
 
-# print the distortion coordinate (out-of-plane displacement of the central atom)
-# and the total energy
+# Print the toten vs. distortion coordinate 
+
+# Input: POSCAR_i, pos_*/OSZICAR, pos_*/POSCAR, (pos_*/EIGENVAL)
+
 from dftscr.vaspfiles import *
 
 N=41
