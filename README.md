@@ -1,3 +1,5 @@
+###
+
 eigenval.py :
 
 eigenval.py (E1) (E2)
@@ -36,7 +38,7 @@ toten_fit.py :
 
 print the toten vs. distortion coordinate 
 
-Input: POSCAR_i, pos_*/OSZICAR, pos_*/POSCAR, (pos_*/EIGENVAL)
+Input: POSCAR_i, pos_./OSZICAR, pos_./POSCAR, (pos_./EIGENVAL)
 
 ########################################
 
@@ -46,6 +48,15 @@ Calculate the projection of a distortin onto the phonon modes,
 and use it as the weight to average the frequency
 
 Input: qpoints.yaml, POSCAR_i, POSCAR_f
+
+########################################
+
+wavecar.py :
+
+Read the KS orbitals from the WAVECAR, and write into seperate files for VESTA plot.
+
+Command line:
+wavecar.py ik ib ispin
 
 ########################################
 
