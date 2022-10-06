@@ -1,6 +1,7 @@
-import numpy as np
-
 class DOSCAR :
+    # ef : float
+    # ispin : integer
+    # nedos : integer
     def __init__(self, filename="DOSCAR") :
         f0=open(filename,"r")
         line=f0.readlines()
