@@ -10,11 +10,11 @@
 # Input: EIGENVAL, KPOINTS, POSCAR (DOSCAR)
 
 import sys
-from dftscr.vaspfiles import *
+from dftscr.vaspfiles import poscar, eigenval, doscar, kpoints_band
 import matplotlib.pyplot as plt
 
 poscar1=poscar.POSCAR()
-#poscar1=filein.POSCAR("CONTCAR")
+#poscar1=poscar.POSCAR("CONTCAR")
 rlc=poscar1.reclc_out()
 
 eigenval1=eigenval.EIGENVAL()
