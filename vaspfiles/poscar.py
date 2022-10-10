@@ -1,5 +1,7 @@
 import numpy as np
 import sys
+import math
+import os
 
 class POSCAR:
     # lc[3][3]
@@ -58,10 +60,6 @@ class POSCAR:
         del word
 
         self.dmass={}
-        self.dmass["B"]=10.81
-        self.dmass["C"]=12.011
-        self.dmass["N"]=14.007
-
 
     def movetobox(self) :
         for i in range(self.Natom) :
@@ -98,6 +96,51 @@ class POSCAR:
                         f1.write(" F")
             f1.write('\n')
         f1.close()
+
+    def filewrite_qe(self, filename):
+        self.load_dmass()
+
+        kgrid=[]
+        for i in range(3) :
+            kgrid.append(math.floor(30.0/(self.lc[i][0]**2+self.lc[i][1]**2+self.lc[i][2]**2)**0.5)+1)
+   
+        f2=open(filename,"w")
+        f2.write("CELL_PARAMETERS angstrom\n")
+        for i in range(3) :
+            f2.write(f"  {self.lc[i][0]:.12f}  {self.lc[i][1]:.12f}  {self.lc[i][2]:.12f}\n")
+        f2.write("ATOMIC_SPECIES\n")
+        for i in range(self.Ntype) :
+            f2.write("  "+self.atomtype[i]+"  "+str(self.dmass[self.atomtype[i]])+"  PP\n")
+        f2.write("ATOMIC_POSITIONS crystal\n")
+        ij=0
+        ik=0
+        for i in range(self.Natom) :
+            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.16f}  {self.ap[i][1]:.16f}  {self.ap[i][2]:.16f}\n")
+            ik=ik+1
+            if ik==self.Naint[ij] :
+                ij=ij+1
+                ik=0
+        f2.write("K_POINTS automatic\n")
+        f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}  {kgrid[2]:d} 0 0 0\n")
+        f2.close()
+
+    def filewrite_prt(self, filename):
+        volume=self.volume()*6.748334503468005
+        # convert Angstrom^3 to bohr^3
+        
+        f2=open(filename,"w")
+        f2.write("begin latticevecs\n")
+        for i in range(3) :
+            f2.write("coord  "+f"{self.lc[i][0]:20.16f}"+"  "+f"{self.lc[i][1]:20.16f}"+"  "+f"{self.lc[i][2]:20.16f}"+"\n")
+        f2.write("volume "+f"{volume:24.16f}"+"\nend latticevecs\n\nbegin coordinates\n")
+        k=0
+        for i in range(self.Ntype) :
+            f2.write("newtype "+self.atomtype[i]+"\n")
+            for j in range(self.Naint[i]) :
+                f2.write("coord  "+f"{self.ap[k][0]:20.16f}"+"  "+f"{self.ap[k][1]:20.16f}"+"  "+f"{self.ap[k][2]:20.16f}"+"\n")
+                k=k+1
+        f2.write("end coordinates\n\n")
+        f2.close()
 
     def match(self, Pright):
         for i in range(3):
@@ -252,15 +295,25 @@ class POSCAR:
             print(str(self.ap[i][0])+"  "+str(self.ap[i][1])+"  "+str(self.ap[i][2]))
         return(self.ap)
 
-    def lc_out(self) :
-        return(self.lc)
 
     def reclc_out(self) :
         reclc=np.linalg.inv(np.array(self.lc)).tolist()
         return(reclc)
    
-    def atomtype_out(self) :
-        return(self.atomtype)
+    def volume(self) :
+        return  self.lc[0][0]*(self.lc[1][1]*self.lc[2][2]-self.lc[1][2]*self.lc[2][1])+self.lc[0][1]*(self.lc[1][2]*self.lc[2][0]-self.lc[1][0]*self.lc[2][2])+self.lc[0][2]*(self.lc[1][0]*self.lc[2][1]-self.lc[1][1]*self.lc[2][0])
 
-    def Naint_out(self) :
-        return(self.Naint)
+    def load_dmass(self) :
+        if self.dmass :
+            return
+        this_dir, this_filename = os.path.split(__file__)
+        DATA_PATH = os.path.join(this_dir, "..", "data", "atomicmass.dat")
+        f0=open(DATA_PATH,"r")
+        line=f0.readlines()
+        f0.close()
+
+        for l in line:
+            word=l.split()
+            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+                continue
+            self.dmass[word[2]]=float(word[3])
