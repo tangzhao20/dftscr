@@ -4,6 +4,7 @@ import math
 import os
 
 class POSCAR:
+    # title
     # lc[3][3]
     # Natom
     # Ntype
@@ -14,7 +15,19 @@ class POSCAR:
     # seldyn[Natom][3] (if f_seldyn)
     # dmass{}
     
-    def __init__(self, filename="POSCAR") :
+    def __init__(self, filename="POSCAR", fempty=False) :
+        if fempty:
+            self.title="SYSTEM\n"
+            self.lc=[]
+            self.Natom=0
+            self.Ntype=0
+            self.f_seldyn=False
+            self.atomtype=[]
+            self.Naint=[]
+            self.ap=[]
+            self.dmass={}
+            return
+
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -61,12 +74,100 @@ class POSCAR:
 
         self.dmass={}
 
-    def movetobox(self) :
-        for i in range(self.Natom) :
+    def fileread_qe(self, filename):
+        f1=open(filename,"r")
+        line=f1.readlines()
+        f1.close()
+
+        Fat=False
+
+        for l in range(len(line)):
+            word=line[l].split()
+            if len(word)>=2 and word[0]=="CELL_PARAMETERS" :
+                if word[1][0]=="a" or word[1][0]=="A" :
+                    factor=1.0
+                elif word[1][0]=="b" or word[1][0]=="B" :
+                    factor=0.529177249
+                else :
+                    print("Only Angstrom and Bohr are supported.")
+                    sys.exit()
+                for il in range(3) :
+                    wordlc=line[l+il+1].split()
+                    self.lc.append([float(wordlc[0]),float(wordlc[1]),float(wordlc[2])])
+                continue
+            elif len(word)>=2 and word[0]=="ATOMIC_POSITIONS" :
+                Fat=True
+                continue
+        
+            if Fat==True :
+                try :
+                    self.ap.append([float(word[1]),float(word[2]),float(word[3])])
+                except :
+                    Fat=False
+                    continue
+
+                self.Natom+=1
+                if self.Ntype==0 or self.atomtype[-1]!=word[0] :
+                    self.Ntype+=1
+                    self.atomtype.append(word[0])
+                    self.Naint.append(1)
+                else :
+                    self.Naint[-1]+=1
+        
+        for i in range(3) :
             for j in range(3) :
-                self.ap[i][j]=self.ap[i][j]-self.ap[i][j]//1.0
-                if self.ap[i][j]<0.0000000001 or self.ap[i][j]>0.9999999999 :
-                    self.ap[i][j]=0.0
+                self.lc[i][j]=self.lc[i][j]*factor
+        
+        self.movetobox()
+
+    def fileread_prt(self, filename):
+        f1=open(filename,"r")
+        line=f1.readlines()
+        f1.close()
+
+        Flc=False
+        Fat=False
+
+        for l in range(len(line)):
+            word=line[l].split()
+            if len(word)>=2 and word[0]=="begin" and word[1]=="latticevecs" :
+                Flc=True
+                continue
+            elif len(word)>=2 and word[0]=="end" and word[1]=="latticevecs" :
+                Flc=False
+                continue
+            elif len(word)>=2 and word[0]=="begin" and word[1]=="coordinates" :
+                Fat=True
+                continue
+            elif len(word)>=2 and word[0]=="end" and word[1]=="coordinates" :
+                Fat=False
+                continue
+        
+            if Flc==True :
+                if len(word)>=4 and word[0]=="coord" :
+                    self.lc.append([float(word[1]),float(word[2]),float(word[3])])
+                elif len(word)>=2 and word[0]=="volume" :
+                    volume=float(word[1])
+            elif Fat==True :
+                if len(word)>=2 and word[0]=="newtype" :
+                    self.Ntype+=1
+                    self.atomtype.append(word[1])
+                    self.Naint.append(0)
+                elif len(word)>=4 and word[0]=="coord" :
+                    self.ap.append([float(word[1]),float(word[2]),float(word[3])])
+                    self.Naint[-1]+=1
+                    self.Natom+=1
+        
+        detlc=self.volume()
+        factor=(volume/6.748334503468005/detlc)**(1.0/3.0)
+        
+        for i in range(3) :
+            for j in range(3) :
+                self.lc[i][j]=self.lc[i][j]*factor
+        
+        self.movetobox()
+
+########################################################################
 
     def filewrite(self, filename):
         f1=open(filename,"w")
@@ -141,6 +242,15 @@ class POSCAR:
                 k=k+1
         f2.write("end coordinates\n\n")
         f2.close()
+
+########################################################################
+
+    def movetobox(self) :
+        for i in range(self.Natom) :
+            for j in range(3) :
+                self.ap[i][j]=self.ap[i][j]-self.ap[i][j]//1.0
+                if self.ap[i][j]<0.0000000001 or self.ap[i][j]>0.9999999999 :
+                    self.ap[i][j]=0.0
 
     def match(self, Pright):
         for i in range(3):
@@ -253,6 +363,7 @@ class POSCAR:
         return tot 
             
     def general_q(self, Pright):
+        self.load_dmass()
         # calculate the generalized cordinate of a total distance (to zero) of a poscar
         # designed for a structural difference (poscar1.general_q(poscar2))
         tot=0.0
