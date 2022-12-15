@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/env python3
 
 # Calculate the projection of a distortin onto the phonon modes,
 # and use it as the weight to average the frequency

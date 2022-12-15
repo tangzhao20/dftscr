@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/env python3
 
 # Calculate the effective mass of a phonon mode
 # and use it as the weight to average the frequency
