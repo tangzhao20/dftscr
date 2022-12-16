@@ -22,7 +22,7 @@ poscar0=poscar.POSCAR()
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
 
-Na=len(q1["natom"])
+Na=q1["natom"]
 if Na!=poscar0.Natom :
     print("Error: Number of atoms from POSCAR and qpoints.yaml doesn`t match")
     sys.exit()
@@ -41,6 +41,6 @@ for ia in range(Na) :
 
 ph_eigvec=np.array(ph_eigvec)
 
-poscar0.movebyvector(disp,ph_eigvec,0.1) # scale: 0.1 A
+poscar0.movebyvector(ph_eigvec,0.1) # scale: 0.1 A
 
 poscar0.filewrite("POSCAR."+str(ib))
