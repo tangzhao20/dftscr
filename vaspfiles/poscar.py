@@ -284,6 +284,7 @@ class POSCAR:
 
     def movebyvector(self, disp, factor):
         # move atoms by a set of vectors
+        # The vector is defined in a cartesian coordinate system using angstrom.
         # disp[Na][3]
         if len(disp)!=self.Natom:
             print("Warning: the length of displacement vector != Natom")
@@ -295,10 +296,8 @@ class POSCAR:
             disp[ia][0]=disp[ia][0]/fdisp
             disp[ia][1]=disp[ia][1]/fdisp
             disp[ia][2]=disp[ia][2]/fdisp
-        
         reclc=self.reclc_out()
         disp=np.matmul(np.array(disp),np.array(reclc)).tolist()
-        print(disp[0])
         for ia in range(self.Natom) :
             for ix in range(3) :
                 self.ap[ia][ix]=self.ap[ia][ix]+disp[ia][ix]*factor
