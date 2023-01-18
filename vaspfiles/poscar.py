@@ -169,7 +169,7 @@ class POSCAR:
 
 ########################################################################
 
-    def filewrite(self, filename):
+    def filewrite(self, filename="POSCAR.new"):
         f1=open(filename,"w")
         f1.write(self.title)
         f1.write('1.0\n')
@@ -198,7 +198,7 @@ class POSCAR:
             f1.write('\n')
         f1.close()
 
-    def filewrite_qe(self, filename):
+    def filewrite_qe(self, filename="qe.st"):
         self.load_dmass()
 
         kgrid=[]
@@ -225,7 +225,7 @@ class POSCAR:
         f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}  {kgrid[2]:d} 0 0 0\n")
         f2.close()
 
-    def filewrite_prt(self, filename):
+    def filewrite_prt(self, filename="prt.st"):
         volume=self.volume()*6.748334503468005
         # convert Angstrom^3 to bohr^3
         
@@ -241,6 +241,32 @@ class POSCAR:
                 f2.write("coord  "+f"{self.ap[k][0]:20.16f}"+"  "+f"{self.ap[k][1]:20.16f}"+"  "+f"{self.ap[k][2]:20.16f}"+"\n")
                 k=k+1
         f2.write("end coordinates\n\n")
+        f2.close()
+
+    def filewrite_parsec(self, filename="parsec.st"):
+        f2=open(filename,"w")
+        f2.write("begin cell_shape\n")
+        for i in range(3) :
+            f2.write("coord  "+f"{self.lc[i][0]:20.16f}"+"  "+f"{self.lc[i][1]:20.16f}"+"  "+f"{self.lc[i][2]:20.16f}"+"\n")
+        f2.write("end cell_shape\n")
+        k=0
+        for i in range(self.Ntype) :
+            f2.write("#------------- new atom type -------------\n")
+            f2.write("Atom_Type: "+self.atomtype[i]+"\n")
+            f2.write("Pseudopotential_Format: \n")
+            f2.write("Core_Cutoff_Radius: \n")
+            f2.write("Local_Component: \n")
+            f2.write("Potential_Num: \n\n")
+            f2.write("begin Electron_Per_Orbital\n")
+            f2.write("# S P D F\n \n")
+            f2.write("end Electron_Per_Orbital\n\n")
+
+            f2.write("begin Atom_Coord\n")
+            for j in range(self.Naint[i]) :
+                f2.write("  "+f"{self.ap[k][0]:20.16f}"+"  "+f"{self.ap[k][1]:20.16f}"+"  "+f"{self.ap[k][2]:20.16f}"+"\n")
+                k=k+1
+            f2.write("end Atom_Coord\n\n")
+            f2.write("#---------- end of atom type -------------\n\n")
         f2.close()
 
 ########################################################################
