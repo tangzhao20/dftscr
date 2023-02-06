@@ -130,20 +130,20 @@ class EIGENVAL :
         if self.is_semic==True :
             if self.vbm_k!=self.cbm_k :
                 if self.vbm_k%kp.nk_line==0 :
-                    vbm_kl=kp.kphl[self.vbm_k//kp.nk_line]
+                    vbm_kl=kp.kph[self.vbm_k//kp.nk_line]
                 else :
-                    vbm_kl="("+kp.kphl[self.vbm_k//kp.nk_line]+","+kp.kphl[self.vbm_k//kp.nk_line+1]+")"
+                    vbm_kl="("+kp.kph[self.vbm_k//kp.nk_line]+","+kp.kph[self.vbm_k//kp.nk_line+1]+")"
                 if self.cbm_k%kp.nk_line==0 :
-                    cbm_kl=kp.kphl[self.cbm_k//kp.nk_line]
+                    cbm_kl=kp.kph[self.cbm_k//kp.nk_line]
                 else :
-                    cbm_kl="("+kp.kphl[self.cbm_k//kp.nk_line]+","+kp.kphl[self.cbm_k//kp.nk_line+1]+")"
+                    cbm_kl="("+kp.kph[self.cbm_k//kp.nk_line]+","+kp.kph[self.cbm_k//kp.nk_line+1]+")"
                 eindg_print="Indirect: Eg = "+str(round(self.eindg,4))+" eV, between "+vbm_kl+" -> "+cbm_kl
                 f0.write(eindg_print+"\n")
                 print(eindg_print)
             if self.edg_k%kp.nk_line==0 :
-                edg_kl=kp.kphl[self.edg_k//kp.nk_line]
+                edg_kl=kp.kph[self.edg_k//kp.nk_line]
             else :
-                edg_kl="("+kp.kphl[self.edg_k//kp.nk_line]+","+kp.kphl[self.edg_k//kp.nk_line+1]+")"
+                edg_kl="("+kp.kph[self.edg_k//kp.nk_line]+","+kp.kph[self.edg_k//kp.nk_line+1]+")"
             edg_print="Direct:   Eg = "+str(round(self.edg,4))+" eV, at "+edg_kl
             f0.write(edg_print+"\n")
             print(edg_print)

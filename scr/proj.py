@@ -43,7 +43,7 @@ x=eigenval1.bandkpout(rlc)
 eigout=eigenval1.eigtrans()
 
 kphout=kpoints1.kphout_out(rlc)
-kphlabel=kpoints1.kphl_out()
+kphlabel=kpoints1.kph_out()
 
 # make plot
 plt.gca().grid(axis="x",linewidth=0.75, color="silver")
