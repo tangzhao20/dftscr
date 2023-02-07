@@ -26,7 +26,7 @@ if eigenval1.is_semic==True :
     eigenval1.writegap(kpoints1)
 else :
     doscar1=doscar.DOSCAR()
-    ef=doscar1.ef_out()
+    ef=doscar1.ef
     eigenval1.eigshift(ef)
 
 if eigenval1.Ns==2 :
@@ -39,7 +39,7 @@ orblist=sys.argv[2]
 orbflag=procar1.readorblist(orblist)
 atomflag=procar1.readatomlist(atomlist,poscar1)
 
-x=eigenval1.bandkpout(rlc)
+x=eigenval1.bandkpout(reclc=rlc)
 eigout=eigenval1.eigtrans()
 
 kphout=kpoints1.kphout_out(rlc)

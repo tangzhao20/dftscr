@@ -57,7 +57,7 @@ import math
 #        if(atom[i][j])==-0.0 :
 #            atom[i][j]=0.0
 
-poscar1=poscar.POSCAR(fempty=True)
+poscar1=poscar.POSCAR(empty=True)
 poscar1.fileread_prt("input")
 
 #kgrid=[]

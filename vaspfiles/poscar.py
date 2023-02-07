@@ -15,8 +15,8 @@ class POSCAR:
     # seldyn[Natom][3] (if f_seldyn)
     # dmass{}
     
-    def __init__(self, filename="POSCAR", fempty=False) :
-        if fempty:
+    def __init__(self, filename="POSCAR", empty=False) :
+        if empty:
             self.title="SYSTEM\n"
             self.lc=[]
             self.Natom=0
@@ -434,6 +434,9 @@ class POSCAR:
 
     def reclc_out(self) :
         reclc=np.linalg.inv(np.array(self.lc)).tolist()
+        for i in range(3) :
+            for j in range(3) :
+                reclc[i][j]=reclc[i][j]*2.0*3.141592653589793238463 
         return(reclc)
    
     def volume(self) :

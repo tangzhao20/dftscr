@@ -1,4 +1,5 @@
 import numpy as np
+import xml.etree.ElementTree as ET
 
 class EIGENVAL : 
     # Nk, Nb, Ns
@@ -6,18 +7,27 @@ class EIGENVAL :
     # occ[k][b][s]
     # Nvb[s]
     # is_semic
+    # kp[k][3]
+    # wt[k][3]
 
-    def __init__(self, filename="EIGENVAL",is_hse=False) :
+    def __init__(self, filename="EIGENVAL",is_hse=False,empty=False) :
+        self.wt=[]
+        self.kp=[]
+        self.eig=[]
+        self.occ=[]
+
+        if empty:
+            self.Nk=0
+            self.Nb=0
+            self.Ns=1
+            return
+
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
         self.Ns=int(line[0].split()[3])
         self.Nk=int(line[5].split()[1])
         self.Nb=int(line[5].split()[2])
-        self.wt=[]
-        self.kp=[]
-        self.eig=[]
-        self.occ=[]
         for k in range(self.Nk) :
             word=line[7+k*(self.Nb+2)].split()
             self.kp.append([float(word[0]),float(word[1]),float(word[2])])
@@ -44,54 +54,51 @@ class EIGENVAL :
         if (is_hse) :
             self.Nk=len(self.kp)
 
-        self.is_semic=True
-        for k in range(self.Nk) :
-            for b in range(self.Nb) :
-                for s in range(self.Ns) :
-                    if self.occ[k][b][s]<0.999 and self.occ[k][b][s]>0.001 :
-                        self.is_semic=False
+        self.semic()
         if self.is_semic==True :
-            self.Nvb=[]
-            for s in range(self.Ns) :
-                self.Nvb.append(0)
-                for b in range(self.Nb) :
-                    if self.occ[0][b][s]<0.5 :
-                        self.Nvb[s]=b
-                        break
-            self.vbm=-1e10
-            self.vbm_k=0
-            self.vbm_s=0
-            self.cbm=1e10
-            self.cbm_k=0
-            self.cbm_s=0
-            self.edg=1e10
-            self.edg_k=0
-            self.edg_s=0
-            for s in range(self.Ns) :
-                for k in range(self.Nk) :
-                    if self.eig[k][self.Nvb[s]-1][s]>self.vbm :
-                        self.vbm=self.eig[k][self.Nvb[s]-1][s]
-                        self.vbm_k=k
-                        self.vbm_s=s
-                    if self.eig[k][self.Nvb[s]][s]<self.cbm :
-                        self.cbm=self.eig[k][self.Nvb[s]][s]
-                        self.cbm_k=k
-                        self.cbm_s=s
-                    if self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s]<self.edg :
-                        self.edg=self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s]
-                        self.edg_k=k
-                        self.edg_s=s
-            self.eindg=self.cbm-self.vbm
+            self.gap()
                     
         del line
 
+    def fileread_qexml(self, filename="*.xml") :
+        # only support Ns=1 here
+        # Nk, Nb, Ns
+        # eig[k][b][s]
+        # occ[k][b][s]
+        # Nvb[s]
+        # is_semic
+        # kp[k][3]
+        # wt[k]
+        tree=ET.parse(filename)
+        kpoints=tree.getroot().find("output").find("band_structure").findall("ks_energies")
+
+        self.Nk=len(kpoints)
+        self.Nb=int(kpoints[0].find('eigenvalues').get("size"))
+        self.Ns=1
+        
+        for kp in kpoints :
+            # use the unit eV and A (^-1)
+            self.kp.append([float(kp1)/0.529177210903 for kp1 in kp.find('k_point').text.split()])
+            self.wt.append(float(kp.find('k_point').get("weight")))
+            # qe xml energies are in Hatree
+            self.eig.append([[float(eig1)*27.211386245988] for eig1 in kp.find('eigenvalues').text.split()])
+            self.occ.append([[float(occ1)] for occ1 in kp.find('occupations').text.split()])
+
+        self.semic()
+        if self.is_semic==True :
+            self.gap()
+
+#########################################################################
+    
     def eigshift(self,ezero) :
         for k in range(self.Nk) :
             for b in range(self.Nb) :
                 for s in range(self.Ns) :
                     self.eig[k][b][s]=self.eig[k][b][s]-ezero
 
-    def bandkpout(self,reclc) :
+    def bandkpout(self,reclc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
+        # transfer the fractional to cartesian in k space
+        # if kp is already in cartisian, simply set reclc=I
         kpout=[]
         kpout.append(0.0)
         for k in range(self.Nk) :
@@ -151,3 +158,42 @@ class EIGENVAL :
             f0.write("Eg = 0, no band gap\n")
         f0.close()
 
+    def semic(self) :
+        self.is_semic=True
+        for k in range(self.Nk) :
+            for b in range(self.Nb) :
+                for s in range(self.Ns) :
+                    if self.occ[k][b][s]<0.999 and self.occ[k][b][s]>0.001 :
+                        self.is_semic=False
+    def gap(self) :
+        self.Nvb=[]
+        for s in range(self.Ns) :
+            self.Nvb.append(0)
+            for b in range(self.Nb) :
+                if self.occ[0][b][s]<0.5 :
+                    self.Nvb[s]=b
+                    break
+        self.vbm=-1e10
+        self.vbm_k=0
+        self.vbm_s=0
+        self.cbm=1e10
+        self.cbm_k=0
+        self.cbm_s=0
+        self.edg=1e10
+        self.edg_k=0
+        self.edg_s=0
+        for s in range(self.Ns) :
+            for k in range(self.Nk) :
+                if self.eig[k][self.Nvb[s]-1][s]>self.vbm :
+                    self.vbm=self.eig[k][self.Nvb[s]-1][s]
+                    self.vbm_k=k
+                    self.vbm_s=s
+                if self.eig[k][self.Nvb[s]][s]<self.cbm :
+                    self.cbm=self.eig[k][self.Nvb[s]][s]
+                    self.cbm_k=k
+                    self.cbm_s=s
+                if self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s]<self.edg :
+                    self.edg=self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s]
+                    self.edg_k=k
+                    self.edg_s=s
+        self.eindg=self.cbm-self.vbm
