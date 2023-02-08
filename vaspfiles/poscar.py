@@ -198,7 +198,7 @@ class POSCAR:
             f1.write('\n')
         f1.close()
 
-    def filewrite_qe(self, filename="qe.st"):
+    def filewrite_qe(self, filename="qe_st.dat"):
         self.load_dmass()
 
         kgrid=[]
@@ -225,7 +225,7 @@ class POSCAR:
         f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}  {kgrid[2]:d} 0 0 0\n")
         f2.close()
 
-    def filewrite_prt(self, filename="prt.st"):
+    def filewrite_prt(self, filename="prt_st.dat"):
         volume=self.volume()*6.748334503468005
         # convert Angstrom^3 to bohr^3
         
@@ -243,7 +243,7 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec.st"):
+    def filewrite_parsec(self, filename="parsec_st.dat"):
         f2=open(filename,"w")
         f2.write("begin cell_shape\n")
         for i in range(3) :
