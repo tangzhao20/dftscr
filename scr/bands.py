@@ -1,6 +1,6 @@
 #!/bin/python3
 
-# eigenval.py package (E1) (E2)
+# bands.py package (E1) (E2)
 # Making the band structure plot
 
 # if E2 exists, the energy range is (E1,E2)
@@ -208,5 +208,5 @@ for i in range(len(kphout)):
     f4.write(str(kphout[i])+" "+kphlabel[i]+"\n")
 f4.close()
 
-fig.savefig(outputname,dpi=300)
+fig.savefig(outputname,dpi=1200)
 

@@ -1,63 +1,64 @@
-###
+# Scripts
 
-eigenval.py :
+## `bands.py`
 
-eigenval.py (E1) (E2)
-Making the band structure plot
+To plotting the band structure plot:
+```
+python bands.py package (E1) (E2)
+```
+if `E2` exists, the energy range is [`E1`,`E2`]  
+if only `E1` exists, the energy range is [-`E1`,`E1`]  
+if neither exists, the energy range is [-5 eV, 5 eV]
 
-if E2 exists, the energy range is (E1,E2)
-if only E1 exists, the energy range is (-E1,E1)
-if neither exists, the energy range is (-5 eV, 5 eV)
+Support `packages`: `vasp`, `qe`  
+VASP inputs: `EIGENVAL`, `KPOINTS`, `POSCAR`, (`DOSCAR`)  
+QE inputs: `*.xml`, `nscf.in`, `kpath.in`
 
-Input: EIGENVAL, KPOINTS, POSCAR (DOSCAR)
+To plot projected band structure from VASP:
+```
+python bands.py vaspproj atoms orbitals (E1) (E2)
+```
+Inputs `EIGENVAL`, `KPOINTS`, `POSCAR`, `PROCAR`, (`DOSCAR`)
 
-########################################
+---
 
-proj.py :
+## `kpath_qe.py`
 
-proj.py atoms orbitals (E1) (E2)
-Make the projected band structure plot
+Create nscf k-point path for QE band structure calculations
 
-if E2 exist, the energy range is (E1,E2)
-if only E1 exists, the energy range is (-E1,E1)
-if neither exists, the energy range is (-5 eV, 5 eV)
+---
 
-Input: POSCAR, EIGENVAL, KPOINTS, PROCAR, (DOSCAR)
+## `dos.py`
 
-########################################
+To print the DOS  
+Input: `INCAR`, `DOSCAR`
 
-dos.py :
+---
 
-print DOS
+## `toten_fit.py`
 
-Input: INCAR, DOSCAR
+To print the total energy vs. distortion coordinate  
+Input: `POSCAR_i`, `pos_*/OSZICAR`, `pos_*/POSCAR`, (`pos_*/EIGENVAL`)
 
-########################################
+---
 
-toten_fit.py :
+## `phproj.py`
 
-print the toten vs. distortion coordinate 
+To calculate the projection of a distortin onto the phonon modes, and use it as weight to average the frequency  
+Input: `qpoints.yaml`, `POSCAR_i`, `POSCAR_f`
 
-Input: POSCAR_i, pos_./OSZICAR, pos_./POSCAR, (pos_./EIGENVAL)
+---
 
-########################################
+## `wavecar.py`
 
-phproj.py :
+To read the KS orbitals from the `WAVECAR`, and write into seperate files for VESTA plot:
+```
+python wavecar.py ik ib ispin
+```
+Input: `kpath.in`
 
-Calculate the projection of a distortin onto the phonon modes,
-and use it as the weight to average the frequency
+Examples of kpath.in can be find in `data` directory
 
-Input: qpoints.yaml, POSCAR_i, POSCAR_f
-
-########################################
-
-wavecar.py :
-
-Read the KS orbitals from the WAVECAR, and write into seperate files for VESTA plot.
-
-Command line:
-wavecar.py ik ib ispin
-
-########################################
+---
 
 ZT

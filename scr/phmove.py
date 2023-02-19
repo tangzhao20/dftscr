@@ -41,6 +41,6 @@ for ia in range(Na) :
 
 ph_eigvec=np.array(ph_eigvec)
 
-poscar0.movebyvector(ph_eigvec,0.1) # scale: 0.1 A
+poscar0.movebyvector(ph_eigvec,0.4) # scale: 0.2 A
 
 poscar0.filewrite("POSCAR."+str(ib))
