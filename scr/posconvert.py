@@ -5,6 +5,7 @@
 # Convert a package1 to package2 structure format.
 
 from dftscr.vaspfiles import poscar
+from commons import load_packagename
 import math
 import sys
 
@@ -13,28 +14,25 @@ if len(sys.argv)<3 :
     print("python3 posconvert.py package1 package2")
     sys.exit()
 
-vaspname={"vasp","Vasp","VASP"}
-qename={"qe","QE"}
-prtname={"paratec","Paratec","PARATEC","prt","PRT"}
-parsecname={"parsec","Parsec","PARSEC"}
+packagename=load_packagename()
 
 package1=sys.argv[1]
 package2=sys.argv[2]
 
-if package1 in vaspname :
+if package1 in packagename["vasp"] :
     if len(sys.argv)>=4 :
         filename1=sys.argv[3]
     else :
         filename1="POSCAR"
     poscar1=poscar.POSCAR(filename1)
-elif package1 in qename :
+elif package1 in packagename['qe'] :
     if len(sys.argv)>=4 :
         filename1=sys.argv[3]
     else :
         filename1="scf.in"
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_qe(filename1)
-elif package1 in prtname :
+elif package1 in packagename['prt'] :
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_prt("input")
 else :
@@ -42,13 +40,13 @@ else :
     print("python3 posconvert.py package1 package2")
     sys.exit()
 
-if package2 in vaspname :
+if package2 in packagename["vasp"] :
     poscar1.filewrite()
-elif  package2 in qename :
+elif  package2 in packagename['qe'] :
     poscar1.filewrite_qe()
-elif package2 in prtname :
+elif package2 in packagename['prt'] :
     poscar1.filewrite_prt()
-elif package2 in parsecname :
+elif package2 in packagename['parsec'] :
     poscar1.filewrite_parsec()
 else :
     print("Package "+package2+" output is not supported yet.")

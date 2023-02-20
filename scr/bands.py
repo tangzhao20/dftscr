@@ -10,6 +10,7 @@
 import os
 import sys
 from dftscr.vaspfiles import poscar, eigenval, doscar, kpoints_band, procar
+from commons import load_packagename
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -18,7 +19,9 @@ if len(sys.argv)<=1 :
     sys.exit()
 package=sys.argv[1]
 
-if package in {"vasp", "VASP", "vaspproj", "VASPproj"} : 
+packagename=load_packagename()
+
+if package in packagename["vasp"]+packagename["vaspproj"] : 
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
 
     poscar1=poscar.POSCAR()
@@ -43,7 +46,7 @@ if package in {"vasp", "VASP", "vaspproj", "VASPproj"} :
     kphlabel=kpoints1.kph_out()
 
 
-elif package in {"qe", "QE"} :
+elif package in packagename["qe"] :
     # Input: *.xml, nscf.in, kpath.in
 
     poscar1=poscar.POSCAR(empty=True)
@@ -89,7 +92,7 @@ else:
     sys.exit()
 
 lproj=False
-if package in {"vaspproj", "VASPproj"} :
+if package in packagename["vaspproj"] :
     # Input: PROCAR
 
     lproj=True
@@ -102,7 +105,7 @@ if package in {"vaspproj", "VASPproj"} :
     orbflag=procar1.readorblist(orblist)
     atomflag=procar1.readatomlist(atomlist,poscar1)
 
-if package in {"vasp","VASP","qe","QE"} :
+if package in packagename["vasp"]+packagename["qe"] :
     if len(sys.argv)>=4 :
         ymax=float(sys.argv[3])
         ymin=float(sys.argv[2])
@@ -112,7 +115,7 @@ if package in {"vasp","VASP","qe","QE"} :
     else :
         ymax=5.0
         ymin=-5.0
-elif package in {"vaspproj","VASP"} :
+elif package in packagename["vaspproj"] :
     if len(sys.argv)>=6 :
         ymax=float(sys.argv[5])
         ymin=float(sys.argv[4])

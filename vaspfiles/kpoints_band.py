@@ -68,6 +68,21 @@ class KPOINTS_band :
 
 #########################################################################
 
+    def filewrite_vasp(self,filename="KPOINTS.new") :
+        f1=open(filename,"w")
+        f1.write("k points along high symmetry lines\n")
+        f1.write("40\n")
+        f1.write("line mode\n")
+        f1.write("fractional\n")
+        for ih in range(len(self.kph)-1) :
+            for ix in range(3) :
+                f1.write("{:16.12f}".format(self.kpdict[self.kph[ih]][ix])+" ")
+            f1.write(self.kph[ih]+"\n")
+            for ix in range(3) :
+                f1.write("{:16.12f}".format(self.kpdict[self.kph[ih+1]][ix])+" ")
+            f1.write(self.kph[ih+1]+"\n\n")
+        f1.close()
+
     def filewrite_qe(self,filename="kpath.out"):
         kplot=[]
         kplot.append(self.kpdict[self.kph[0]])
@@ -81,11 +96,23 @@ class KPOINTS_band :
         f1=open(filename,"w")
         f1.write("K_POINTS crystal_b\n")
         f1.write(str(len(kplot))+"\n")
-        for i in range(len(kplot)) :
-            f1.write("{:16.12f}".format(kplot[i][0])+" ")
-            f1.write("{:16.12f}".format(kplot[i][1])+" ")
-            f1.write("{:16.12f}".format(kplot[i][2])+" 1.0\n")
+        for ik in range(len(kplot)) :
+            for ix in range(3) :
+                f1.write("{:16.12f}".format(kplot[ik][ix])+" ")
+            f1.write("1.0\n")
         f1.close()
+
+    def filewrite_kpathin(self, filename="kpath.in.new") :
+        f1=open(filename,"w")
+        for h in self.kpdict :
+            for ix in range(3) :
+                f1.write(str(self.kpdict[h][ix])+" ")
+            f1.write(h+"\n")
+        f1.write("\n")
+        for h in self.kph :
+            f1.write(h+"\n")
+        f1.close()
+            
 
 #########################################################################
 
@@ -119,7 +146,7 @@ class KPOINTS_band :
         DATA_PATH = os.path.join(this_dir, "..", "data", "greek.dat")
         f0=open(DATA_PATH,"r")
         line=f0.readlines()
-        f0.close
+        f0.close()
         greek={}
         for l in line :
             word=l.split()

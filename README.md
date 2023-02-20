@@ -1,5 +1,3 @@
-# Scripts
-
 ## `bands.py`
 
 To plotting the band structure plot:
@@ -10,7 +8,7 @@ if `E2` exists, the energy range is [`E1`,`E2`]
 if only `E1` exists, the energy range is [-`E1`,`E1`]  
 if neither exists, the energy range is [-5 eV, 5 eV]
 
-Support `packages`: `vasp`, `qe`  
+Support `package`s: `vasp`, `qe`  
 VASP inputs: `EIGENVAL`, `KPOINTS`, `POSCAR`, (`DOSCAR`)  
 QE inputs: `*.xml`, `nscf.in`, `kpath.in`
 
@@ -22,9 +20,34 @@ Inputs `EIGENVAL`, `KPOINTS`, `POSCAR`, `PROCAR`, (`DOSCAR`)
 
 ---
 
-## `kpath_qe.py`
+## `posconvert.py`
+
+To convert the format of the crystal structure.
+```
+python posconvert.py package1 package2
+```
+Support `package`s: `vasp`, `qe`, `paratec`, `parsec`
+
+VASP input: `POSCAR`  
+QE input: `scf.in`  
+Paratec input: `input`
+
+---
+
+## `kconvert.py`
+
+To convert the format of the k-point path.
+```
+python kconvert.py package1 package2 (N)
+```
+Support `package`s: `vasp`, `qe`, `kpathin`
+
+VASP input: `KPOINTS`  
 
 Create nscf k-point path for QE band structure calculations
+```
+python kconvert.py kpathin qe (N)
+```
 
 ---
 
