@@ -48,6 +48,8 @@ elif package2 in packagename['prt'] :
     poscar1.filewrite_prt()
 elif package2 in packagename['parsec'] :
     poscar1.filewrite_parsec()
+elif package2 in packagename['wannier90'] :
+    poscar1.filewrite_wannier90()
 else :
     print("Package "+package2+" output is not supported yet.")
     print("python3 posconvert.py package1 package2")

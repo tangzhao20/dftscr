@@ -112,8 +112,21 @@ class KPOINTS_band :
         for h in self.kph :
             f1.write(h+"\n")
         f1.close()
-            
 
+    def filewrite_wannier90(self, filename="wannier90_kp.dat") :
+        f1=open(filename,"w")
+        f1.write("begin kpoint_path\n")
+        for ih in range(len(self.kph)-1) :
+            f1.write(self.kph[ih]+" ")
+            for ix in range(3) :
+                f1.write("{:12.8f}".format(self.kpdict[self.kph[ih]][ix])+" ")
+            f1.write(" "+self.kph[ih+1]+" ")
+            for ix in range(3) :
+                f1.write("{:12.8f}".format(self.kpdict[self.kph[ih+1]][ix])+" ")
+            f1.write("\n")
+        f1.write("end kpoint_path\n")
+        f1.close()
+            
 #########################################################################
 
     def kph_out(self) :

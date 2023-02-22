@@ -269,6 +269,31 @@ class POSCAR:
             f2.write("#---------- end of atom type -------------\n\n")
         f2.close()
 
+    def filewrite_wannier90(self, filename="wannier90_st.dat"):
+        f2=open(filename,"w")
+        f2.write("Begin Unit_Cell_Cart\n")
+        for i in range(3) :
+            f2.write(f"  {self.lc[i][0]:.8f}  {self.lc[i][1]:.8f}  {self.lc[i][2]:.8f}\n")
+        f2.write("End Unit_Cell_Cart\n\n")
+
+        f2.write("Begin Projections\n")
+        for i in range(self.Ntype) :
+            f2.write("  "+self.atomtype[i]+"  :\n")
+        f2.write("  random\n")
+        f2.write("End Projections\n\n")
+
+        f2.write("Begin Atoms_Frac\n")
+        ij=0
+        ik=0
+        for i in range(self.Natom) :
+            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.8f}  {self.ap[i][1]:.8f}  {self.ap[i][2]:.8f}\n")
+            ik=ik+1
+            if ik==self.Naint[ij] :
+                ij=ij+1
+                ik=0
+        f2.write("End Atoms_Frac\n\n")
+        f2.close()
+
 ########################################################################
 
     def movetobox(self) :

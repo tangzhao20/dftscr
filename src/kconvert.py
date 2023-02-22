@@ -40,6 +40,8 @@ elif package2 in packagename["qe"] :
     kpoints1.filewrite_qe()
 elif package2 in packagename["vasp"] :
     kpoints1.filewrite_vasp()
+elif package2 in packagename["wannier90"] :
+    kpoints1.filewrite_wannier90()
 else :
     print("Package "+package2+" input is not supported yet.")
     print("python3 kconvert.py package1 package2 (N)")
