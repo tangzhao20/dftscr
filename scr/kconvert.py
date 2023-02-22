@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # create nscf k-point path for QE band structure calculations
 # python kconvert.py package1 package2 (N)

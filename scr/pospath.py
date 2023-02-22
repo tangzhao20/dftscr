@@ -1,4 +1,5 @@
-#!/bin/python3
+#!/usr/bin/env python3
+
 # Create structures as the linear combination of two initials.
 # Input: POSCAR_i and POSCAR_f
 # Output: POSCAR.*

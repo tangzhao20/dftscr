@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # bands.py package (E1) (E2)
 # Making the band structure plot

@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 
 # Move the structure according to a phonon mode. 
 # Typically designed for a JTE style broken symmetry of a point defect by soft modes.

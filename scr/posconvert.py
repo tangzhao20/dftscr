@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 #python3 posconvert.py package1 package2 (filename1)
 

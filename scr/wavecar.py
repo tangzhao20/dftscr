@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # wavecar.py ik ib ispin
 # output: wfn_ik_ib_ispin.vasp

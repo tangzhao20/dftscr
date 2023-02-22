@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # posmove.py a1 a2 a3
 # move the vasp structure (Direct) by a1 a2 a3
