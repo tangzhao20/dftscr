@@ -6,7 +6,7 @@
 # input: kpath.in
 
 import sys
-from dftscr.vaspfiles import kpoints_band
+from classes import kpoints_band
 from commons import load_packagename
 
 packagename=load_packagename()

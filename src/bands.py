@@ -9,7 +9,7 @@
 
 import os
 import sys
-from dftscr.vaspfiles import poscar, eigenval, doscar, kpoints_band, procar
+from classes import poscar, eigenval, doscar, kpoints_band, procar
 from commons import load_packagename
 import matplotlib.pyplot as plt
 import matplotlib as mpl

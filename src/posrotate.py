@@ -4,7 +4,7 @@
 
 # posrotate.py theta(degrees)
 
-from dftscr.vaspfiles import poscar
+from classes import poscar
 import sys
 import math
 

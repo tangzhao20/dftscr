@@ -7,7 +7,7 @@
 # pospath.py N
 # here N is the number of structures between initial two.
 
-from dftscr.vaspfiles import poscar
+from classes import poscar
 import sys
 import copy
 

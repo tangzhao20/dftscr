@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-# Calculate the effective mass of a phonon mode
+# Calculate the projection of a distortin onto the phonon modes,
 # and use it as the weight to average the frequency
 
 # Input: qpoints.yaml, POSCAR_i, POSCAR_f
 
 import yaml
 import matplotlib.pyplot as plt
-from dftscr.vaspfiles import *
+from classes import poscar
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)

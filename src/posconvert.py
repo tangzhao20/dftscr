@@ -4,7 +4,7 @@
 
 # Convert a package1 to package2 structure format.
 
-from dftscr.vaspfiles import poscar
+from classes import poscar
 from commons import load_packagename
 import math
 import sys

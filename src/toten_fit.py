@@ -4,7 +4,7 @@
 
 # Input: POSCAR_i, pos_*/OSZICAR, pos_*/POSCAR, (pos_*/EIGENVAL)
 
-from dftscr.vaspfiles import *
+from classes import *
 
 N=41
 

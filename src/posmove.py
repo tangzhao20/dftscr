@@ -6,7 +6,7 @@
 # posmove.py a1 a2 a3 a4 a5 a6
 # move the vasp structure (Direct) by a1/a2 a3/a4 a5/a6
 
-from dftscr.vaspfiles import poscar
+from classes import poscar
 import sys
 
 if len(sys.argv)<4 :

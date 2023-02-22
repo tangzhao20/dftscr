@@ -9,7 +9,7 @@
 import sys
 import numpy as np
 import yaml
-from dftscr.vaspfiles import poscar
+from classes import poscar
 
 if len(sys.argv)==1 :
     print("No index of phonon mode. set to 1.")
