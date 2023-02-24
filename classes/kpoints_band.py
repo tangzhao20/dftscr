@@ -113,7 +113,7 @@ class KPOINTS_band :
             f1.write(h+"\n")
         f1.close()
 
-    def filewrite_wannier90(self, filename="wannier90_kp.dat") :
+    def filewrite_wannier90(self, filename="wannier90_kpath.dat") :
         f1=open(filename,"w")
         f1.write("begin kpoint_path\n")
         for ih in range(len(self.kph)-1) :
