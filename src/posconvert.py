@@ -6,8 +6,8 @@
 
 from classes import poscar
 from commons import load_packagename
-import math
 import sys
+import os
 
 if len(sys.argv)<3 :
     print("Need input: package1 and package2")
@@ -29,7 +29,18 @@ elif package1 in packagename['qe'] :
     if len(sys.argv)>=4 :
         filename1=sys.argv[3]
     else :
-        filename1="scf.in"
+        # find a scf.in or nscf.in file
+        files = os.listdir()
+        if "scf.in" in files:
+            filename1="scf.in"
+        elif "nscf.in" in files:
+            filename1="nscf.in"
+        elif "relax.in" in files:
+            filename1="relax.in"
+        else :
+            print("package1 is qe. Use input scf/nscf/relax.in, or add the filename at the end:")
+            print("python3 posconvert.py qe package2 filename1")
+            sys.exit()
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_qe(filename1)
 elif package1 in packagename['prt'] :
