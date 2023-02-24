@@ -33,6 +33,7 @@ for iz in range(Nz) :
 f1=open("wannier90_kgrid.dat","w")
 f2=open("qe_kgrid.dat","w")
 
+f1.write("mp_grid =  "+str(Nx)+"  "+str(Ny)+"  "+str(Nz)+"\n\n")
 f1.write("begin kpoints\n")
 f2.write("K_POINTS crystal\n")
 f2.write(str(N)+"\n")
@@ -46,7 +47,8 @@ for iz in range(Nz) :
             f2.write("  {:.8f}".format(y[iy]))
             f2.write("  {:.8f}".format(z[iz]))
             f2.write("  {:.8f}\n".format(w))
-f1.write("end kpoints\n")
+f1.write("end kpoints\n\n")
+f2.write("\n")
 
 f1.close()
 f2.close()
