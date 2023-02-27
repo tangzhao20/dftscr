@@ -14,6 +14,8 @@ from commons import load_packagename
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+fsecond=False
+
 if len(sys.argv)<=1 :
     print("python bands.py package (Emin) (Emax)")
     sys.exit()
@@ -31,13 +33,11 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
     kpoints1=kpoints_band.KPOINTS_band()
     
     if eigenval1.is_semic==True :
-        vbm=eigenval1.vbm
-        eigenval1.eigshift(vbm)
+        eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
         doscar1=doscar.DOSCAR()
-        ef=doscar1.ef
-        eigenval1.eigshift(ef)
+        eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(reclc=rlc)
     eigout=eigenval1.eigtrans()
@@ -54,26 +54,18 @@ elif package in packagename["qe"] :
     rlc=poscar1.reclc_out()
     
     eigenval1=eigenval.EIGENVAL(empty=True)
-    # find a .xml file
-    files = os.listdir()
-    for f in files:
-        if f.endswith('.xml'):
-            filename=f
-            break
-    eigenval1.fileread_qexml(filename)
+    eigenval1.fileread_qexml()
     
     kpoints1=kpoints_band.KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin()
     
     if eigenval1.is_semic==True :
-        vbm=eigenval1.vbm
-        eigenval1.eigshift(vbm)
+        eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
         doscar1=doscar.DOSCAR(empty=True)
         doscar1.fileread_xml(filename)
-        ef=doscar1.ef
-        eigenval1.eigshift(ef)
+        eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout()
     eigout=eigenval1.eigtrans()
@@ -85,6 +77,70 @@ elif package in packagename["qe"] :
     factor=max(kphout)/max(x)
     for ix in range(len(x)): 
         x[ix]=x[ix]*factor
+
+elif package in packagename["wannier90"] :
+    # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
+    # Only semiconductors are supported
+
+    poscar1=poscar.POSCAR(empty=True)
+    poscar1.fileread_qe("nscf.in")
+    rlc=poscar1.reclc_out()
+
+    pad=0
+    for w in sys.argv :
+        if w.startswith("pad=") :
+            pad=int(w.split("=")[1])
+            sys.argv.remove(w)
+            break
+
+    eigenval1=eigenval.EIGENVAL(empty=True)
+    eigenval1.fileread_wan(Nb_pad=pad)
+
+    kpoints1=kpoints_band.KPOINTS_band(empty=True)
+    kpoints1.fileread_kpathin()
+
+    # find a ../bands/*.xml file
+    files = os.listdir("../bands")
+    for f in files:
+        if f.endswith('.xml'):
+            filename=f
+            fsecond=True
+            break
+
+    if fsecond :
+        eigenval2=eigenval.EIGENVAL(empty=True)
+        eigenval2.fileread_qexml("../bands/"+filename)
+
+        eigenval2.gap()
+        eigenval2.eigshift(eigenval2.vbm)
+
+    eigenval1.occ=[]
+    for ik in range(eigenval1.Nk) :
+        occ0=[]
+        for ib in range(eigenval2.Nvb[0]-pad) :
+            occ0.append([1.0])
+        if fsecond :
+           for ib in range(eigenval2.Nvb[0]-pad,eigenval1.Nb) :
+               occ0.append([0.0])
+           eigenval1.occ.append(occ0)
+
+    eigenval1.gap()
+    eigenval1.eigshift(eigenval1.vbm)
+
+    x=eigenval1.bandkpout(reclc=rlc)
+    eigout=eigenval1.eigtrans()
+
+    kphout=kpoints1.kphout_out(rlc)
+    kphlabel=kpoints1.kph_out()
+
+    if fsecond :
+        x2=eigenval2.bandkpout()
+        eigout2=eigenval2.eigtrans()
+
+        # the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
+        factor=max(kphout)/max(x2)
+        for ix in range(len(x2)) :
+            x2[ix]=x2[ix]*factor
 
 else:
     print("Package \""+package+"\" is not supported yet.")
@@ -105,7 +161,7 @@ if package in packagename["vaspproj"] :
     orbflag=procar1.readorblist(orblist)
     atomflag=procar1.readatomlist(atomlist,poscar1)
 
-if package in packagename["vasp"]+packagename["qe"] :
+if package in packagename["vasp"]+packagename["qe"]+packagename["wannier90"] :
     if len(sys.argv)>=4 :
         ymax=float(sys.argv[3])
         ymin=float(sys.argv[2])
@@ -185,6 +241,19 @@ if lproj:
             f2.write(str(x[ik])+" "+str(eigout[0][ib][ik])+" "+str(projplotsize[ib][ik])+"\n")
         f2.write("\n")
     f2.close()
+
+# second band structure plot (for wannier)
+
+if fsecond :
+    
+    for b in range(eigenval2.Nb) :
+        ax0.plot(x2,eigout2[0][b],color=colpal[1],linewidth=1,zorder=2)
+    f3=open("eigenval2.dat","w")
+    for i in range(len(eigout2[0])):
+        for j in range(len(x2)) :
+            f3.write(str(x2[j])+" "+str(eigout2[0][i][j])+" "+"\n")
+        f3.write("\n")
+    f3.close()
 
 ax0.set_ylim(ymin,ymax)
 ax0.set_xlim(x[0],x[len(x)-1])

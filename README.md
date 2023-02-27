@@ -16,7 +16,13 @@ To plot projected band structure from VASP:
 ```
 python bands.py vaspproj atoms orbitals (E1) (E2)
 ```
-Inputs `EIGENVAL`, `KPOINTS`, `POSCAR`, `PROCAR`, (`DOSCAR`)
+Inputs: `EIGENVAL`, `KPOINTS`, `POSCAR`, `PROCAR`, (`DOSCAR`)
+
+To plot band structure from wannier90:
+```
+python bands.py wan (pad=*) (E1) (E2)
+```
+Inputs: `nscf.in`, `../bands/*.xml`, `*_band.kpt`, `*_band.dat`, `kpath.in`
 
 ---
 

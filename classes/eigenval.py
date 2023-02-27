@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import xml.etree.ElementTree as ET
 
@@ -60,7 +61,7 @@ class EIGENVAL :
                     
         del line
 
-    def fileread_qexml(self, filename="*.xml") :
+    def fileread_qexml(self, filename="") :
         # only support Ns=1 here
         # Nk, Nb, Ns
         # eig[k][b][s]
@@ -69,6 +70,13 @@ class EIGENVAL :
         # is_semic
         # kp[k][3]
         # wt[k]
+        if filename=="" :
+            # find a .xml file
+            files = os.listdir()
+            for f in files:
+                if f.endswith('.xml'):
+                    filename=f
+                    break
         tree=ET.parse(filename)
         kpoints=tree.getroot().find("output").find("band_structure").findall("ks_energies")
 
@@ -87,6 +95,61 @@ class EIGENVAL :
         self.semic()
         if self.is_semic==True :
             self.gap()
+
+    def fileread_wan(self, Nb_pad=0) :
+        # only support Ns=1 and semiconductor
+        # Nk, Nb, Ns
+        # eig[k][b][s]
+        # occ[k][b][s] # empty
+        # Nvb[s]       # empty
+        # is_semic     # empty
+        # kp[k][3]
+        # wt[k]
+        files = os.listdir()
+
+        for f in files:
+            if f.endswith('_band.kpt'):
+                filename=f
+                break
+        f1=open(filename,"r")
+        line=f1.readlines()
+        f1.close()
+        self.Nk=int(line[0].split()[0])
+        for ik in range(self.Nk) :
+            word=line[ik+1].split()
+            kpoint=[]
+            for ix in range(3) :
+                kpoint.append(float(word[ix]))
+            self.kp.append(kpoint)
+            self.wt.append(float(word[3]))
+
+        # find a *_band.dat file
+        for f in files:
+            if f.endswith('_band.dat'):
+                filename=f
+                break
+        f2=open(filename,"r")
+        line=f2.readlines()
+        f2.close()
+
+        for ik in range(self.Nk) :
+            self.eig.append([])
+        ik=0
+        ib=-1
+        fempty=True
+        for l in line:
+            word=l.split()
+            if len(word)==2 :
+                if fempty==True :
+                    ik=0
+                    ib=ib+1
+                    fempty=False
+                self.eig[ik].append([float(word[1])])
+                ik=ik+1
+            else :
+                fempty=True
+        self.Nb=len(self.eig[0])
+        self.Ns=1
 
 #########################################################################
     
