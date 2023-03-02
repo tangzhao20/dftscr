@@ -48,6 +48,7 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
 
 elif package in packagename["qe"] :
     # Input: *.xml, nscf.in, kpath.in
+    # No need to run bands.x
 
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_qe("nscf.in")
@@ -245,7 +246,6 @@ if lproj:
 # second band structure plot (for wannier)
 
 if fsecond :
-    
     for b in range(eigenval2.Nb) :
         ax0.plot(x2,eigout2[0][b],color=colpal[1],linewidth=1,zorder=2)
     f3=open("eigenval2.dat","w")
@@ -259,21 +259,12 @@ ax0.set_ylim(ymin,ymax)
 ax0.set_xlim(x[0],x[len(x)-1])
 ax0.set_xticks(kphout,kphlabel,color=colpal[4])
 ax0.tick_params(axis="x", length=0)
-ax0.tick_params(axis="y", colors=colpal[4])
-ax0.tick_params(axis="y", direction="in", color=colpal[2], width=1,zorder=0)
+ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], width=1,zorder=0)
 ax0.set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
-ax0.spines['bottom'].set_color(colpal[4])
-ax0.spines['top'].set_color(colpal[4])
-ax0.spines['left'].set_color(colpal[4])
-ax0.spines['right'].set_color(colpal[4])
-ax0.spines['bottom'].set_linewidth(1)
-ax0.spines['top'].set_linewidth(1)
-ax0.spines['left'].set_linewidth(1)
-ax0.spines['right'].set_linewidth(1)
-ax0.spines['bottom'].set_zorder(4)
-ax0.spines['top'].set_zorder(4)
-ax0.spines['left'].set_zorder(4)
-ax0.spines['right'].set_zorder(4)
+for edge in ["bottom", "top", "left", "right"] :
+    ax0.spines[edge].set_color(colpal[4])
+    ax0.spines[edge].set_linewidth(1)
+    ax0.spines[edge].set_zorder(4)
 
 f4=open("label.dat","w")
 for i in range(len(kphout)):

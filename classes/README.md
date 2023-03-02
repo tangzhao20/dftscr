@@ -1,0 +1,1 @@
+These python classes are designed to read and write the information of DFT calculations, as well as process some common operations. The overall structure follows `VASP` `*CAR` files, while some formats of other packages are also supported.
