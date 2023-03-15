@@ -188,13 +188,14 @@ else :
     print("python bands.py package (Emin) (Emax)")
     sys.exit()
 
-colpal=["#005f86","#f8971f","#d6d2c4","#ffffff","#333f48"] #color palette: [Blue, Orange, Gray, white, black]
+colpal=["#005f86","#f8971f","#d6d2c4","#ffffff","#333f48"] #color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
+mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
 
-fig=plt.figure(figsize=(4,3))
-gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.15,right=0.98,top=0.97, bottom=0.07)
+fig=plt.figure(figsize=(5,3.75))
+gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.17,right=0.98,top=0.97, bottom=0.07)
 ax0=gs0.subplots()
 
 ax0.grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
@@ -204,9 +205,9 @@ spinlabel=["spin up","spin down"]
 for s in range(eigenval1.Ns) :
     for b in range(eigenval1.Nb) :
         if eigenval1.Ns==2 and b==0 :
-            ax0.plot(x,eigout[s][b],color=colpal[s],label=spinlabel[s],linewidth=1,zorder=3)
+            ax0.plot(x,eigout[s][b],color=colpal[s],label=spinlabel[s],linewidth=1,zorder=3-s)
         else :
-            ax0.plot(x,eigout[s][b],color=colpal[s],linewidth=1,zorder=3)
+            ax0.plot(x,eigout[s][b],color=colpal[s],linewidth=1,zorder=3-s)
 
 outputname="bs.png"
 
@@ -259,7 +260,7 @@ ax0.set_ylim(ymin,ymax)
 ax0.set_xlim(x[0],x[len(x)-1])
 ax0.set_xticks(kphout,kphlabel,color=colpal[4])
 ax0.tick_params(axis="x", length=0)
-ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], width=1,zorder=0)
+ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
 ax0.set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
 for edge in ["bottom", "top", "left", "right"] :
     ax0.spines[edge].set_color(colpal[4])
