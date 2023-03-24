@@ -59,8 +59,11 @@ python kconvert.py kpathin qe (N)
 
 ## `dos.py`
 
-To print the DOS  
-Input: `INCAR`, `DOSCAR`
+To plot DOS  
+```
+python dos.py (v) (E1) (E2)
+```
+Input: `DOSCAR`
 
 ---
 

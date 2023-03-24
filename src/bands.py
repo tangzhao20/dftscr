@@ -259,7 +259,7 @@ if fsecond :
 ax0.set_ylim(ymin,ymax)
 ax0.set_xlim(x[0],x[len(x)-1])
 ax0.set_xticks(kphout,kphlabel,color=colpal[4])
-ax0.tick_params(axis="x", length=0)
+ax0.tick_params(axis="x", direction="in", length=0)
 ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
 ax0.set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
 for edge in ["bottom", "top", "left", "right"] :
