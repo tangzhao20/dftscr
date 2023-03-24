@@ -10,7 +10,7 @@
 import os
 import sys
 from classes import poscar, eigenval, doscar, kpoints_band, procar
-from commons import load_packagename
+from commons import load_packagename, load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -188,7 +188,7 @@ else :
     print("python bands.py package (Emin) (Emax)")
     sys.exit()
 
-colpal=["#005f86","#f8971f","#d6d2c4","#ffffff","#333f48"] #color palette: [blue, orange, gray, white, black]
+colpal=load_palette() #color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
