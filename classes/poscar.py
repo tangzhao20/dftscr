@@ -211,7 +211,7 @@ class POSCAR:
             f2.write(f"  {self.lc[i][0]:.12f}  {self.lc[i][1]:.12f}  {self.lc[i][2]:.12f}\n")
         f2.write("ATOMIC_SPECIES\n")
         for i in range(self.Ntype) :
-            f2.write("  "+self.atomtype[i]+"  "+str(self.dmass[self.atomtype[i]])+"  PP\n")
+            f2.write("  "+self.atomtype[i]+"  "+str(self.dmass[self.atomtype[i]])+"  "+self.atomtype[i]+".upf\n")
         f2.write("ATOMIC_POSITIONS crystal\n")
         ij=0
         ik=0

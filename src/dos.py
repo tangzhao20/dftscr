@@ -2,11 +2,12 @@
 
 # plot DOS
 
-# python dos.py (v) (E1) (E2)
+# python dos.py (v) package (E1) (E2)
 
 # Input: DOSCAR
 
 import sys
+import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from classes import doscar
@@ -17,17 +18,34 @@ if len(sys.argv)>1 and sys.argv[1] in ["v","vertical"] :
     fvertical=True
     del sys.argv[1]
 
-if len(sys.argv)>=3 :
+if len(sys.argv)<=1 :
+    print("python bands.py package (Emin) (Emax)")
+    sys.exit()
+package=sys.argv[1]
+
+packagename=load_packagename()
+
+if package in packagename["vasp"]: 
+    doscar0=doscar.DOSCAR()
+elif package in packagename["qe"]:
+    doscar0=doscar.DOSCAR(empty=True)
+    # find a *.dos file
+    files = os.listdir(".")
+    for f in files:
+        if f.endswith('.dos'):
+            filename=f
+            break
+    doscar0.fileread_qe(filename)
+
+if len(sys.argv)>=4 :
+    xmax=float(sys.argv[3])
+    xmin=float(sys.argv[2])
+elif len(sys.argv)==3 :
     xmax=float(sys.argv[2])
-    xmin=float(sys.argv[1])
-elif len(sys.argv)==2 :
-    xmax=float(sys.argv[1])
-    xmin=-float(sys.argv[1])
+    xmin=-float(sys.argv[2])
 else :
     xmax=5.0
     xmin=-5.0
-
-doscar0=doscar.DOSCAR()
 
 doscar0.energyshift(doscar0.ef)
 
