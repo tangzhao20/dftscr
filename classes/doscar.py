@@ -6,7 +6,7 @@ class DOSCAR :
     # Ns : integer
     # Nedos : integer
     # energy[Nedos]
-    # dos[Nedos][Ns]
+    # dos[Ns][Nedos]
     def __init__(self, filename="DOSCAR",empty=False) :
         if empty:
             self.ef=0.0

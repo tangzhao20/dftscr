@@ -12,11 +12,14 @@ Support packages: VASP, QE
 VASP inputs: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)  
 QE inputs: \*.xml, nscf.in, kpath.in
 
-To plot projected band structure from VASP:
+To plot projected band structure:
 ```
-python bands.py vaspproj atoms orbitals (E1) (E2)
+python bands.py package atoms orbitals (E1) (E2)
 ```
-Inputs: EIGENVAL, KPOINTS, POSCAR, PROCAR, (DOSCAR)
+
+Support packages: VASP (vaspproj), QE (qeproj)  
+VASP inputs: EIGENVAL, KPOINTS, POSCAR, PROCAR, (DOSCAR)  
+QE inputs: \*.xml, nscf.in, kpath.in, projwfc.out
 
 To plot band structure from wannier90:
 ```
@@ -86,7 +89,7 @@ Input: qpoints.yaml, POSCAR\_i, POSCAR\_f
 
 ## `wavecar.py`
 
-To read the KS orbitals from the `WAVECAR`, and write into seperate files for VESTA plot:
+To read the KS orbitals from the WAVECAR, and write into seperate files for VESTA plot:
 ```
 python wavecar.py ik ib ispin
 ```

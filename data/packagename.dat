@@ -1,7 +1,8 @@
 vasp vasp Vasp VASP
+vaspproj vaspproj VASPproj
 qe qe QE
+qeproj qeproj QEproj
 prt paratec Paratec PARATEC prt PRT
 parsec parsec Parsec PARSEC
 kpathin kpath kpathin
-vaspproj vaspproj VASPproj
 wannier90 wannier Wannier wannier90 Wannier90 w90 W90 wan Wan

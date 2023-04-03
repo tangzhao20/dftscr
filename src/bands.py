@@ -46,7 +46,7 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
     kphlabel=kpoints1.kph_out()
 
 
-elif package in packagename["qe"] :
+elif package in packagename["qe"]+packagename["qeproj"] :
     # Input: *.xml, nscf.in, kpath.in
     # No need to run bands.x
 
@@ -149,44 +149,35 @@ else:
     sys.exit()
 
 lproj=False
-if package in packagename["vaspproj"] :
-    # Input: PROCAR
-
+if package in packagename["vaspproj"]+packagename["qeproj"] :
     lproj=True
     if eigenval1.Ns==2 :
         print("Spin polarized projected band structure not supported yet.\n")
         sys.exit()
-    procar1=procar.PROCAR()
+    if package in packagename["vaspproj"] :
+        # Input: PROCAR
+        procar1=procar.PROCAR()
+    elif package in packagename["qeproj"] :
+        # Input: projwfc.out
+        procar1=procar.PROCAR(empty=True)
+        procar1.fileread_qe()
+    
     atomlist=sys.argv[2]
-    orblist=sys.argv[3]
-    orbflag=procar1.readorblist(orblist)
+    del sys.argv[2]
     atomflag=procar1.readatomlist(atomlist,poscar1)
+    orblist=sys.argv[2]
+    del sys.argv[2]
+    orbflag=procar1.readorblist(orblist)
 
-if package in packagename["vasp"]+packagename["qe"]+packagename["wannier90"] :
-    if len(sys.argv)>=4 :
-        ymax=float(sys.argv[3])
-        ymin=float(sys.argv[2])
-    elif len(sys.argv)==3 :
-        ymax=float(sys.argv[2])
-        ymin=-float(sys.argv[2])
-    else :
-        ymax=5.0
-        ymin=-5.0
-elif package in packagename["vaspproj"] :
-    if len(sys.argv)>=6 :
-        ymax=float(sys.argv[5])
-        ymin=float(sys.argv[4])
-    elif len(sys.argv)==5 :
-        ymax=float(sys.argv[4])
-        ymin=-float(sys.argv[4])
-    else :
-        ymax=5.0
-        ymin=-5.0
+if len(sys.argv)>=4 :
+    ymax=float(sys.argv[3])
+    ymin=float(sys.argv[2])
+elif len(sys.argv)==3 :
+    ymax=float(sys.argv[2])
+    ymin=-float(sys.argv[2])
 else :
-    print("Package \""+package+"\" is not supported yet.")
-    print("This occurs when reading the y range. Check code.")
-    print("python bands.py package (Emin) (Emax)")
-    sys.exit()
+    ymax=5.0
+    ymin=-5.0
 
 colpal=load_palette() #color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
@@ -234,9 +225,9 @@ if lproj:
     projplotsize=procar1.plot(atomflag,orbflag,dotsize)
     for ib in range(eigenval1.Nb):
         ax0.scatter(x,eigout[0][ib],s=projplotsize[ib],c=colpal[1],zorder=2)
-    outputname="proj_"+sys.argv[2]+"_"+sys.argv[3]+".png"
+    outputname="proj_"+atomlist+"_"+orblist+".png"
     
-    f2=open("proj_"+sys.argv[2]+"_"+sys.argv[3]+".dat","w")
+    f2=open("proj_"+atomlist+"_"+orblist+".dat","w")
     f2.write("#k-point energy(eV) pointsize\n")
     for ib in range(eigenval1.Nb):
         for ik in range(eigenval1.Nk):

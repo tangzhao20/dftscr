@@ -19,7 +19,7 @@ if len(sys.argv)>1 and sys.argv[1] in ["v","vertical"] :
     del sys.argv[1]
 
 if len(sys.argv)<=1 :
-    print("python bands.py package (Emin) (Emax)")
+    print("python dos.py (v) package (Emin) (Emax)")
     sys.exit()
 package=sys.argv[1]
 
@@ -36,6 +36,10 @@ elif package in packagename["qe"]:
             filename=f
             break
     doscar0.fileread_qe(filename)
+else:
+    print("Package \""+package+"\" is not supported yet.")
+    print("python dos.py (v) package (Emin) (Emax)")
+    sys.exit()
 
 if len(sys.argv)>=4 :
     xmax=float(sys.argv[3])
