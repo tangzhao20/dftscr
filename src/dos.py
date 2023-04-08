@@ -14,8 +14,10 @@ from classes import doscar
 from commons import load_packagename, load_palette
 
 fvertical=False
+filename_out="dos.png"
 if len(sys.argv)>1 and sys.argv[1] in ["v","vertical"] :
     fvertical=True
+    filename_out="dos_v.png"
     del sys.argv[1]
 
 if len(sys.argv)<=1 :
@@ -140,4 +142,4 @@ if doscar0.Ns==2:
         ax1.spines[edge].set_linewidth(1)
         ax1.spines[edge].set_zorder(4)
 
-fig.savefig("dos.png",dpi=1200)
+fig.savefig(filename_out,dpi=1200)
