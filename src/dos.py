@@ -33,11 +33,17 @@ elif package in packagename["qe"]:
     doscar0=doscar.DOSCAR(empty=True)
     # find a *.dos file
     files = os.listdir(".")
+    fxml=False
     for f in files:
         if f.endswith('.dos'):
             filename=f
-            break
+        if f.endswith('.xml'): # sometimes EFermi in .dos file could be wrong??
+            fxml=True          # read from .xml file instead.
+            xmlname=f
     doscar0.fileread_qe(filename)
+    if fxml:
+        print("EFermi read from .xml file")
+        doscar0.fileread_xml(xmlname)
 else:
     print("Package \""+package+"\" is not supported yet.")
     print("python dos.py (v) package (Emin) (Emax)")
