@@ -4,7 +4,8 @@
 
 # python dos.py (v) package (E1) (E2)
 
-# Input: DOSCAR
+# VASP input: DOSCAR
+# QE input: *.dos *.xml
 
 import sys
 import os
@@ -79,24 +80,24 @@ mpl.rcParams.update({'font.size': 14})
 if fvertical==False :
     fig=plt.figure(figsize=(5,3.75))
     if doscar0.Ns==1 :
-        gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.17,right=0.95,top=0.97, bottom=0.115)
+        gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.14,right=0.96,top=0.97, bottom=0.12)
         ax0=gs0.subplots()
     else :
-        gs0=fig.add_gridspec(2,1,wspace=0.0,hspace=0.00,left=0.17,right=0.95,top=0.97, bottom=0.115)
+        gs0=fig.add_gridspec(2,1,wspace=0.0,hspace=0.00,left=0.14,right=0.96,top=0.97, bottom=0.12)
         (ax0,ax1)=gs0.subplots()
 
     ax0.axvline(linewidth=1,color=colpal[2],zorder=0)
     ax0.plot(doscar0.energy,doscar0.dos[0],color=colpal[0],linewidth=1,zorder=3)
     ax0.set_xlim([xmin,xmax])
     ax0.set_ylim([0,dosmax*1.1])
-    ax0.tick_params(axis="x", bottom=True, top=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+    ax0.tick_params(axis="x", bottom=True, top=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0, pad=4)
 else : # vertical
     fig=plt.figure(figsize=(1,3.75))
     if doscar0.Ns==1 :
-        gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.02,right=0.98,top=0.97, bottom=0.07)
+        gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.03,right=0.97,top=0.97, bottom=0.07)
         ax0=gs0.subplots()
     else :
-        gs0=fig.add_gridspec(1,2,wspace=0.0,hspace=0.00,left=0.02,right=0.98,top=0.97, bottom=0.07)
+        gs0=fig.add_gridspec(1,2,wspace=0.0,hspace=0.00,left=0.03,right=0.97,top=0.97, bottom=0.07)
         (ax1,ax0)=gs0.subplots()
 
     ax0.axhline(linewidth=1,color=colpal[2],zorder=0)
@@ -105,7 +106,7 @@ else : # vertical
     ax0.set_ylim([xmin,xmax])
     ax0.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
     
-ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0, pad=4)
 for edge in ["bottom","top","left","right"] :
     ax0.spines[edge].set_color(colpal[4])
     ax0.spines[edge].set_linewidth(1)
@@ -124,7 +125,7 @@ if fvertical==False:
         ax1.set_ylim([dosmax*1.1,0.0])
         ax1.set_xlabel("Energy (eV)",color=colpal[4],labelpad=-1)
         ax0.set_ylabel("DOS (eV⁻¹)",color=colpal[4],y=0.0)
-        ax1.tick_params(axis="x", bottom=True, top=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+        ax1.tick_params(axis="x", bottom=True, top=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0, pad=4)
 else: # vertical
     ax0.set_yticklabels([])
     if doscar0.Ns==1 :
@@ -142,7 +143,7 @@ else: # vertical
         ax1.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
 
 if doscar0.Ns==2: 
-    ax1.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+    ax1.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0, pad=4)
     for edge in ["bottom","top","left","right"] :
         ax1.spines[edge].set_color(colpal[4])
         ax1.spines[edge].set_linewidth(1)

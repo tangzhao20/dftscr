@@ -186,7 +186,7 @@ mpl.rcParams.update({'font.size': 14})
 # band structure plot
 
 fig=plt.figure(figsize=(5,3.75))
-gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.17,right=0.98,top=0.97, bottom=0.07)
+gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07)
 ax0=gs0.subplots()
 
 ax0.grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
