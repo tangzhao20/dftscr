@@ -88,7 +88,6 @@ class EIGENVAL :
         for ix1 in range(3) :
             for ix2 in range(3) :
                 lc[ix1][ix2]=lc[ix1][ix2]/factor
-        print("lc=",lc)
 
         self.Nk=len(kpoints)
         self.Nb=int(kpoints[0].find('eigenvalues').get("size"))
@@ -212,7 +211,7 @@ class EIGENVAL :
         if self.is_semic==True :
             if self.vbm_k!=self.cbm_k :
                 vbm_kl=kp.findlabel(self.kp[self.vbm_k],dim=1)
-                cbm_kl=kp.findlabel(self.kp[self.vbm_k],dim=1)
+                cbm_kl=kp.findlabel(self.kp[self.cbm_k],dim=1)
                 eindg_print="Indirect: Eg = "+str(round(self.eindg,4))+" eV, between "+vbm_kl+" -> "+cbm_kl
                 f0.write(eindg_print+"\n")
                 print(eindg_print)

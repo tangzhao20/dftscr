@@ -69,7 +69,6 @@ elif package in packagename["qe"]+packagename["qeproj"] :
         eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
-    print("x=",x)
     eigout=eigenval1.eigtrans()
     
     kphx=kpoints1.kphx_out(rlc)
@@ -252,7 +251,7 @@ if fsecond :
     f3.close()
 
 ax0.set_ylim(ymin,ymax)
-ax0.set_xlim(x[0],x[len(x)-1])
+ax0.set_xlim(kphx[0],kphx[-1])
 ax0.set_xticks(kphx,kphlabel,color=colpal[4])
 ax0.tick_params(axis="x", direction="in", length=0)
 ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
