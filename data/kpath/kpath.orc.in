@@ -7,13 +7,7 @@
 0.0 0.5 0.0 Y
 0.0 0.0 0.5 Z
 
-G
-X
-S
-Y
-G
-Z
-U
-R
-T
-Z
+G X S Y G Z U R T Z
+Y T
+U X
+S R

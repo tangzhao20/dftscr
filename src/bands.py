@@ -39,11 +39,11 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
         doscar1=doscar.DOSCAR()
         eigenval1.eigshift(doscar1.ef)
     
-    x=eigenval1.bandkpout(reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
     eigout=eigenval1.eigtrans()
     
-    kphout=kpoints1.kphout_out(rlc)
-    kphlabel=kpoints1.kph_out()
+    kphx=kpoints1.kphx_out(rlc)
+    kphlabel=kpoints1.kphlabel_out()
 
 
 elif package in packagename["qe"]+packagename["qeproj"] :
@@ -68,16 +68,17 @@ elif package in packagename["qe"]+packagename["qeproj"] :
         doscar1.fileread_xml(filename)
         eigenval1.eigshift(doscar1.ef)
     
-    x=eigenval1.bandkpout()
+    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
+    print("x=",x)
     eigout=eigenval1.eigtrans()
     
-    kphout=kpoints1.kphout_out(rlc)
-    kphlabel=kpoints1.kph_out()
+    kphx=kpoints1.kphx_out(rlc)
+    kphlabel=kpoints1.kphlabel_out()
     
-    # the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
-    factor=max(kphout)/max(x)
-    for ix in range(len(x)): 
-        x[ix]=x[ix]*factor
+    ## the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
+    #factor=max(kphx)/max(x)
+    #for ix in range(len(x)): 
+    #    x[ix]=x[ix]*factor
 
 elif package in packagename["wannier90"] :
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
@@ -128,18 +129,18 @@ elif package in packagename["wannier90"] :
     eigenval1.gap()
     eigenval1.eigshift(eigenval1.vbm)
 
-    x=eigenval1.bandkpout(reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
     eigout=eigenval1.eigtrans()
 
-    kphout=kpoints1.kphout_out(rlc)
-    kphlabel=kpoints1.kph_out()
+    kphx=kpoints1.kphx_out(rlc)
+    kphlabel=kpoints1.kphlabel_out()
 
     if fsecond :
-        x2=eigenval2.bandkpout()
+        x2=eigenval2.bandkpout(kp=kpoints1)
         eigout2=eigenval2.eigtrans()
 
         # the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
-        factor=max(kphout)/max(x2)
+        factor=max(kph)/max(x2)
         for ix in range(len(x2)) :
             x2[ix]=x2[ix]*factor
 
@@ -190,6 +191,9 @@ gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, b
 ax0=gs0.subplots()
 
 ax0.grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
+for il in range(len(kphlabel)):
+    if "|" in kphlabel[il]:
+        ax0.axvline(x=kphx[il],linewidth=1,color=colpal[4],zorder=4)
 ax0.axhline(linewidth=1,color=colpal[2],zorder=0)
 
 spinlabel=["spin up","spin down"]
@@ -249,7 +253,7 @@ if fsecond :
 
 ax0.set_ylim(ymin,ymax)
 ax0.set_xlim(x[0],x[len(x)-1])
-ax0.set_xticks(kphout,kphlabel,color=colpal[4])
+ax0.set_xticks(kphx,kphlabel,color=colpal[4])
 ax0.tick_params(axis="x", direction="in", length=0)
 ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
 ax0.set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
@@ -259,8 +263,8 @@ for edge in ["bottom", "top", "left", "right"] :
     ax0.spines[edge].set_zorder(4)
 
 f4=open("label.dat","w")
-for i in range(len(kphout)):
-    f4.write(str(kphout[i])+" "+kphlabel[i]+"\n")
+for i in range(len(kphx)):
+    f4.write(str(kphx[i])+" "+kphlabel[i]+"\n")
 f4.close()
 
 fig.savefig(outputname,dpi=1200)

@@ -79,18 +79,29 @@ class EIGENVAL :
                     break
         tree=ET.parse(filename)
         kpoints=tree.getroot().find("output").find("band_structure").findall("ks_energies")
+        cell=tree.getroot().find("input").find("atomic_structure").find("cell")
+        lc=[]
+        for ix in range(3):
+            lc.append([float(lc1) for lc1 in cell.find("a"+str(ix+1)).text.split()])
+            # convert lc from A to a/2pi
+        factor=(lc[0][0]**2+lc[0][1]**2+lc[0][2]**2)**0.5#/(2.0*3.141592653589793238463)
+        for ix1 in range(3) :
+            for ix2 in range(3) :
+                lc[ix1][ix2]=lc[ix1][ix2]/factor
+        print("lc=",lc)
 
         self.Nk=len(kpoints)
         self.Nb=int(kpoints[0].find('eigenvalues').get("size"))
         self.Ns=1
         
         for kp in kpoints :
-            # use the unit eV and A (^-1)
-            self.kp.append([float(kp1)/0.529177210903 for kp1 in kp.find('k_point').text.split()])
+            # energies are in eV, and 2pi/a
+            self.kp.append([float(kp1) for kp1 in kp.find('k_point').text.split()])
             self.wt.append(float(kp.find('k_point').get("weight")))
             # qe xml energies are in Hatree
             self.eig.append([[float(eig1)*27.211386245988] for eig1 in kp.find('eigenvalues').text.split()])
             self.occ.append([[float(occ1)] for occ1 in kp.find('occupations').text.split()])
+        self.kp=(np.array(self.kp)@(np.array(lc).T)).tolist()
 
         self.semic()
         if self.is_semic==True :
@@ -159,27 +170,28 @@ class EIGENVAL :
                 for s in range(self.Ns) :
                     self.eig[k][b][s]=self.eig[k][b][s]-ezero
 
-    def bandkpout(self,reclc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
+    def bandkpout(self,kp,reclc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
         # transfer the fractional to cartesian in k space
         # if kp is already in cartisian, simply set reclc=I
-        kpout=[]
-        kpout.append(0.0)
-        for k in range(self.Nk) :
-            if k>0 :
-                kpcold=[]
-                kpcold.append(kpc[0])
-                kpcold.append(kpc[1])
-                kpcold.append(kpc[2])
+        kpout=[0.0]
+        for ik in range(self.Nk) :
+            if ik>0 :
+                kpcold=[kpc[0],kpc[1],kpc[2]]
                 del kpc
+                kplabelold=kplabel
             kpc=[]
+            kplabel=kp.findlabel(self.kp[ik],dim=0)
             for i in range(3) :
                 kpc0=0.0
                 for j in range(3) :
-                    kpc0=kpc0+self.kp[k][j]*reclc[i][j]
+                    kpc0=kpc0+self.kp[ik][j]*reclc[i][j]
                 kpc.append(kpc0)
-            if k>0 :
-                dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
-                kpout.append(kpout[k-1]+dkpc)
+            if ik>0 :
+                if kplabel!="elsewhere" and kplabelold!="elsewhere":
+                    kpout.append(kpout[ik-1])
+                else :
+                    dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
+                    kpout.append(kpout[ik-1]+dkpc)
                 del kpcold
         return(kpout)
 
@@ -199,21 +211,12 @@ class EIGENVAL :
         f0=open("gap.txt","w")
         if self.is_semic==True :
             if self.vbm_k!=self.cbm_k :
-                if self.vbm_k%kp.nk_line==0 :
-                    vbm_kl=kp.kph[self.vbm_k//kp.nk_line]
-                else :
-                    vbm_kl="("+kp.kph[self.vbm_k//kp.nk_line]+","+kp.kph[self.vbm_k//kp.nk_line+1]+")"
-                if self.cbm_k%kp.nk_line==0 :
-                    cbm_kl=kp.kph[self.cbm_k//kp.nk_line]
-                else :
-                    cbm_kl="("+kp.kph[self.cbm_k//kp.nk_line]+","+kp.kph[self.cbm_k//kp.nk_line+1]+")"
+                vbm_kl=kp.findlabel(self.kp[self.vbm_k],dim=1)
+                cbm_kl=kp.findlabel(self.kp[self.vbm_k],dim=1)
                 eindg_print="Indirect: Eg = "+str(round(self.eindg,4))+" eV, between "+vbm_kl+" -> "+cbm_kl
                 f0.write(eindg_print+"\n")
                 print(eindg_print)
-            if self.edg_k%kp.nk_line==0 :
-                edg_kl=kp.kph[self.edg_k//kp.nk_line]
-            else :
-                edg_kl="("+kp.kph[self.edg_k//kp.nk_line]+","+kp.kph[self.edg_k//kp.nk_line+1]+")"
+            edg_kl=kp.findlabel(self.kp[self.edg_k],dim=1)
             edg_print="Direct:   Eg = "+str(round(self.edg,4))+" eV, at "+edg_kl
             f0.write(edg_print+"\n")
             print(edg_print)
@@ -260,3 +263,4 @@ class EIGENVAL :
                     self.edg_k=k
                     self.edg_s=s
         self.eindg=self.cbm-self.vbm
+

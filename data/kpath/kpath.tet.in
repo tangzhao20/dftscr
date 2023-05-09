@@ -5,10 +5,6 @@
 0.0 0.5 0.0 X
 0.0 0.0 0.5 Z
 
-G
-X
-M
-G
-Z
-R
-A
+G X M G Z R A
+X R
+M A
