@@ -47,11 +47,12 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
 
 
 elif package in packagename["qe"]+packagename["qeproj"] :
-    # Input: *.xml, nscf.in, kpath.in
+    # Input: *.xml, kpath.in
     # No need to run bands.x
 
     poscar1=poscar.POSCAR(empty=True)
-    poscar1.fileread_qe("nscf.in")
+    #poscar1.fileread_qe("nscf.in")
+    poscar1.fileread_xml()
     rlc=poscar1.reclc_out()
     
     eigenval1=eigenval.EIGENVAL(empty=True)
@@ -74,11 +75,6 @@ elif package in packagename["qe"]+packagename["qeproj"] :
     kphx=kpoints1.kphx_out(rlc)
     kphlabel=kpoints1.kphlabel_out()
     
-    ## the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
-    #factor=max(kphx)/max(x)
-    #for ix in range(len(x)): 
-    #    x[ix]=x[ix]*factor
-
 elif package in packagename["wannier90"] :
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
     # Only semiconductors are supported
@@ -137,11 +133,6 @@ elif package in packagename["wannier90"] :
     if fsecond :
         x2=eigenval2.bandkpout(kp=kpoints1)
         eigout2=eigenval2.eigtrans()
-
-        # the x axis somehow doesn`t match here. qe used the unit 2pi/alat?
-        factor=max(kph)/max(x2)
-        for ix in range(len(x2)) :
-            x2[ix]=x2[ix]*factor
 
 else:
     print("Package \""+package+"\" is not supported yet.")

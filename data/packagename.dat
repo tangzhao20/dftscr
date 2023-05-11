@@ -2,6 +2,7 @@ vasp vasp Vasp VASP
 vaspproj vaspproj VASPproj
 qe qe QE
 qeproj qeproj QEproj
+qexml qexml xml
 prt paratec Paratec PARATEC prt PRT
 parsec parsec Parsec PARSEC
 kpathin kpath kpathin kpath.in

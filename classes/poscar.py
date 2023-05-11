@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import math
 import os
+import xml.etree.ElementTree as ET
 
 class POSCAR:
     # title
@@ -84,6 +85,7 @@ class POSCAR:
         for l in range(len(line)):
             word=line[l].split()
             if len(word)>=2 and word[0]=="CELL_PARAMETERS" :
+                word[1].replace("(","").replace("{","")
                 if word[1][0]=="a" or word[1][0]=="A" :
                     factor=1.0
                 elif word[1][0]=="b" or word[1][0]=="B" :
@@ -119,6 +121,40 @@ class POSCAR:
                 self.lc[i][j]=self.lc[i][j]*factor
         
         self.movetobox()
+
+    def fileread_xml(self, filename=""):
+        if filename=="" :
+            # find a .xml file
+            files = os.listdir()
+            for f in files:
+                if f.endswith('.xml'):
+                    filename=f
+                    break
+
+        tree=ET.parse(filename)
+        cell=tree.getroot().find("output").find("atomic_structure").find("cell")
+
+        for ix in range(3):
+            self.lc.append([float(lc1) for lc1 in cell.find("a"+str(ix+1)).text.split()])
+        atoms=tree.getroot().find("output").find("atomic_structure").find("atomic_positions").findall("atom")
+        
+        for atom in atoms :
+            atom_name=atom.get("name")
+            if len(self.atomtype)==0 or self.atomtype[-1]!=atom_name:
+                self.atomtype.append(atom_name)
+                self.Naint.append(1)
+            else :
+                self.Naint[-1]+=1
+            self.ap.append([float(ap) for ap in atom.text.split()])
+
+        # convert Cartesian to direct
+        self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
+        for ix in range(3):
+            for iy in range(3):
+                self.lc[ix][iy]=self.lc[ix][iy]*0.529177249
+
+        self.Natom=len(self.ap)
+        self.Ntype=len(self.atomtype)
 
     def fileread_prt(self, filename):
         f1=open(filename,"r")
@@ -175,7 +211,7 @@ class POSCAR:
         f1.write('1.0\n')
         for i in range(3) :
             for j in range(3) :
-                f1.write(f"{self.lc[i][j]:23.16f}")
+                f1.write(f"{self.lc[i][j]:21.12f}")
             f1.write('\n')
         for i in range(self.Ntype) :
             f1.write(self.atomtype[i]+"   ")
@@ -188,7 +224,7 @@ class POSCAR:
         f1.write('Direct\n')
         for i in range (self.Natom) :
             for j in range(3) :
-                f1.write(f"{self.ap[i][j]:20.16f}")
+                f1.write(f"{self.ap[i][j]:18.12f}")
             if self.f_seldyn :
                 for j in range(3) :
                     if self.seldyn[i][j] :
@@ -216,7 +252,7 @@ class POSCAR:
         ij=0
         ik=0
         for i in range(self.Natom) :
-            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.16f}  {self.ap[i][1]:.16f}  {self.ap[i][2]:.16f}\n")
+            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.12f}  {self.ap[i][1]:.12f}  {self.ap[i][2]:.12f}\n")
             ik=ik+1
             if ik==self.Naint[ij] :
                 ij=ij+1
@@ -232,13 +268,13 @@ class POSCAR:
         f2=open(filename,"w")
         f2.write("begin latticevecs\n")
         for i in range(3) :
-            f2.write("coord  "+f"{self.lc[i][0]:20.16f}"+"  "+f"{self.lc[i][1]:20.16f}"+"  "+f"{self.lc[i][2]:20.16f}"+"\n")
+            f2.write("coord  "+f"{self.lc[i][0]:20.12f}"+"  "+f"{self.lc[i][1]:20.12f}"+"  "+f"{self.lc[i][2]:20.12f}"+"\n")
         f2.write("volume "+f"{volume:24.16f}"+"\nend latticevecs\n\nbegin coordinates\n")
         k=0
         for i in range(self.Ntype) :
             f2.write("newtype "+self.atomtype[i]+"\n")
             for j in range(self.Naint[i]) :
-                f2.write("coord  "+f"{self.ap[k][0]:20.16f}"+"  "+f"{self.ap[k][1]:20.16f}"+"  "+f"{self.ap[k][2]:20.16f}"+"\n")
+                f2.write("coord  "+f"{self.ap[k][0]:20.12f}"+"  "+f"{self.ap[k][1]:20.12f}"+"  "+f"{self.ap[k][2]:20.12f}"+"\n")
                 k=k+1
         f2.write("end coordinates\n\n")
         f2.close()
@@ -247,7 +283,7 @@ class POSCAR:
         f2=open(filename,"w")
         f2.write("begin cell_shape\n")
         for i in range(3) :
-            f2.write("  "+f"{self.lc[i][0]:20.16f}"+"  "+f"{self.lc[i][1]:20.16f}"+"  "+f"{self.lc[i][2]:20.16f}"+"\n")
+            f2.write("  "+f"{self.lc[i][0]:20.12f}"+"  "+f"{self.lc[i][1]:20.12f}"+"  "+f"{self.lc[i][2]:20.12f}"+"\n")
         f2.write("end cell_shape\n\n")
         k=0
         for i in range(self.Ntype) :
@@ -263,7 +299,7 @@ class POSCAR:
 
             f2.write("begin Atom_Coord\n")
             for j in range(self.Naint[i]) :
-                f2.write("  "+f"{self.ap[k][0]:20.16f}"+"  "+f"{self.ap[k][1]:20.16f}"+"  "+f"{self.ap[k][2]:20.16f}"+"\n")
+                f2.write("  "+f"{self.ap[k][0]:20.12f}"+"  "+f"{self.ap[k][1]:20.12f}"+"  "+f"{self.ap[k][2]:20.12f}"+"\n")
                 k=k+1
             f2.write("end Atom_Coord\n\n")
         f2.close()
@@ -272,7 +308,7 @@ class POSCAR:
         f2=open(filename,"w")
         f2.write("Begin Unit_Cell_Cart\n")
         for i in range(3) :
-            f2.write(f"  {self.lc[i][0]:.8f}  {self.lc[i][1]:.8f}  {self.lc[i][2]:.8f}\n")
+            f2.write(f"  {self.lc[i][0]:.12f}  {self.lc[i][1]:.12f}  {self.lc[i][2]:.12f}\n")
         f2.write("End Unit_Cell_Cart\n\n")
 
         f2.write("Begin Projections\n")
@@ -285,7 +321,7 @@ class POSCAR:
         ij=0
         ik=0
         for i in range(self.Natom) :
-            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.8f}  {self.ap[i][1]:.8f}  {self.ap[i][2]:.8f}\n")
+            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.12f}  {self.ap[i][1]:.12f}  {self.ap[i][2]:.12f}\n")
             ik=ik+1
             if ik==self.Naint[ij] :
                 ij=ij+1

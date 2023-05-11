@@ -83,8 +83,8 @@ class EIGENVAL :
         lc=[]
         for ix in range(3):
             lc.append([float(lc1) for lc1 in cell.find("a"+str(ix+1)).text.split()])
-            # convert lc from A to a/2pi
-        factor=(lc[0][0]**2+lc[0][1]**2+lc[0][2]**2)**0.5#/(2.0*3.141592653589793238463)
+            # convert lc (from Bohr) to a/2pi
+        factor=(lc[0][0]**2+lc[0][1]**2+lc[0][2]**2)**0.5
         for ix1 in range(3) :
             for ix2 in range(3) :
                 lc[ix1][ix2]=lc[ix1][ix2]/factor
