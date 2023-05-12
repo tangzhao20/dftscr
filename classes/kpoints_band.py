@@ -145,15 +145,17 @@ class KPOINTS_band :
 #########################################################################
 
     def kphlabel_out(self):
-        kphlabel=self.kph[0]
+        kphlabel=[self.kph[0]]
         for ip in range(1,len(self.kph)) :
-            kphlabel[-1]=kphlabel[-1]+"|"+self.kph[ip][0]
-            kphlabel=kphlabel+self.kph[ip][1:]
+            kphlabel[-1][-1]=kphlabel[-1][-1]+"|"+self.kph[ip][0]
+            kphlabel.append([""])
+            kphlabel[-1]=kphlabel[-1]+self.kph[ip][1:]
         return kphlabel
 
     def kphx_out(self,reclc):
-        kphx=[0.0]
+        kphx=[]
         for p in self.kph :
+            kphx.append([0.0])
             for ik in range(len(p)) :
                 if ik>0 :
                     kpcold=[kpc[0],kpc[1],kpc[2]]
@@ -166,7 +168,7 @@ class KPOINTS_band :
                     kpc.append(kpc0)
                 if ik>0 :
                     dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
-                    kphx.append(kphx[-1]+dkpc)
+                    kphx[-1].append(kphx[-1][-1]+dkpc)
                     del kpcold
         return(kphx)
 

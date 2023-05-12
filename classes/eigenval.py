@@ -172,26 +172,17 @@ class EIGENVAL :
     def bandkpout(self,kp,reclc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
         # transfer the fractional to cartesian in k space
         # if kp is already in cartisian, simply set reclc=I
-        kpout=[0.0]
+        kpc=np.array(self.kp)@(np.array(reclc).T)
+        kplabelold=""
+        kpout=[]
         for ik in range(self.Nk) :
-            if ik>0 :
-                kpcold=[kpc[0],kpc[1],kpc[2]]
-                del kpc
-                kplabelold=kplabel
-            kpc=[]
             kplabel=kp.findlabel(self.kp[ik],dim=0)
-            for i in range(3) :
-                kpc0=0.0
-                for j in range(3) :
-                    kpc0=kpc0+self.kp[ik][j]*reclc[i][j]
-                kpc.append(kpc0)
-            if ik>0 :
-                if kplabel!="elsewhere" and kplabelold!="elsewhere":
-                    kpout.append(kpout[ik-1])
-                else :
-                    dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
-                    kpout.append(kpout[ik-1]+dkpc)
-                del kpcold
+            if kplabel!="elsewhere" and kplabelold!="elsewhere":
+                kpout.append([0.0])
+            else :
+                dkpc=sum((kpc[ik]-kpc[ik-1])**2)**0.5
+                kpout[-1].append(kpout[-1][-1]+dkpc)
+            kplabelold=kplabel
         return(kpout)
 
     def eigtrans(self) :

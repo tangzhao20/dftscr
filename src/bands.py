@@ -25,6 +25,7 @@ packagename=load_packagename()
 
 if package in packagename["vasp"]+packagename["vaspproj"] : 
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
+    # TODO: test VASP
 
     poscar1=poscar.POSCAR()
     rlc=poscar1.reclc_out()
@@ -139,6 +140,33 @@ else:
     print("python bands.py package (Emin) (Emax)")
     sys.exit()
 
+# width is the physical width of each plots
+# Nx is the number of x points in each plots
+# ixl and ixr are the left and right index of each panel, to seperate the bands
+width=[]
+Nx=[]
+ixl=[]
+ixr=[]
+for p in x :
+    width.append(max(p))
+    Nx.append(len(p))
+    if ixl==[] :
+        ixl=[0]
+    else :
+        ixl.append(ixr[-1])
+    ixr.append(ixl[-1]+Nx[-1])
+if fsecond :
+    Nx2=[]
+    ix2l=[]
+    ix2r=[]
+    for p in x :
+        Nx2.append(len(p))
+        if ix2l==[] :
+            ix2l=[0]
+        else :
+            ix2l.append(ix2r[-1])
+        ix2r.append(ix2l[-1]+Nx2[-1])
+
 lproj=False
 if package in packagename["vaspproj"]+packagename["qeproj"] :
     lproj=True
@@ -177,22 +205,20 @@ mpl.rcParams.update({'font.size': 14})
 # band structure plot
 
 fig=plt.figure(figsize=(5,3.75))
-gs0=fig.add_gridspec(1,1,wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07)
-ax0=gs0.subplots()
+gs0=fig.add_gridspec(1,len(kphx),wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07,width_ratios=width[:len(kphx)])
+ax=[]
+for ip in range(len(kphx)):
+    ax.append(fig.add_subplot(gs0[ip]))
 
-ax0.grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
-for il in range(len(kphlabel)):
-    if "|" in kphlabel[il]:
-        ax0.axvline(x=kphx[il],linewidth=1,color=colpal[4],zorder=4)
-ax0.axhline(linewidth=1,color=colpal[2],zorder=0)
-
-spinlabel=["spin up","spin down"]
-for s in range(eigenval1.Ns) :
-    for b in range(eigenval1.Nb) :
-        if eigenval1.Ns==2 and b==0 :
-            ax0.plot(x,eigout[s][b],color=colpal[s],label=spinlabel[s],linewidth=1,zorder=3-s)
-        else :
-            ax0.plot(x,eigout[s][b],color=colpal[s],linewidth=1,zorder=3-s)
+    ax[ip].grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
+    ax[ip].axhline(linewidth=1,color=colpal[2],zorder=0)
+    spinlabel=["spin up","spin down"]
+    for s in range(eigenval1.Ns) :
+        for b in range(eigenval1.Nb) :
+            if eigenval1.Ns==2 and b==0 :
+                ax[ip].plot(x[ip],eigout[s][b][ixl[ip]:ixr[ip]],color=colpal[s],label=spinlabel[s],linewidth=1,zorder=3-s)
+            else :
+                ax[ip].plot(x[ip],eigout[s][b][ixl[ip]:ixr[ip]],color=colpal[s],linewidth=1,zorder=3-s)
 
 outputname="bs.png"
 
@@ -201,14 +227,20 @@ outputname="bs.png"
 
 f3=open("eigenval.dat","w")
 if eigenval1.Ns==2 :
-    for i in range(len(eigout[0])):
-        for j in range(len(x)) :
-            f3.write(str(x[j])+" "+str(eigout[0][i][j])+" "+str(eigout[1][i][j])+"\n")
+    for ib in range(len(eigout[0])):
+        for ip in range(len(kphx)):
+            ik0=0
+            for ik in range(len(x[ip])):
+                f3.write(str(x[ip][ik])+" "+str(eigout[0][ib][ik0])+" "+str(eigout[1][ib][ik0])+"\n")
+                ik0+=1
         f3.write("\n")
 else :
-    for i in range(len(eigout[0])):
-        for j in range(len(x)) :
-            f3.write(str(x[j])+" "+str(eigout[0][i][j])+" "+"\n")
+    for ib in range(len(eigout[0])):
+        for ip in range(len(kphx)):
+            ik0=0
+            for ik in range(len(x[ip])):
+                f3.write(str(x[ip][ik])+" "+str(eigout[0][ib][ik0])+" "+"\n")
+                ik0+=1
         f3.write("\n")
 f3.close()
 
@@ -217,44 +249,58 @@ f3.close()
 if lproj:
     dotsize=50.0
     projplotsize=procar1.plot(atomflag,orbflag,dotsize)
-    for ib in range(eigenval1.Nb):
-        ax0.scatter(x,eigout[0][ib],s=projplotsize[ib],c=colpal[1],zorder=2)
+    for ip in range(len(kphx)):
+        for ib in range(eigenval1.Nb):
+            ax[ip].scatter(x[ip],eigout[0][ib][ixl[ip]:ixr[ip]],s=projplotsize[ib][ixl[ip]:ixr[ip]],c=colpal[1],zorder=2)
     outputname="proj_"+atomlist+"_"+orblist+".png"
     
     f2=open("proj_"+atomlist+"_"+orblist+".dat","w")
     f2.write("#k-point energy(eV) pointsize\n")
     for ib in range(eigenval1.Nb):
-        for ik in range(eigenval1.Nk):
-            f2.write(str(x[ik])+" "+str(eigout[0][ib][ik])+" "+str(projplotsize[ib][ik])+"\n")
+        for ip in range(len(x)):
+            ik0=0
+            for ik in range(len(x[ip])):
+                f2.write(str(x[ip][ik])+" "+str(eigout[0][ib][ik0])+" "+str(projplotsize[ib][ik0])+"\n")
+                ik0+=1
         f2.write("\n")
     f2.close()
 
 # second band structure plot (for wannier)
 
 if fsecond :
-    for b in range(eigenval2.Nb) :
-        ax0.plot(x2,eigout2[0][b],color=colpal[1],linewidth=1,zorder=2)
+    for ip in range(len(kphx)):
+        for b in range(eigenval2.Nb):
+            ax0.plot(x2[ip],eigout2[0][b][ix2l[ip]:ix2r[ip]],color=colpal[1],linewidth=1,zorder=2)
     f3=open("eigenval2.dat","w")
-    for i in range(len(eigout2[0])):
-        for j in range(len(x2)) :
-            f3.write(str(x2[j])+" "+str(eigout2[0][i][j])+" "+"\n")
+    for ib in range(len(eigout2[0])):
+        for ip in range(len(kphx)):
+            ik0=0
+            for ik in range(len(x2[ip])) :
+                f3.write(str(x2[ip][ik])+" "+str(eigout2[0][ib][ik0])+" "+"\n")
+                ik0+=1
         f3.write("\n")
     f3.close()
 
-ax0.set_ylim(ymin,ymax)
-ax0.set_xlim(kphx[0],kphx[-1])
-ax0.set_xticks(kphx,kphlabel,color=colpal[4])
-ax0.tick_params(axis="x", direction="in", length=0)
-ax0.tick_params(axis="y", left=True, right=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
-ax0.set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
-for edge in ["bottom", "top", "left", "right"] :
-    ax0.spines[edge].set_color(colpal[4])
-    ax0.spines[edge].set_linewidth(1)
-    ax0.spines[edge].set_zorder(4)
+ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
+for ip in range(len(kphx)):
+    ax[ip].set_ylim(ymin,ymax)
+    ax[ip].set_xlim(kphx[ip][0],kphx[ip][-1])
+    ax[ip].set_xticks(kphx[ip],kphlabel[ip],color=colpal[4])
+    ax[ip].tick_params(axis="x", direction="in", length=0)
+    ax[ip].tick_params(axis="y", left=False, right=False, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+    if ip!=0 :
+        ax[ip].yaxis.set_ticklabels([])
+    for edge in ["bottom", "top", "left", "right"] :
+        ax[ip].spines[edge].set_color(colpal[4])
+        ax[ip].spines[edge].set_linewidth(1)
+        ax[ip].spines[edge].set_zorder(4)
+ax[0].tick_params(axis="y", left=True)
+ax[-1].tick_params(axis="y", right=True)
 
 f4=open("label.dat","w")
-for i in range(len(kphx)):
-    f4.write(str(kphx[i])+" "+kphlabel[i]+"\n")
+for ip in range(len(kphx)):
+    for ik in range(len(kphx[ip])):
+        f4.write(str(kphx[ip][ik])+" "+kphlabel[ip][ik]+"\n")
 f4.close()
 
 fig.savefig(outputname,dpi=1200)
