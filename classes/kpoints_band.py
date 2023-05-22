@@ -211,7 +211,7 @@ class KPOINTS_band :
                     y2=kh2[1]-k[1]
                     z1=kh1[2]-k[2]
                     z2=kh2[2]-k[2]
-                    if abs(x1*y2-x2*y1)<=1e-5 and abs(y1*z2-y2*z1)<=1e-5 :
+                    if abs(x1*y2-x2*y1)<=1e-5 and abs(y1*z2-y2*z1)<=1e-5 and abs(x1*z2-x2*z1)<=1.e-5:
                         return "("+h1+","+h2+")"
         return "elsewhere"
 
