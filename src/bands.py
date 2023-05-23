@@ -132,7 +132,7 @@ elif package in packagename["wannier90"] :
     kphlabel=kpoints1.kphlabel_out()
 
     if fsecond :
-        x2=eigenval2.bandkpout(kp=kpoints1)
+        x2=eigenval2.bandkpout(kp=kpoints1,reclc=rlc)
         eigout2=eigenval2.eigtrans()
 
 else:
@@ -159,7 +159,7 @@ if fsecond :
     Nx2=[]
     ix2l=[]
     ix2r=[]
-    for p in x :
+    for p in x2 :
         Nx2.append(len(p))
         if ix2l==[] :
             ix2l=[0]
@@ -270,7 +270,7 @@ if lproj:
 if fsecond :
     for ip in range(len(kphx)):
         for b in range(eigenval2.Nb):
-            ax0.plot(x2[ip],eigout2[0][b][ix2l[ip]:ix2r[ip]],color=colpal[1],linewidth=1,zorder=2)
+            ax[ip].plot(x2[ip],eigout2[0][b][ix2l[ip]:ix2r[ip]],color=colpal[1],linewidth=1,zorder=2)
     f3=open("eigenval2.dat","w")
     for ib in range(len(eigout2[0])):
         for ip in range(len(kphx)):
