@@ -111,6 +111,8 @@ elif package in packagename["wannier90"] :
 
         eigenval2.gap()
         eigenval2.eigshift(eigenval2.vbm)
+        if eigenval2.is_semic==True :
+            eigenval1.is_semic=True
 
     eigenval1.occ=[]
     for ik in range(eigenval1.Nk) :
@@ -122,8 +124,12 @@ elif package in packagename["wannier90"] :
                occ0.append([0.0])
            eigenval1.occ.append(occ0)
 
-    eigenval1.gap()
-    eigenval1.eigshift(eigenval1.vbm)
+    if eigenval1.is_semic==True :
+        eigenval1.gap()
+        eigenval1.writegap(kpoints1)
+        eigenval1.eigshift(eigenval1.vbm)
+    else : 
+        print("Metal band structure are not shifted")
 
     x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
     eigout=eigenval1.eigtrans()
