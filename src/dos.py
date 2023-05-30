@@ -6,6 +6,7 @@
 
 # VASP input: DOSCAR
 # QE input: *.dos *.xml
+# QE projection input: *.dos *.xml *.pdos_atm#*(*)_wfc#*(*)
 
 import sys
 import os
@@ -30,7 +31,7 @@ packagename=load_packagename()
 
 if package in packagename["vasp"]: 
     doscar0=doscar.DOSCAR()
-elif package in packagename["qe"]:
+elif package in packagename["qe"]+packagename["qeproj"]:
     doscar0=doscar.DOSCAR(empty=True)
     # find a *.dos file
     files = os.listdir(".")
@@ -49,6 +50,24 @@ else:
     print("Package \""+package+"\" is not supported yet.")
     print("python dos.py (v) package (Emin) (Emax)")
     sys.exit()
+
+lproj=False
+if package in packagename["qeproj"] :
+    lproj=True
+    doscar0.readpdos_qe()
+    if doscar0.Ns==2 :
+        print("Spin polarized projected band structure not supported yet.\n")
+        sys.exit()
+
+    # Input: *.pdos_atm#*(*)_wfc#*(*)
+    doscar0.readpdos_qe()
+
+    atomlist=sys.argv[2]
+    del sys.argv[2]
+    atomflag=doscar0.readatomlist(atomlist)
+    orblist=sys.argv[2]
+    del sys.argv[2]
+    orbflag=doscar0.readorblist(orblist)
 
 if len(sys.argv)>=4 :
     xmax=float(sys.argv[3])
@@ -88,9 +107,15 @@ if fvertical==False :
 
     ax0.axvline(linewidth=1,color=colpal[2],zorder=0)
     ax0.plot(doscar0.energy,doscar0.dos[0],color=colpal[0],linewidth=1,zorder=3)
+    if package in packagename["qeproj"]:
+        pdos=doscar0.plotpdos(atomflag,orbflag)
+        ax0.plot(doscar0.energy_pdos,pdos,color=colpal[1],linewidth=1,zorder=3.5)
+        filename_out="dos_"+atomlist+"_"+orblist+".png"
+
     ax0.set_xlim([xmin,xmax])
     ax0.set_ylim([0,dosmax*1.1])
     ax0.tick_params(axis="x", bottom=True, top=True, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0, pad=4)
+    
 else : # vertical
     fig=plt.figure(figsize=(1,3.75))
     if doscar0.Ns==1 :
@@ -102,6 +127,11 @@ else : # vertical
 
     ax0.axhline(linewidth=1,color=colpal[2],zorder=0)
     ax0.plot(doscar0.dos[0],doscar0.energy,color=colpal[0],linewidth=1,zorder=3)
+    if package in packagename["qeproj"]:
+        pdos=doscar0.plotpdos(atomflag,orbflag)
+        ax0.plot(pdos,doscar0.energy_pdos,color=colpal[1],linewidth=1,zorder=3.5)
+        filename_out="dos_v_"+atomlist+"_"+orblist+".png"
+
     ax0.set_xlim([0,dosmax*1.1])
     ax0.set_ylim([xmin,xmax])
     ax0.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)

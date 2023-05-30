@@ -46,7 +46,6 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
     kphx=kpoints1.kphx_out(rlc)
     kphlabel=kpoints1.kphlabel_out()
 
-
 elif package in packagename["qe"]+packagename["qeproj"] :
     # Input: *.xml, kpath.in
     # No need to run bands.x

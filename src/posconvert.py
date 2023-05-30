@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#python3 posconvert.py package1 package2 (filename1)
+# python3 posconvert.py package1 package2 (filename1)
 
 # Convert a package1 to package2 structure format.
 

@@ -16,7 +16,6 @@ To plot projected band structure:
 ```
 python bands.py package atoms orbitals (E1) (E2)
 ```
-
 Support packages: VASP (vaspproj), QE (qeproj)  
 VASP inputs: EIGENVAL, KPOINTS, POSCAR, PROCAR, (DOSCAR)  
 QE inputs: \*.xml, kpath.in, projwfc.out
@@ -70,6 +69,13 @@ Support packages: VASP, QE
 
 VASP input: DOSCAR  
 QE input: \*.dos
+
+To plot projected DOS:
+```
+python dos.py (v) package atoms orbitals (E1) (E2)
+```
+Support packages: QE (qeproj)  
+QE input: \*.dos \*.xml \*.pdos\_atm#\*(\*)\_wfc#\*(\*)
 
 ---
 
