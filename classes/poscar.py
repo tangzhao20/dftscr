@@ -85,12 +85,13 @@ class POSCAR:
         for l in range(len(line)):
             word=line[l].split()
             if len(word)>=2 and word[0]=="CELL_PARAMETERS" :
-                word[1].replace("(","").replace("{","")
+                word[1]=word[1].replace("(","").replace("{","")
                 if word[1][0]=="a" or word[1][0]=="A" :
                     factor=1.0
                 elif word[1][0]=="b" or word[1][0]=="B" :
                     factor=0.529177249
                 else :
+                    print(word[1])
                     print("Only Angstrom and Bohr are supported.")
                     sys.exit()
                 for il in range(3) :
