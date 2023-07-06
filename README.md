@@ -1,4 +1,4 @@
-## bands.py
+## [bands.py](src/bands.py)
 
 To plotting the band structure plot:
 ```
@@ -28,7 +28,7 @@ Inputs: nscf.in, ../bands/\*.xml, \*\_band.kpt, \*\_band.dat, kpath.in
 
 ---
 
-## posconvert.py
+## [posconvert.py](src/posconvert.py)
 
 To convert the format of the crystal structure.
 ```
@@ -42,7 +42,7 @@ Paratec input: input
 
 ---
 
-## kconvert.py
+## [kconvert.py](src/kconvert.py)
 
 To convert the format of the k-point path.
 ```
@@ -59,7 +59,7 @@ python kconvert.py kpathin qe (N)
 
 ---
 
-## dos.py
+## [dos.py](src/dos.py)
 
 To plot DOS  
 ```
@@ -79,21 +79,21 @@ QE input: \*.dos \*.xml \*.pdos\_atm#\*(\*)\_wfc#\*(\*)
 
 ---
 
-## toten\_fit.py
+## [toten\_fit.py](src/toten_fit.py)
 
 To print the total energy vs. distortion coordinate  
 Input: POSCAR\_i, pos\_\*/OSZICAR, pos\_\*/POSCAR, (pos\_\*/EIGENVAL)
 
 ---
 
-## phproj.py
+## [phproj.py](src/phproj.py)
 
 To calculate the projection of a distortin onto the phonon modes, and use it as weight to average the frequency  
 Input: qpoints.yaml, POSCAR\_i, POSCAR\_f
 
 ---
 
-## wavecar.py
+## [wavecar.py](src/wavecar.py)
 
 To read the KS orbitals from the WAVECAR, and write into seperate files for VESTA plot:
 ```
@@ -101,7 +101,7 @@ python wavecar.py ik ib ispin
 ```
 Input: kpath.in
 
-Examples of kpath.in can be find in data directory
+Examples of kpath.in can be find in [data](data/kpath) directory
 
 ---
 
