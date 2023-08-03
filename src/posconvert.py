@@ -43,12 +43,15 @@ elif package1 in packagename['qe'] :
             sys.exit()
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_qe(filename1)
-elif package1 in packagename['prt'] :
-    poscar1=poscar.POSCAR(empty=True)
-    poscar1.fileread_prt("input")
 elif package1 in packagename['qexml'] :
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_xml()
+elif package1 in packagename['prt'] :
+    poscar1=poscar.POSCAR(empty=True)
+    poscar1.fileread_prt("input")
+elif package1 in packagename['parsec'] :
+    poscar1=poscar.POSCAR(empty=True)
+    poscar1.fileread_parsec()
 else :
     print("Package "+package1+" input is not supported yet.")
     print("python3 posconvert.py package1 package2")

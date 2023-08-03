@@ -204,6 +204,44 @@ class POSCAR:
         
         self.movetobox()
 
+    def fileread_parsec(self, filename="parsec.in"):
+        f1=open(filename,"r")
+        line=f1.readlines()
+        f1.close()
+
+        Fat=False
+
+        for il in range(len(line)):
+            word=line[il].replace(":"," ").replace("="," ").split()
+            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+                continue
+            if len(word)>=2 and word[0]=="begin" and word[1]=="atom_coord" :
+                Fat=True
+                continue
+            if len(word)>=2 and word[0]=="end" and word[1]=="atom_coord" :
+                Fat=False
+                continue
+            if word[0]=="Boundary_Sphere_Radius": 
+                alat=float(word[1])*0.529177249*2.0 # in Bohr here
+                self.lc=[[alat,0.0,0.0],[0.0,alat,0.0],[0.0,0.0,alat]]
+            if word[0]=="atom_types_num" :
+                self.Ntype=int(word[1])
+            if word[0]=="atom_type" :
+                self.atomtype.append(word[1])
+                self.Naint.append(0)
+            if word[0]=="coordinate_unit" and word[1]=="cartesian_ang" :
+                factor=1.0
+            if word[0]=="coordinate_unit" and word[1]=="cartesian_bohr" :
+                factor=0.529177249
+            if Fat==True :
+                ap=[]
+                for ix in range(3):
+                    x=float(word[ix])*factor/alat+0.5
+                    ap.append(x)
+                self.ap.append(ap)
+                self.Naint[-1]+=1
+                self.Natom+=1
+
 ########################################################################
 
     def filewrite(self, filename="POSCAR.new"):
@@ -313,9 +351,9 @@ class POSCAR:
         f2.write("End Unit_Cell_Cart\n\n")
 
         f2.write("Begin Projections\n")
+        f2.write("  random\n")
         for i in range(self.Ntype) :
             f2.write("  "+self.atomtype[i]+"  :\n")
-        f2.write("  random\n")
         f2.write("End Projections\n\n")
 
         f2.write("Begin Atoms_Frac\n")
