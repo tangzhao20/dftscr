@@ -34,10 +34,10 @@ To convert the format of the crystal structure.
 ```
 python posconvert.py package1 package2
 ```
-Support packages: VASP, QE (.in or .xml), Paratec, Parsec
+Support packages: VASP, QE (.in or .xml), Paratec, Parsec, .xyz
 
-VASP input: POSCAR  
-QE input: scf.in 
+VASP input: POSCAR
+QE input: scf.in
 Paratec input: input
 
 ---

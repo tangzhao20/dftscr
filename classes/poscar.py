@@ -131,6 +131,10 @@ class POSCAR:
                 if f.endswith('.xml'):
                     filename=f
                     break
+        if filename=="" :
+            print("Error: .xml file is not found")
+            sys.exit()
+
 
         tree=ET.parse(filename)
         cell=tree.getroot().find("output").find("atomic_structure").find("cell")
@@ -242,6 +246,44 @@ class POSCAR:
                 self.Naint[-1]+=1
                 self.Natom+=1
 
+    def fileread_xyz(self,filename="") :
+        if filename=="" :
+            # find a .xyz file
+            files = os.listdir()
+            for f in files:
+                if f.endswith('.xyz'):
+                    filename=f
+                    break
+        if filename=="" :
+            print("Error: .xyz file is not found")
+            sys.exit()
+        f0=open(filename,"r")
+        line=f0.readlines()
+        f0.close()
+
+        radius=0.0
+        self.Natom=int(line[0].split()[0])
+        if len(line)<self.Natom+2 :
+            print("Error: Length of file "+filename+" is less than Natom+2 "+str(self.Natom))
+            sys.exit()
+        for il in range(2,self.Natom+2) :
+            word=line[il].split()
+            if self.Ntype==0 or self.atomtype[-1]!=word[0] :
+                self.Ntype+=1
+                self.atomtype.append(word[0])
+                self.Naint.append(1)
+            else :
+                self.Naint[-1]+=1
+            ap0=[float(word[1]),float(word[2]),float(word[3])]
+            self.ap.append(ap0)
+            radius=max(radius,abs(ap0[0]),abs(ap0[1]),abs(ap0[2]))
+            
+        lc0=2.0*radius+10.0
+        self.lc=[[lc0,0,0],[0,lc0,0],[0,0,lc0]]
+        for ia in range(self.Natom) :
+            for ix in range(3) :
+                self.ap[ia][ix]=self.ap[ia][ix]/lc0+0.5
+            
 ########################################################################
 
     def filewrite(self, filename="POSCAR.new"):
@@ -366,6 +408,25 @@ class POSCAR:
                 ij=ij+1
                 ik=0
         f2.write("End Atoms_Frac\n\n")
+        f2.close()
+
+    def filewrite_xyz(self, filename="structure.xyz") :
+        f2=open(filename,"w")
+        f2.write(str(self.Natom)+"\n\n")
+        it1=0
+        it2=0
+        for ia in range(self.Natom) :
+            apc=[0.0]*3
+            for ix in range(3) :
+                apc[0]+=(self.ap[ia][ix]-0.5)*self.lc[ix][0]
+                apc[1]+=(self.ap[ia][ix]-0.5)*self.lc[ix][1]
+                apc[2]+=(self.ap[ia][ix]-0.5)*self.lc[ix][2]
+            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:16.10f}{apc[1]:16.10f}{apc[2]:16.10f}\n")
+            it2=it2+1
+            if it2==self.Naint[it1] :
+                it1=it1+1
+                it2=0
+            
         f2.close()
 
 ########################################################################

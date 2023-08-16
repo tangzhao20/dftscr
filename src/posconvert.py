@@ -52,6 +52,13 @@ elif package1 in packagename['prt'] :
 elif package1 in packagename['parsec'] :
     poscar1=poscar.POSCAR(empty=True)
     poscar1.fileread_parsec()
+elif package1 in packagename['xyz'] :
+    if len(sys.argv)>=4 :
+        filename1=sys.argv[3]
+    else :
+        filename1=""
+    poscar1=poscar.POSCAR(empty=True)
+    poscar1.fileread_xyz(filename1)
 else :
     print("Package "+package1+" input is not supported yet.")
     print("python3 posconvert.py package1 package2")
@@ -67,6 +74,8 @@ elif package2 in packagename['parsec'] :
     poscar1.filewrite_parsec()
 elif package2 in packagename['wannier90'] :
     poscar1.filewrite_wannier90()
+elif package2 in packagename['xyz'] :
+    poscar1.filewrite_xyz()
 else :
     print("Package "+package2+" output is not supported yet.")
     print("python3 posconvert.py package1 package2")
