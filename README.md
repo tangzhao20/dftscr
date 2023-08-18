@@ -105,4 +105,12 @@ Examples of kpath.in can be find in [data](data/kpath) directory
 
 ---
 
+## [silicon.py](src/silicon.py)
+
+This code creates the silicon, given the radius in angstrom.
+```
+python silicon.py radius
+```
+
+---
 ZT
