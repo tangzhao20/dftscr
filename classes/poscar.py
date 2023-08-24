@@ -89,7 +89,7 @@ class POSCAR:
                 if word[1][0]=="a" or word[1][0]=="A" :
                     factor=1.0
                 elif word[1][0]=="b" or word[1][0]=="B" :
-                    factor=0.529177249
+                    factor=0.529177210903
                 else :
                     print(word[1])
                     print("Only Angstrom and Bohr are supported.")
@@ -156,7 +156,7 @@ class POSCAR:
         self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
         for ix in range(3):
             for iy in range(3):
-                self.lc[ix][iy]=self.lc[ix][iy]*0.529177249
+                self.lc[ix][iy]=self.lc[ix][iy]*0.529177210903
 
         self.Natom=len(self.ap)
         self.Ntype=len(self.atomtype)
@@ -200,7 +200,7 @@ class POSCAR:
                     self.Natom+=1
         
         detlc=self.volume()
-        factor=(volume/6.748334503468005/detlc)**(1.0/3.0)
+        factor=(volume/detlc)**(1.0/3.0)*0.529177210903
         
         for i in range(3) :
             for j in range(3) :
@@ -226,7 +226,7 @@ class POSCAR:
                 Fat=False
                 continue
             if word[0]=="Boundary_Sphere_Radius": 
-                alat=float(word[1])*0.529177249*2.0 # in Bohr here
+                alat=float(word[1])*0.529177210903*2.0 # in Bohr here
                 self.lc=[[alat,0.0,0.0],[0.0,alat,0.0],[0.0,0.0,alat]]
             if word[0]=="atom_types_num" :
                 self.Ntype=int(word[1])
@@ -236,7 +236,7 @@ class POSCAR:
             if word[0]=="coordinate_unit" and word[1]=="cartesian_ang" :
                 factor=1.0
             if word[0]=="coordinate_unit" and word[1]=="cartesian_bohr" :
-                factor=0.529177249
+                factor=0.529177210903
             if Fat==True :
                 ap=[]
                 for ix in range(3):
@@ -263,6 +263,10 @@ class POSCAR:
 
         radius=0.0
         self.Natom=int(line[0].split()[0])
+        lbohr=False
+        word=line[1].split()
+        if len(word)>=1 and word[0]=="Bohr" :
+            lbohr=True
         if len(line)<self.Natom+2 :
             print("Error: Length of file "+filename+" is less than Natom+2 "+str(self.Natom))
             sys.exit()
@@ -283,7 +287,11 @@ class POSCAR:
         for ia in range(self.Natom) :
             for ix in range(3) :
                 self.ap[ia][ix]=self.ap[ia][ix]/lc0+0.5
-            
+
+        if lbohr :
+            for ix in range(3) :
+                self.lc[ix][ix]=self.lc[ix][ix]*0.529177210903
+
 ########################################################################
 
     def filewrite(self, filename="POSCAR.new"):
@@ -324,8 +332,11 @@ class POSCAR:
    
         f2=open(filename,"w")
         f2.write("CELL_PARAMETERS angstrom\n")
-        for i in range(3) :
-            f2.write(f"  {self.lc[i][0]:.12f}  {self.lc[i][1]:.12f}  {self.lc[i][2]:.12f}\n")
+        for ix1 in range(3) :
+            for ix2 in range(3) :
+                f2.write(f"{self.lc[ix1][ix2]:18.12f}")
+            f2.write("\n")
+
         f2.write("ATOMIC_SPECIES\n")
         for i in range(self.Ntype) :
             f2.write("  "+self.atomtype[i]+"  "+str(self.dmass[self.atomtype[i]])+"  "+self.atomtype[i]+".upf\n")
@@ -333,7 +344,7 @@ class POSCAR:
         ij=0
         ik=0
         for i in range(self.Natom) :
-            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.12f}  {self.ap[i][1]:.12f}  {self.ap[i][2]:.12f}\n")
+            f2.write(f"  {self.atomtype[ij]:2s}{self.ap[i][0]:18.12f}{self.ap[i][1]:18.12f}{self.ap[i][2]:18.12f}\n")
             ik=ik+1
             if ik==self.Naint[ij] :
                 ij=ij+1
@@ -343,32 +354,61 @@ class POSCAR:
         f2.close()
 
     def filewrite_prt(self, filename="prt_st.dat"):
-        volume=self.volume()*6.748334503468005
+        volume=self.volume()*6.74833449460037308669
         # convert Angstrom^3 to bohr^3
-        
+
         f2=open(filename,"w")
         f2.write("begin latticevecs\n")
         for i in range(3) :
-            f2.write("coord  "+f"{self.lc[i][0]:20.12f}"+"  "+f"{self.lc[i][1]:20.12f}"+"  "+f"{self.lc[i][2]:20.12f}"+"\n")
-        f2.write("volume "+f"{volume:24.16f}"+"\nend latticevecs\n\nbegin coordinates\n")
+            f2.write(f"coord{self.lc[i][0]:18.12f}{self.lc[i][1]:18.12f}{self.lc[i][2]:18.12f}\n")
+        f2.write(f"volume {volume:24.16f}\nend latticevecs\n\nbegin coordinates\n")
         k=0
         for i in range(self.Ntype) :
             f2.write("newtype "+self.atomtype[i]+"\n")
             for j in range(self.Naint[i]) :
-                f2.write("coord  "+f"{self.ap[k][0]:20.12f}"+"  "+f"{self.ap[k][1]:20.12f}"+"  "+f"{self.ap[k][2]:20.12f}"+"\n")
+                f2.write(f"coord{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
                 k=k+1
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat"):
+    def filewrite_parsec(self, filename="parsec_st.dat", lbohr=False, lmolecule=False):
         f2=open(filename,"w")
-        f2.write("begin cell_shape\n")
-        for i in range(3) :
-            f2.write("  "+f"{self.lc[i][0]:20.12f}"+"  "+f"{self.lc[i][1]:20.12f}"+"  "+f"{self.lc[i][2]:20.12f}"+"\n")
-        f2.write("end cell_shape\n\n")
+
+        if lmolecule :
+            radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5
+            if lbohr :
+                radius=radius/0.529177210903
+                f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+            else :
+                f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
+        else : # print lattice constant in bohr for bulk
+            f2.write("Boundary_Conditions bulk")
+            if lbohr==False :
+                f2.write("Lattice_Vector_Scale 1.0 ang\n")
+            f2.write("begin Cell_Shape\n")
+            if lbohr :
+                for ix1 in range(3) :
+                    for ix2 in range(3) :
+                        f2.write(f"{self.lc[ix1][ix2]/0.529177210903:18.12f}")
+                    f2.write("\n")
+            else :
+                for ix1 in range(3) :
+                    for ix2 in range(3) :
+                        f2.write(f"{self.lc[ix1][ix2]:18.12f}")
+                    f2.write("\n")
+            f2.write("end Cell_Shape\n\n")
+
+        f2.write("Atom_Types_Num "+str(len(self.atomtype))+"\n")
+        if lmolecule :
+            if lbohr :
+                f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+            else :
+                f2.write("Coordinate_Unit Cartesian_Ang\n\n")
+        else :
+            f2.write("Coordinate_Unit Lattice_Vectors\n\n")
         k=0
         for i in range(self.Ntype) :
-            f2.write("#------------- new atom type -------------\n")
+            #f2.write("#------------- new atom type -------------\n")
             f2.write("Atom_Type: "+self.atomtype[i]+"\n")
             #f2.write("Pseudopotential_Format: \n")
             #f2.write("Core_Cutoff_Radius: \n")
@@ -379,17 +419,30 @@ class POSCAR:
             #f2.write("end Electron_Per_Orbital\n\n")
 
             f2.write("begin Atom_Coord\n")
-            for j in range(self.Naint[i]) :
-                f2.write("  "+f"{self.ap[k][0]:20.12f}"+"  "+f"{self.ap[k][1]:20.12f}"+"  "+f"{self.ap[k][2]:20.12f}"+"\n")
-                k=k+1
+            if lmolecule :
+                for ia in range(self.Naint[i]) :
+                    apc=[0.0]*3
+                    for ix1 in range(3) :
+                        for ix2 in range(3) :
+                            apc[ix2]+=(self.ap[k][ix1]-0.5)*self.lc[ix1][ix2]
+                    if lbohr :
+                        for ix in range(3) :
+                            apc[ix]=apc[ix]/0.529177210903
+                    f2.write(f"{apc[0]:18.12f}{apc[1]:18.12f}{apc[2]:18.12f}\n")
+                    k=k+1
+            else :
+                for ia in range(self.Naint[i]) :
+                    f2.write(f"{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
+                    k=k+1
             f2.write("end Atom_Coord\n\n")
+
         f2.close()
 
     def filewrite_wannier90(self, filename="wannier90_st.dat"):
         f2=open(filename,"w")
         f2.write("Begin Unit_Cell_Cart\n")
         for i in range(3) :
-            f2.write(f"  {self.lc[i][0]:.12f}  {self.lc[i][1]:.12f}  {self.lc[i][2]:.12f}\n")
+            f2.write(f"{self.lc[i][0]:18.12f}{self.lc[i][1]:18.12f}{self.lc[i][2]:18.12f}\n")
         f2.write("End Unit_Cell_Cart\n\n")
 
         f2.write("Begin Projections\n")
@@ -402,7 +455,7 @@ class POSCAR:
         ij=0
         ik=0
         for i in range(self.Natom) :
-            f2.write(f"  {self.atomtype[ij]:2s}  {self.ap[i][0]:.12f}  {self.ap[i][1]:.12f}  {self.ap[i][2]:.12f}\n")
+            f2.write(f"  {self.atomtype[ij]:2s}{self.ap[i][0]:18.12f}{self.ap[i][1]:18.12f}{self.ap[i][2]:18.12f}\n")
             ik=ik+1
             if ik==self.Naint[ij] :
                 ij=ij+1
@@ -417,11 +470,10 @@ class POSCAR:
         it2=0
         for ia in range(self.Natom) :
             apc=[0.0]*3
-            for ix in range(3) :
-                apc[0]+=(self.ap[ia][ix]-0.5)*self.lc[ix][0]
-                apc[1]+=(self.ap[ia][ix]-0.5)*self.lc[ix][1]
-                apc[2]+=(self.ap[ia][ix]-0.5)*self.lc[ix][2]
-            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:16.10f}{apc[1]:16.10f}{apc[2]:16.10f}\n")
+            for ix1 in range(3) :
+                for ix2 in range(3) :
+                    apc[ix2]+=(self.ap[ia][ix1]-0.5)*self.lc[ix1][ix2]
+            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:18.12f}{apc[1]:18.12f}{apc[2]:18.12f}\n")
             it2=it2+1
             if it2==self.Naint[it1] :
                 it1=it1+1

@@ -101,16 +101,42 @@ python wavecar.py ik ib ispin
 ```
 Input: kpath.in
 
-Examples of kpath.in can be find in [data](data/kpath) directory
+Examples of kpath.in can be find in [data/kpath](data/kpath) directory
 
 ---
 
 ## [silicon.py](src/silicon.py)
 
-This code creates the silicon, given the radius in angstrom.
+This code creates the molecular structure of silicon clusters, given the radius in angstrom.
 ```
 python silicon.py radius
 ```
 
 ---
+
+## [afm.py](src/afm.py)
+
+This Python code, along with the Bash script [afm.sh](src/afm.sh), prepares the job directories and files for the AFM simulation.
+
+The Python code can be used to prepare the structure files by
+```
+python afm.py
+```
+Input: afm.in, tip.xyz, sample.xyz  
+Output : parsec\_st.dat, manual\_\*\_\*.dat  
+The structure files manual\_\*\_\*.dat will be moved into the seq\_\*\_\* directories in the Bash script.
+
+Or the Bash script can be used to create directories and prepare files by
+```
+dftscr_dir/jobs/afm.sh
+```
+Input: afm.in, tip.xyz, sample.xyz, job.sh, parsec.in.head  
+Output: seq\_\*\_\*, seq\_\*\_\*/parsec.in, seq\_\*\_\*/job.sh
+
+The Python code is executed within the Bash script, so please ensure to add the [src](src) directory to your `$PATH`.  
+
+Examples of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/inputs) directory.
+
+---
+
 ZT

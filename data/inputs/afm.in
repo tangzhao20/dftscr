@@ -1,0 +1,12 @@
+# Here is an example of afm.in.
+# All the unit for lengths are Bohr
+
+x_range -7.5 7.5
+# x_spacing 0.6
+
+y_range -9.3 9.3
+# y_spacing 0.6
+
+# z_sampling 5.7 6.0 6.3
+
+parallel 8
