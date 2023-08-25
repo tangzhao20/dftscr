@@ -5,8 +5,8 @@ class KPOINTS_band :
     def __init__(self, filename="KPOINTS",empty=False) :
         
         self.kpdict={} # a dictionary which maps label to b-coordinate
-        self.kph=[] # a path of high symmetry k-points. kph[Np][Nh[ip]]
-        # use kpdict[kph[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
+        self.xlabels=[] # a path of high symmetry k-points. xlabels[Np][Nh[ip]]
+        # use kpdict[xlabels[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
 
         if empty:
             self.nk_line=0
@@ -39,10 +39,10 @@ class KPOINTS_band :
             if label not in self.kpdict :
                 self.kpdict[label]=[float(word[0]),float(word[1]),float(word[2])]
             if ffirst==True:
-                if len(self.kph)==0 or label != self.kph[-1][-1]:
-                    self.kph.append([label])
+                if len(self.xlabels)==0 or label != self.xlabels[-1][-1]:
+                    self.xlabels.append([label])
             else:
-                self.kph[-1].append(label)
+                self.xlabels[-1].append(label)
             ffirst=not ffirst
 
     def fileread_kpathin(self,filename="kpath.in",nk_line=40):
@@ -65,10 +65,10 @@ class KPOINTS_band :
                 float(word[1])
                 float(word[2])
             except :
-                self.kph.append(word)
-                for ik in range(len(self.kph[-1])) :
-                    if self.kph[-1][ik] in greek :
-                        self.kph[-1][ik]=greek[self.kph[-1][ik]]
+                self.xlabels.append(word)
+                for ik in range(len(self.xlabels[-1])) :
+                    if self.xlabels[-1][ik] in greek :
+                        self.xlabels[-1][ik]=greek[self.xlabels[-1][ik]]
             else :
                 label=word[3]
                 if label in greek :
@@ -83,7 +83,7 @@ class KPOINTS_band :
         f1.write("40\n")
         f1.write("line mode\n")
         f1.write("fractional\n")
-        for p in self.kph :
+        for p in self.xlabels :
             for ih in range(len(p)-1) :
                 for ix in range(3) :
                     f1.write("{:16.12f}".format(self.kpdict[p[ih]][ix])+" ")
@@ -95,13 +95,13 @@ class KPOINTS_band :
 
     def filewrite_qe(self,filename="kpath.out"):
         kplot=[]
-        for ip in range(len(self.kph)):
-            kplot.append(self.kpdict[self.kph[ip][0]])
-            for ih in range(len(self.kph[ip])-1):
+        for ip in range(len(self.xlabels)):
+            kplot.append(self.kpdict[self.xlabels[ip][0]])
+            for ih in range(len(self.xlabels[ip])-1):
                 for ik in range(self.nk_line) :
                     k=[0.0,0.0,0.0]
                     for ix in range(3) :
-                        k[ix]=self.kpdict[self.kph[ip][ih]][ix]*float(self.nk_line-ik-1)/float(self.nk_line)+self.kpdict[self.kph[ip][ih+1]][ix]*float(ik+1)/float(self.nk_line)
+                        k[ix]=self.kpdict[self.xlabels[ip][ih]][ix]*float(self.nk_line-ik-1)/float(self.nk_line)+self.kpdict[self.xlabels[ip][ih+1]][ix]*float(ik+1)/float(self.nk_line)
                     kplot.append(k)
 
         f1=open(filename,"w")
@@ -120,7 +120,7 @@ class KPOINTS_band :
                 f1.write(str(self.kpdict[h][ix])+" ")
             f1.write(h+"\n")
         f1.write("\n")
-        for p in self.kph :
+        for p in self.xlabels :
             for h in p :
                 f1.write(h+" ")
             f1.write("\n")
@@ -130,7 +130,7 @@ class KPOINTS_band :
         f1=open(filename,"w")
         f1.write("bands_plot = true\n\n")
         f1.write("begin kpoint_path\n")
-        for p in self.kph :
+        for p in self.xlabels :
             for ih in range(len(p)-1) :
                 f1.write(p[ih]+" ")
                 for ix in range(3) :
@@ -144,18 +144,18 @@ class KPOINTS_band :
             
 #########################################################################
 
-    def kphlabel_out(self):
-        kphlabel=[self.kph[0]]
-        for ip in range(1,len(self.kph)) :
-            kphlabel[-1][-1]=kphlabel[-1][-1]+"|"+self.kph[ip][0]
-            kphlabel.append([""])
-            kphlabel[-1]=kphlabel[-1]+self.kph[ip][1:]
-        return kphlabel
+    def xlabels_out(self):
+        xlabels=[self.xlabels[0]]
+        for ip in range(1,len(self.xlabels)) :
+            xlabels[-1][-1]=xlabels[-1][-1]+"|"+self.xlabels[ip][0]
+            xlabels.append([""])
+            xlabels[-1]=xlabels[-1]+self.xlabels[ip][1:]
+        return xlabels
 
-    def kphx_out(self,reclc):
-        kphx=[]
-        for p in self.kph :
-            kphx.append([0.0])
+    def xticks_out(self,reclc):
+        xticks=[]
+        for p in self.xlabels :
+            xticks.append([0.0])
             for ik in range(len(p)) :
                 if ik>0 :
                     kpcold=[kpc[0],kpc[1],kpc[2]]
@@ -168,9 +168,9 @@ class KPOINTS_band :
                     kpc.append(kpc0)
                 if ik>0 :
                     dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
-                    kphx[-1].append(kphx[-1][-1]+dkpc)
+                    xticks[-1].append(xticks[-1][-1]+dkpc)
                     del kpcold
-        return(kphx)
+        return(xticks)
 
     def loadgreek(self):
         this_dir, this_filename = os.path.split(__file__)
