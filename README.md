@@ -126,14 +126,12 @@ Input: afm.in, tip.xyz, sample.xyz
 Output : parsec\_st.dat, manual\_\*\_\*.dat  
 The structure files manual\_\*\_\*.dat will be moved into the seq\_\*\_\* directories in the Bash script.
 
-Or the Bash script can be used to create directories and prepare files by
+The Bash script can be used to create directories and prepare files by
 ```
 dftscr_dir/jobs/afm.sh
 ```
 Input: afm.in, tip.xyz, sample.xyz, job.sh, parsec.in.head  
 Output: seq\_\*\_\*, seq\_\*\_\*/parsec.in, seq\_\*\_\*/job.sh
-
-The Python code is executed within the Bash script, so please ensure to add the [src](src) directory to your `$PATH`.  
 
 Examples of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/inputs) directory.
 

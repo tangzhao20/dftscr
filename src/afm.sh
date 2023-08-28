@@ -1,15 +1,14 @@
 #!/bin/bash
-
-# This scripts prepare the job directorys and files for the AFM simulation.
 #
-# dftscr_dir/src should be added to path
+# This scripts prepare the job directorys and files for the AFM simulation.
+# The afm.py script should be run first, and then the PARSEC input file should be modified as needed.
+#
+# Input: afm.in
 
 if [ ! -f "afm.in" ]; then
     echo "Error: afm.in doesn't exist"
-    stop
+    exit
 fi
-
-afm.py
 
 parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
 for (( i=1 ; i<=3 ; i++ )) do

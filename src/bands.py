@@ -66,7 +66,7 @@ elif package in packagename["qe"]+packagename["qeproj"] :
         eigenval1.writegap(kpoints1)
     else :
         doscar1=doscar.DOSCAR(empty=True)
-        doscar1.fileread_xml(filename)
+        doscar1.fileread_xml()
         eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)

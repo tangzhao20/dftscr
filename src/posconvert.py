@@ -71,7 +71,14 @@ elif  package2 in packagename['qe'] :
 elif package2 in packagename['prt'] :
     poscar1.filewrite_prt()
 elif package2 in packagename['parsec'] :
-    poscar1.filewrite_parsec()
+    lm=False
+    lb=False
+    for w in sys.argv :
+        if w.startswith("molecule") :
+            lm=True
+            lb=True
+            sys.argv.remove(w)
+    poscar1.filewrite_parsec(lbohr=lb,lmolecule=lm)
 elif package2 in packagename['wannier90'] :
     poscar1.filewrite_wannier90()
 elif package2 in packagename['xyz'] :

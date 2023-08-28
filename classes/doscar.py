@@ -43,7 +43,14 @@ class DOSCAR :
             
         del line
 
-    def fileread_xml(self, filename="pwscf.xml") :
+    def fileread_xml(self, filename="") :
+        if filename=="" :
+            # find a .xml file
+            files = os.listdir()
+            for f in files:
+                if f.endswith('.xml'):
+                    filename=f
+                    break
         tree=ET.parse(filename)
         #TODO: test the metal case
         if tree.getroot().find("output").find("band_structure").find("highestOccupiedLevel") is None :
