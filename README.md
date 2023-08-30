@@ -137,4 +137,15 @@ Examples of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/input
 
 ---
 
+## [posvacuum.py](src/posvacuum.py)
+
+This script adds the vacuum layer to the structure.
+```
+python posvacuum.py z_vac
+```
+Input: POSCAR  
+Output: POSCAR.new
+
+---
+
 ZT

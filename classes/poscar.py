@@ -487,7 +487,7 @@ class POSCAR:
         for i in range(self.Natom) :
             for j in range(3) :
                 self.ap[i][j]=self.ap[i][j]-self.ap[i][j]//1.0
-                if self.ap[i][j]<0.0000000001 or self.ap[i][j]>0.9999999999 :
+                if self.ap[i][j]<0.00000001 or self.ap[i][j]>0.99999999 :
                     self.ap[i][j]=0.0
 
     def match(self, Pright):
@@ -541,19 +541,25 @@ class POSCAR:
                 self.ap[ia][ix]=self.ap[ia][ix]+disp[ia][ix]*factor
         self.movetobox()
 
-    def vacuum(self,newz) :
-        factor=(newz/self.lc[2][2])
-        if abs(self.lc[2][0])>0.000001 or abs(self.lc[2][1])>0.000001 :
-            print("a3 doesn't parllel to z")
+    def addatom(self, itype, ap, newtype="X") :
+        if itype<0 :
+            print("Error: itype < 0 in addatom function.")
             sys.exit()
-        self.movetobox()
-        for i in range(self.Natom) :
-            if self.ap[i][2]<=0.5 :
-                self.ap[i][2]=self.ap[i][2]/factor
-            else :
-                self.ap[i][2]=1.0-(1.0-self.ap[i][2])/factor
-        self.movetobox()
-        self.lc[2][2]=newz
+        elif itype<self.Ntype :
+            self.Natom+=1
+            self.ap.insert(sum(self.Naint[:itype+1]),ap)
+            self.Naint[itype]+=1
+        elif itype==self.Ntype :
+            # create a new type
+            self.Natom+=1
+            self.Ntype+=1
+            if newtype=="X" :
+                print("Warning: atom name is not defined in the addatom function.")
+            self.atomtype.append(newtype)
+            self.Naint.append(1)
+            self.ap.append(ap)
+        else :
+            print("Error: itype > Ntype in addatom function.")
 
     def displacement(self, Pright):
         # find the displacement vector of two POSCARs
