@@ -36,7 +36,7 @@ for itype in range(poscar1.Ntype) :
     newatoms0=[]
     for iaint in range(poscar1.Naint[itype]) :
         if poscar1.ap[ia][2]<0.00000001 :
-            newatoms0.append([poscar1.ap[ia][0],poscar1.ap[ia][0],1.0])
+            newatoms0.append([poscar1.ap[ia][0],poscar1.ap[ia][1],1.0])
         ia+=1
     newatoms.append(newatoms0)
 
