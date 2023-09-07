@@ -134,12 +134,29 @@ class KPOINTS_band :
             for ih in range(len(p)-1) :
                 f1.write(p[ih]+" ")
                 for ix in range(3) :
-                    f1.write("{:12.8f}".format(self.kpdict[p[ih]][ix])+" ")
+                    f1.write(f"{self.kpdict[p[ih]][ix]:12.8f}")
                 f1.write(" "+p[ih+1]+" ")
                 for ix in range(3) :
-                    f1.write("{:12.8f}".format(self.kpdict[p[ih+1]][ix])+" ")
+                    f1.write(f"{self.kpdict[p[ih+1]][ix]:12.8f}")
                 f1.write("\n")
         f1.write("end kpoint_path\n\n")
+        f1.close()
+
+    def filewrite_parsec(self, filename="parsec_kpath.dat") :
+        f1=open(filename,"w")
+        f1.write("begin Bandstruc\n")
+        for p in self.xlabels :
+            ih2=1
+            for ih in range(len(p)-1) :
+                f1.write(f"{ih2:4d}")
+                for ix in range(3) :
+                    f1.write(f"{self.kpdict[p[ih]][ix]:12.8f}")
+                for ix in range(3) :
+                    f1.write(f"{self.kpdict[p[ih+1]][ix]:12.8f}")
+                f1.write(" "+p[ih]+"-"+p[ih+1]+"\n")
+                ih2+=1
+        f1.write("end Bandstruc\n")
+        f1.write("Bandstruc_Points 40\n\n")
         f1.close()
             
 #########################################################################

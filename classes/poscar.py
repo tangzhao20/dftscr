@@ -371,35 +371,63 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat", lbohr=False, lmolecule=False):
+    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, lmolecule=False, lslab=False):
+        print(" lcartesian = ",lcartesian)
+        print(" lbohr = ",lbohr)
+        print(" lmolecule = ",lmolecule)
+        print(" lslab = ",lslab)
+        if lmolecule and lslab :
+            print("Error: both molecule and slab are True.")
+            sys.exit()
+        if lmolecule or lslab :
+            lcartesian=True
         f2=open(filename,"w")
-
+        if lbohr :
+            funit=0.529177210903
+        else :
+            funit=1.0
         if lmolecule :
-            radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5
+            radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5/funit
             if lbohr :
-                radius=radius/0.529177210903
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
             else :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
-        else : # print lattice constant in bohr for bulk
-            f2.write("Boundary_Conditions bulk")
+        elif lslab :
+            f2.write("Boundary_Conditions slab\n")
             if lbohr==False :
                 f2.write("Lattice_Vector_Scale 1.0 ang\n")
             f2.write("begin Cell_Shape\n")
-            if lbohr :
-                for ix1 in range(3) :
-                    for ix2 in range(3) :
-                        f2.write(f"{self.lc[ix1][ix2]/0.529177210903:18.12f}")
-                    f2.write("\n")
-            else :
-                for ix1 in range(3) :
-                    for ix2 in range(3) :
-                        f2.write(f"{self.lc[ix1][ix2]:18.12f}")
-                    f2.write("\n")
+            for ix1 in range(2) :
+                for ix2 in range(3) :
+                    f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
+                f2.write("\n")
+            f2.write("end Cell_Shape\n\n")
+            f2.write(f"Boundary_Sphere_Radius {self.lc[2][2]*0.5/funit:18.12f}\n\n")
+
+            f2.write("Kpoint_Method mp\n\n")
+            f2.write("begin Monkhorst_Pack_Grid\n")
+            kgrid=[]
+            for i in range(2) :
+                kgrid.append(math.floor(30.0/(self.lc[i][0]**2+self.lc[i][1]**2+self.lc[i][2]**2)**0.5)+1)
+            f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}\n")
+            f2.write("end Monkhorst_Pack_Grid\n\n")
+            f2.write("begin Monkhorst_Pack_Shift\n")
+            f2.write("0.0  0.0  0.0\n")
+            f2.write("end Monkhorst_Pack_Shift\n\n")
+
+        else : # print lattice constant in bohr for bulk
+            f2.write("Boundary_Conditions bulk\n")
+            if lbohr==False :
+                f2.write("Lattice_Vector_Scale 1.0 ang\n")
+            f2.write("begin Cell_Shape\n")
+            for ix1 in range(3) :
+                for ix2 in range(3) :
+                    f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
+                f2.write("\n")
             f2.write("end Cell_Shape\n\n")
 
         f2.write("Atom_Types_Num "+str(len(self.atomtype))+"\n")
-        if lmolecule :
+        if lcartesian :
             if lbohr :
                 f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
             else :
@@ -412,25 +440,31 @@ class POSCAR:
             f2.write("Atom_Type: "+self.atomtype[i]+"\n")
             #f2.write("Pseudopotential_Format: \n")
             #f2.write("Core_Cutoff_Radius: \n")
-            f2.write("Local_Component: \n")
+            f2.write("Local_Component: s\n") # to be modified
             #f2.write("Potential_Num: \n\n")
             #f2.write("begin Electron_Per_Orbital\n")
             #f2.write("# S P D F\n \n")
             #f2.write("end Electron_Per_Orbital\n\n")
 
             f2.write("begin Atom_Coord\n")
-            if lmolecule :
+            if lcartesian :
+                if lmolecule :
+                    shift=[-0.5,-0.5,-0.5]
+                elif lslab :
+                    shift=[0.0,0.0,-0.5]
+                else : # bulk
+                    shift=[0.0,0.0,0.0]
                 for ia in range(self.Naint[i]) :
                     apc=[0.0]*3
                     for ix1 in range(3) :
                         for ix2 in range(3) :
-                            apc[ix2]+=(self.ap[k][ix1]-0.5)*self.lc[ix1][ix2]
-                    if lbohr :
-                        for ix in range(3) :
-                            apc[ix]=apc[ix]/0.529177210903
+                            apc[ix2]+=(self.ap[k][ix1]+shift[ix1])*self.lc[ix1][ix2]
+                    for ix in range(3) :
+                        apc[ix]=apc[ix]/funit
                     f2.write(f"{apc[0]:18.12f}{apc[1]:18.12f}{apc[2]:18.12f}\n")
                     k=k+1
             else :
+
                 for ia in range(self.Naint[i]) :
                     f2.write(f"{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
                     k=k+1
