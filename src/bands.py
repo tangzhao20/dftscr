@@ -140,6 +140,26 @@ elif package in packagename["wannier90"] :
         x2=eigenval2.bandkpout(kp=kpoints1,reclc=rlc)
         energy2=eigenval2.eigtrans()
 
+
+elif package in packagename["parsec"] :
+    # Input: bands.dat, parsec.in, kpath.in
+
+    poscar1=poscar.POSCAR(empty=True)
+    poscar1.fileread_parsec()
+    rlc=poscar1.reclc_out()
+
+    eigenval1=eigenval.EIGENVAL(empty=True)
+    eigenval1.fileread_parsec()
+    
+    kpoints1=kpoints_band.KPOINTS_band(empty=True)
+    kpoints1.fileread_kpathin()
+    
+    x=eigenval1.bandkpout(kp=kpoints1)
+    energy=eigenval1.eigtrans()
+    
+    xticks=kpoints1.xticks_out(rlc)
+    xlabels=kpoints1.xlabels_out()
+
 else:
     print("Package \""+package+"\" is not supported yet.")
     print("python bands.py package (Emin) (Emax)")

@@ -52,13 +52,13 @@ class POSCAR:
             self.Naint.append(int(word[i]))
             self.Natom=self.Natom+self.Naint[i]
         word=line[7].split()
-        if word[0][0]=='S' or word[0][0]=='s' :
+        if word[0][0].lower()=='s' :
             self.f_seldyn=True
             lineoff=lineoff+1
         else :
             self.f_seldyn=False
         word=line[7+lineoff].split()
-        if word[0][0]!='D' and word[0][0]!='d' :
+        if word[0][0].lower()!='d' :
             print("Only atomic position 'Direct' supported")
             exit()
         self.ap=[]
@@ -86,9 +86,9 @@ class POSCAR:
             word=line[l].split()
             if len(word)>=2 and word[0]=="CELL_PARAMETERS" :
                 word[1]=word[1].replace("(","").replace("{","")
-                if word[1][0]=="a" or word[1][0]=="A" :
+                if word[1][0].lower()=="a" :
                     factor=1.0
-                elif word[1][0]=="b" or word[1][0]=="B" :
+                elif word[1][0].lower()=="b" :
                     factor=0.529177210903
                 else :
                     print(word[1])
@@ -213,38 +213,85 @@ class POSCAR:
         line=f1.readlines()
         f1.close()
 
-        Fat=False
-
+        lslab=False
+        lbulk=False
+        lmolecule=True
         for il in range(len(line)):
             word=line[il].replace(":"," ").replace("="," ").split()
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
                 continue
-            if len(word)>=2 and word[0]=="begin" and word[1]=="atom_coord" :
-                Fat=True
+            if word[0].lower()=="boundary_conditions" :
+                if word[1].lower()=="slab" :
+                    lslab=True
+                    lmolecule=False
+                    break
+                if word[1].lower()=="bulk" :
+                    lbulk=True
+                    lmolecule=False
+                    print("Error: bulk structure for parsec is not available.")
+                    sys.exit()
+                    break
+
+        Fat=False
+        Flc=False
+        self.lc=[[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        for il in range(len(line)):
+            word=line[il].replace(":"," ").replace("="," ").split()
+            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
                 continue
-            if len(word)>=2 and word[0]=="end" and word[1]=="atom_coord" :
+            if len(word)>=2 and word[0].lower()=="begin" and word[1].lower()=="atom_coord" :
+                Fat=True
+                reclc=np.linalg.inv(np.array(self.lc)).tolist()
+                continue
+            if len(word)>=2 and word[0].lower()=="end" and word[1].lower()=="atom_coord" :
                 Fat=False
                 continue
-            if word[0]=="Boundary_Sphere_Radius": 
+            if len(word)>=2 and word[0].lower()=="begin" and word[1].lower()=="cell_shape" :
+                Flc=True
+                ilc=0
+                continue
+            if len(word)>=2 and word[0].lower()=="end" and word[1].lower()=="cell_shape" :
+                Flc=False
+                continue
+            if word[0].lower()=="boundary_sphere_radius": 
                 alat=float(word[1])*0.529177210903*2.0 # in Bohr here
-                self.lc=[[alat,0.0,0.0],[0.0,alat,0.0],[0.0,0.0,alat]]
-            if word[0]=="atom_types_num" :
+                if lmolecule :
+                    self.lc[0][0]=alat
+                    self.lc[1][1]=alat
+                    self.lc[2][2]=alat
+                elif lslab :
+                    self.lc[2][2]=alat
+            if word[0].lower()=="atom_types_num" :
                 self.Ntype=int(word[1])
-            if word[0]=="atom_type" :
+            if word[0].lower()=="atom_type" :
                 self.atomtype.append(word[1])
                 self.Naint.append(0)
-            if word[0]=="coordinate_unit" and word[1]=="cartesian_ang" :
+            if word[0].lower()=="coordinate_unit" and word[1].lower()=="cartesian_ang" :
                 factor=1.0
-            if word[0]=="coordinate_unit" and word[1]=="cartesian_bohr" :
+            if word[0].lower()=="coordinate_unit" and word[1].lower()=="cartesian_bohr" :
                 factor=0.529177210903
+            if Flc==True :
+                for ix in range(3) :
+                    self.lc[ilc][ix]=float(word[ix])*0.529177210903
+                ilc+=1
             if Fat==True :
                 ap=[]
-                for ix in range(3):
-                    x=float(word[ix])*factor/alat+0.5
-                    ap.append(x)
+                for ix in range(3) :
+                    ap.append(float(word[ix])*factor)
                 self.ap.append(ap)
                 self.Naint[-1]+=1
                 self.Natom+=1
+
+        self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
+        if lmolecule :
+            shift=[0.5,0.5,0.5]
+        elif lslab :
+            shift=[0.0,0.0,0.5]
+        else : # bulk
+            shift=[0.0,0.0,0.0]
+        for ia in range(self.Natom) :
+            for ix in range(3) :
+                self.ap[ia][ix]+=shift[ix]
 
     def fileread_xyz(self,filename="") :
         if filename=="" :

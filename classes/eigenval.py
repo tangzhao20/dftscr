@@ -63,13 +63,6 @@ class EIGENVAL :
 
     def fileread_qexml(self, filename="") :
         # only support Ns=1 here
-        # Nk, Nb, Ns
-        # eig[k][b][s]
-        # occ[k][b][s]
-        # Nvb[s]
-        # is_semic
-        # kp[k][3]
-        # wt[k]
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -108,13 +101,6 @@ class EIGENVAL :
 
     def fileread_wan(self, Nb_pad=0) :
         # only support Ns=1 and semiconductor
-        # Nk, Nb, Ns
-        # eig[k][b][s]
-        # occ[k][b][s] # empty
-        # Nvb[s]       # empty
-        # is_semic     # empty
-        # kp[k][3]
-        # wt[k]
         files = os.listdir()
 
         for f in files:
@@ -160,6 +146,65 @@ class EIGENVAL :
                 fempty=True
         self.Nb=len(self.eig[0])
         self.Ns=1
+
+    def fileread_parsec(self) :
+        # Nk, Nb, Ns
+        # eig[k][b][s]
+        # occ[k][b][s]
+        # Nvb[s]
+        # is_semic
+        # kp[k][3]
+        # wt[k][3]
+
+        filename="bands.dat"
+        f1=open(filename,"r")
+        line=f1.readlines()
+        f1.close()
+
+        word=line[1].split()
+        self.Ns=int(word[0])
+        if self.Ns==2 :
+            print("Error: Ns==2 is not supported for parsec. See eigenval.py")
+            sys.exit()
+        self.Nb=int(word[1])
+        Np=int(word[2])
+        ef=float(word[3])
+        self.Nk=0
+        for ip in range(Np) :
+            word=line[ip+3].split()
+            self.Nk+=int(word[1])
+
+        il=4+Np
+        for ik in range(self.Nk): 
+            word=line[il].split()
+            self.kp.append([float(word[3]),float(word[4]),float(word[5])])
+            il+=1
+            eig0=[]
+            for ib in range(self.Nb) :
+                eig0.append([float(line[il].split()[0])])
+                il+=1
+            self.eig.append(eig0)
+
+        # convert kp from 1/bohr to 1/A
+        for ik in range(self.Nk) :
+            for ix in range(3) :
+                self.kp[ik][ix]=self.kp[ik][ix]/0.529177210903
+
+        self.eigshift(ef)
+        Nvb=[]
+        for ik in range(self.Nk) :
+            for ib in range(self.Nb) :
+                if self.eig[ik][ib][0]>1e-6 :
+                    Nvb.append(ib)
+                    break
+        if max(Nvb)==min(Nvb) :
+            self.is_semic=True
+            self.Nvb=[max(Nvb)]
+        else :
+            self.is_semic=False
+        for ik in range(self.Nk) :
+            for ib in range(self.Nb) :
+                self.eig[ik][ib][0]*=13.605693122994
 
 #########################################################################
     
