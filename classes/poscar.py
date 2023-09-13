@@ -228,13 +228,12 @@ class POSCAR:
                 if word[1].lower()=="bulk" :
                     lbulk=True
                     lmolecule=False
-                    print("Error: bulk structure for parsec is not available.")
-                    sys.exit()
                     break
 
         Fat=False
         Flc=False
         self.lc=[[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        factor_lc=0.529177210903
         for il in range(len(line)):
             word=line[il].replace(":"," ").replace("="," ").split()
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
@@ -261,28 +260,38 @@ class POSCAR:
                     self.lc[2][2]=alat
                 elif lslab :
                     self.lc[2][2]=alat
+            if word[0].lower()=="lattice_vector_scale" :
+                factor_lc=float(word[1])
+                if len(word)<3 or word[2].lower()!="ang" :
+                    factor_lc=factor_lc*0.529177210903
             if word[0].lower()=="atom_types_num" :
                 self.Ntype=int(word[1])
             if word[0].lower()=="atom_type" :
                 self.atomtype.append(word[1])
                 self.Naint.append(0)
-            if word[0].lower()=="coordinate_unit" and word[1].lower()=="cartesian_ang" :
-                factor=1.0
-            if word[0].lower()=="coordinate_unit" and word[1].lower()=="cartesian_bohr" :
-                factor=0.529177210903
+            if word[0].lower()=="coordinate_unit" :
+                if word[1].lower()=="cartesian_ang" :
+                    lcart=True
+                    factor_ap=1.0
+                elif word[1].lower()=="lattice_vectors" :
+                    lcart=False
+                    factor_ap=1.0
+                else : # cartesian_bohr
+                    lcart=True
+                    factor_ap=0.529177210903
             if Flc==True :
                 for ix in range(3) :
-                    self.lc[ilc][ix]=float(word[ix])*0.529177210903
+                    self.lc[ilc][ix]=float(word[ix])*factor_lc
                 ilc+=1
             if Fat==True :
                 ap=[]
                 for ix in range(3) :
-                    ap.append(float(word[ix])*factor)
+                    ap.append(float(word[ix])*factor_ap)
                 self.ap.append(ap)
                 self.Naint[-1]+=1
                 self.Natom+=1
-
-        self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
+        if lcart :
+            self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
         if lmolecule :
             shift=[0.5,0.5,0.5]
         elif lslab :
@@ -441,37 +450,35 @@ class POSCAR:
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
         elif lslab :
             f2.write("Boundary_Conditions slab\n")
+            radius=self.lc[2][2]*0.5/funit
+            if lbohr :
+                f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+            else :
+                f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
+            Nx=2
+        else :
+            f2.write("Boundary_Conditions bulk\n")
+            Nx=3
+
+        if not lmolecule : 
             if lbohr==False :
                 f2.write("Lattice_Vector_Scale 1.0 ang\n")
             f2.write("begin Cell_Shape\n")
-            for ix1 in range(2) :
+            for ix1 in range(Nx) :
                 for ix2 in range(3) :
                     f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
                 f2.write("\n")
             f2.write("end Cell_Shape\n\n")
-            f2.write(f"Boundary_Sphere_Radius {self.lc[2][2]*0.5/funit:18.12f}\n\n")
 
             f2.write("Kpoint_Method mp\n\n")
             f2.write("begin Monkhorst_Pack_Grid\n")
-            kgrid=[]
-            for i in range(2) :
-                kgrid.append(math.floor(30.0/(self.lc[i][0]**2+self.lc[i][1]**2+self.lc[i][2]**2)**0.5)+1)
-            f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}\n")
-            f2.write("end Monkhorst_Pack_Grid\n\n")
+            for ix in range(Nx) :
+                kgrid=math.floor(30.0/(self.lc[ix][0]**2+self.lc[ix][1]**2+self.lc[ix][2]**2)**0.5)+1
+                f2.write(f"  {kgrid:d}")
+            f2.write("\nend Monkhorst_Pack_Grid\n\n")
             f2.write("begin Monkhorst_Pack_Shift\n")
             f2.write("0.0  0.0  0.0\n")
             f2.write("end Monkhorst_Pack_Shift\n\n")
-
-        else : # print lattice constant in bohr for bulk
-            f2.write("Boundary_Conditions bulk\n")
-            if lbohr==False :
-                f2.write("Lattice_Vector_Scale 1.0 ang\n")
-            f2.write("begin Cell_Shape\n")
-            for ix1 in range(3) :
-                for ix2 in range(3) :
-                    f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
-                f2.write("\n")
-            f2.write("end Cell_Shape\n\n")
 
         f2.write("Atom_Types_Num "+str(len(self.atomtype))+"\n")
         if lcartesian :
@@ -616,7 +623,7 @@ class POSCAR:
             disp[ia][1]=disp[ia][1]/fdisp
             disp[ia][2]=disp[ia][2]/fdisp
         reclc=self.reclc_out()
-        disp=np.matmul(np.array(disp),np.array(reclc)).tolist()
+        disp=(np.array(disp)@np.array(reclc)).tolist()
         for ia in range(self.Natom) :
             for ix in range(3) :
                 self.ap[ia][ix]=self.ap[ia][ix]+disp[ia][ix]*factor
@@ -729,7 +736,6 @@ class POSCAR:
         for i in range(self.Natom) :
             print(str(self.ap[i][0])+"  "+str(self.ap[i][1])+"  "+str(self.ap[i][2]))
         return(self.ap)
-
 
     def reclc_out(self) :
         reclc=np.linalg.inv(np.array(self.lc)).tolist()

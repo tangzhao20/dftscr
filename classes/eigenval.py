@@ -93,7 +93,7 @@ class EIGENVAL :
             # qe xml energies are in Hatree
             self.eig.append([[float(eig1)*27.211386245988] for eig1 in kp.find('eigenvalues').text.split()])
             self.occ.append([[float(occ1)] for occ1 in kp.find('occupations').text.split()])
-        self.kp=(np.array(self.kp)@(np.array(lc).T)).tolist()
+        self.kc2kd(lc)
 
         self.semic()
         if self.is_semic==True :
@@ -148,13 +148,6 @@ class EIGENVAL :
         self.Ns=1
 
     def fileread_parsec(self) :
-        # Nk, Nb, Ns
-        # eig[k][b][s]
-        # occ[k][b][s]
-        # Nvb[s]
-        # is_semic
-        # kp[k][3]
-        # wt[k][3]
 
         filename="bands.dat"
         f1=open(filename,"r")
@@ -188,7 +181,7 @@ class EIGENVAL :
         # convert kp from 1/bohr to 1/A
         for ik in range(self.Nk) :
             for ix in range(3) :
-                self.kp[ik][ix]=self.kp[ik][ix]/0.529177210903
+                self.kp[ik][ix]=self.kp[ik][ix]/0.529177210903*0.5/3.141592653589793238463
 
         self.eigshift(ef)
         Nvb=[]
@@ -222,13 +215,17 @@ class EIGENVAL :
         kpout=[]
         for ik in range(self.Nk) :
             kplabel=kp.findlabel(self.kp[ik],dim=0)
-            if kplabel!="elsewhere" and kplabelold!="elsewhere":
+            if kplabel!="elsewhere" and kplabel!=kplabelold and (kplabelold!="elsewhere" or max([abs(self.kp[ik][ix]-self.kp[ik-1][ix]) for ix in range(3)])>0.1) :
                 kpout.append([0.0])
             else :
                 dkpc=sum((kpc[ik]-kpc[ik-1])**2)**0.5
                 kpout[-1].append(kpout[-1][-1]+dkpc)
             kplabelold=kplabel
         return(kpout)
+
+    def kc2kd(self,lc) :
+        #convert kc from Cartesian to direct
+        self.kp=(np.array(self.kp)@(np.array(lc).T)).tolist()
 
     def eigtrans(self) :
         eigout=[]

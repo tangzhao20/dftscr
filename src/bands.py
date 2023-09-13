@@ -150,11 +150,12 @@ elif package in packagename["parsec"] :
 
     eigenval1=eigenval.EIGENVAL(empty=True)
     eigenval1.fileread_parsec()
+    eigenval1.kc2kd(poscar1.lc)
     
     kpoints1=kpoints_band.KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin()
     
-    x=eigenval1.bandkpout(kp=kpoints1)
+    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
     energy=eigenval1.eigtrans()
     
     xticks=kpoints1.xticks_out(rlc)

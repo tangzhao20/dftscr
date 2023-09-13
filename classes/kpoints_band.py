@@ -145,8 +145,8 @@ class KPOINTS_band :
     def filewrite_parsec(self, filename="parsec_kpath.dat") :
         f1=open(filename,"w")
         f1.write("begin Bandstruc\n")
+        ih2=1
         for p in self.xlabels :
-            ih2=1
             for ih in range(len(p)-1) :
                 f1.write(f"{ih2:4d}")
                 for ix in range(3) :
@@ -210,10 +210,11 @@ class KPOINTS_band :
         # k[3] is a k point in direct coordinate,
         # this function find the label of k
         # dim is the maximum dimension of searching. (point, line, plane, ...)
+        tol=1e-4
         if dim>=0 :
             for h in self.kpdict :
                 kh=self.kpdict[h]
-                if abs(kh[0]-k[0])<=1e-5 and abs(kh[1]-k[1])<=1e-5 and abs(kh[2]-k[2])<=1e-5 :
+                if abs(kh[0]-k[0])<=tol and abs(kh[1]-k[1])<=tol and abs(kh[2]-k[2])<=tol :
                     return h
         if dim>=1 :
             for h1 in self.kpdict :
@@ -228,7 +229,7 @@ class KPOINTS_band :
                     y2=kh2[1]-k[1]
                     z1=kh1[2]-k[2]
                     z2=kh2[2]-k[2]
-                    if abs(x1*y2-x2*y1)<=1e-5 and abs(y1*z2-y2*z1)<=1e-5 and abs(x1*z2-x2*z1)<=1.e-5:
+                    if abs(x1*y2-x2*y1)<=tol and abs(y1*z2-y2*z1)<=tol and abs(x1*z2-x2*z1)<=tol:
                         return "("+h1+","+h2+")"
         return "elsewhere"
 
