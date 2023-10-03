@@ -7,7 +7,7 @@
 #
 # Input: POSCAR
 
-from classes import poscar
+from classes import POSCAR
 import sys
 
 if len(sys.argv)<2 :
@@ -21,7 +21,7 @@ if z_vac<0 :
     print("Error: z_vac < 0")
     sys.exit()
 
-poscar1=poscar.POSCAR()
+poscar1=POSCAR()
 if max(abs(poscar1.lc[2][0]), abs(poscar1.lc[2][1]))>0.000001 :
     print("Error: a3 doesn't parllel to z")
     sys.exit()

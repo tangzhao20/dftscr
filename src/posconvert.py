@@ -4,7 +4,7 @@
 
 # Convert a package1 to package2 structure format.
 
-from classes import poscar
+from classes import POSCAR
 from commons import load_packagename
 import sys
 import os
@@ -24,7 +24,7 @@ if package1 in packagename["vasp"] :
         filename1=sys.argv[3]
     else :
         filename1="POSCAR"
-    poscar1=poscar.POSCAR(filename1)
+    poscar1=POSCAR(filename1)
 elif package1 in packagename['qe'] :
     if len(sys.argv)>=4 :
         filename1=sys.argv[3]
@@ -41,23 +41,23 @@ elif package1 in packagename['qe'] :
             print("package1 is qe. Use input scf/nscf/relax.in, or add the filename at the end:")
             print("python3 posconvert.py qe package2 filename1")
             sys.exit()
-    poscar1=poscar.POSCAR(empty=True)
+    poscar1=POSCAR(empty=True)
     poscar1.fileread_qe(filename1)
 elif package1 in packagename['qexml'] :
-    poscar1=poscar.POSCAR(empty=True)
+    poscar1=POSCAR(empty=True)
     poscar1.fileread_xml()
 elif package1 in packagename['prt'] :
-    poscar1=poscar.POSCAR(empty=True)
+    poscar1=POSCAR(empty=True)
     poscar1.fileread_prt("input")
 elif package1 in packagename['parsec'] :
-    poscar1=poscar.POSCAR(empty=True)
+    poscar1=POSCAR(empty=True)
     poscar1.fileread_parsec()
 elif package1 in packagename['xyz'] :
     if len(sys.argv)>=4 :
         filename1=sys.argv[3]
     else :
         filename1=""
-    poscar1=poscar.POSCAR(empty=True)
+    poscar1=POSCAR(empty=True)
     poscar1.fileread_xyz(filename1)
 else :
     print("Package "+package1+" input is not supported yet.")

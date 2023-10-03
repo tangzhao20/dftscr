@@ -7,13 +7,13 @@
 
 import yaml
 import matplotlib.pyplot as plt
-from classes import poscar
+from classes import POSCAR
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
 
-poscar_i=poscar.POSCAR("POSCAR_i")
-poscar_f=poscar.POSCAR("POSCAR_f")
+poscar_i=POSCAR("POSCAR_i")
+poscar_f=POSCAR("POSCAR_f")
 
 disp=poscar_f.displacement(poscar_i)
 

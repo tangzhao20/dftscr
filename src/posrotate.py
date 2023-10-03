@@ -4,7 +4,7 @@
 
 # posrotate.py theta(degrees)
 
-from classes import poscar
+from classes import POSCAR
 import sys
 import math
 
@@ -12,7 +12,7 @@ theta=math.radians(float(sys.argv[1]))
 costheta=math.cos(theta)
 sintheta=math.sin(theta)
 
-poscar1=poscar.POSCAR()
+poscar1=POSCAR()
 aa=poscar1.lc[0][0]
 bb=poscar1.lc[0][1]
 cc=poscar1.lc[1][0]

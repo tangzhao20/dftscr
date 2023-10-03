@@ -7,7 +7,7 @@
 # input: POSCAR
 # output: POSCAR.new
 
-from classes import poscar
+from classes import POSCAR
 import sys
 
 if len(sys.argv)<4 :
@@ -17,7 +17,7 @@ if len(sys.argv)<4 :
 factor=[int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3])]
 factor_t=factor[0]*factor[1]*factor[2]
 
-poscar1=poscar.POSCAR()
+poscar1=POSCAR()
 for i in range(3):
     for j in range(3):
         poscar1.lc[i][j]=poscar1.lc[i][j]*factor[i]

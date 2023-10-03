@@ -2,7 +2,7 @@
 
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
-from classes import poscar
+from classes import POSCAR
 import sys
 
 #================================================================
@@ -41,9 +41,9 @@ for l in line :
 #================================================================
 # Read the structure from .xyz files
 bohr=0.529177210903
-poscar1=poscar.POSCAR(empty=True)
+poscar1=POSCAR(empty=True)
 poscar1.fileread_xyz("sample.xyz")
-poscar2=poscar.POSCAR(empty=True)
+poscar2=POSCAR(empty=True)
 poscar2.fileread_xyz("tip.xyz")
 
 # move the sample top to z=0

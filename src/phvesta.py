@@ -10,15 +10,11 @@ scal=4
 adia=0.2  # diameter of the arrow
 rgb=[0,128,255] # arrow colors
 
-
-
 with open("qpoints.yaml") as f0:
     qp=yaml.full_load(f0)
 
 with open("structure.vesta") as f0:
     line=f0.readlines()
-
-
 
 Nl=len(line)
 Nb=len(qp["phonon"][0]["band"])
@@ -36,7 +32,6 @@ for ib in range(Nb):
         vec0.append(vec1)
     vec.append(vec0)
     
-
 # writting from here
 
 for ib in range(Nb) :
@@ -66,5 +61,3 @@ for ib in range(Nb) :
         il+=1
     f1.close()
 
-
-#print(vec["phonon"][0]["band"][0]["eigenvector"])

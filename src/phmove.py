@@ -9,7 +9,7 @@
 import sys
 import numpy as np
 import yaml
-from classes import poscar
+from classes import POSCAR
 
 if len(sys.argv)==1 :
     print("No index of phonon mode. set to 1.")
@@ -17,7 +17,7 @@ if len(sys.argv)==1 :
 else :
     ib=int(sys.argv[1])
 
-poscar0=poscar.POSCAR()
+poscar0=POSCAR()
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)

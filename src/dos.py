@@ -12,7 +12,7 @@ import sys
 import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from classes import doscar
+from classes import DOSCAR
 from commons import load_packagename, load_palette
 
 fvertical=False
@@ -30,9 +30,9 @@ package=sys.argv[1]
 packagename=load_packagename()
 
 if package in packagename["vasp"]: 
-    doscar0=doscar.DOSCAR()
+    doscar0=DOSCAR()
 elif package in packagename["qe"]+packagename["qeproj"]:
-    doscar0=doscar.DOSCAR(empty=True)
+    doscar0=DOSCAR(empty=True)
     # find a *.dos file
     files = os.listdir(".")
     fxml=False

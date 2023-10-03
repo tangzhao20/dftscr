@@ -7,13 +7,13 @@
 # pospath.py N
 # here N is the number of structures between initial two.
 
-from classes import poscar
+from classes import POSCAR
 import sys
 import copy
 
 N=int(sys.argv[1])
-poscar0=poscar.POSCAR("POSCAR_i")
-poscar1=poscar.POSCAR("POSCAR_f")
+poscar0=POSCAR("POSCAR_i")
+poscar1=POSCAR("POSCAR_f")
 if poscar0.match(poscar1) :
     pass
 else : 

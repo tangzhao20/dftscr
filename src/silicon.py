@@ -6,7 +6,7 @@
 # 3. add hydrogen atoms
 
 import sys
-from classes import poscar
+from classes import POSCAR
 
 radius=float(sys.argv[1])
 print(" raidus = "+str(radius)+" ")
@@ -130,7 +130,7 @@ for ia in range(len(si_b)) :
         H.append([si_b[ia][0]+si_h_4, si_b[ia][1]+si_h_4, si_b[ia][2]-si_h_4])
 
 # write to file
-poscar1=poscar.POSCAR(empty=True)
+poscar1=POSCAR(empty=True)
 lc_big=2*radius+10
 poscar1.lc=[[lc_big,0,0],[0,lc_big,0],[0,0,lc_big]]
 poscar1.Natom=len(si_a)+len(si_b)+len(H)
