@@ -15,6 +15,7 @@ class POSCAR:
     # ap[Natom][3]
     # seldyn[Natom][3] (if f_seldyn)
     # dmass{}
+    # ndim # 3 for bulks, 2 for slabs, and 0 for molecules
     
     def __init__(self, filename="POSCAR", empty=False) :
         if empty:
@@ -27,6 +28,7 @@ class POSCAR:
             self.Naint=[]
             self.ap=[]
             self.dmass={}
+            self.ndim=3 
             return
 
         f0=open(filename,"r")
@@ -198,14 +200,14 @@ class POSCAR:
                     self.ap.append([float(word[1]),float(word[2]),float(word[3])])
                     self.Naint[-1]+=1
                     self.Natom+=1
-        
+
         detlc=self.volume()
         factor=(volume/detlc)**(1.0/3.0)*0.529177210903
-        
+
         for i in range(3) :
             for j in range(3) :
                 self.lc[i][j]=self.lc[i][j]*factor
-        
+
         self.movetobox()
 
     def fileread_parsec(self, filename="parsec.in"):
@@ -213,21 +215,17 @@ class POSCAR:
         line=f1.readlines()
         f1.close()
 
-        lslab=False
-        lbulk=False
-        lmolecule=True
+        self.ndim=0
         for il in range(len(line)):
             word=line[il].replace(":"," ").replace("="," ").split()
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
                 continue
             if word[0].lower()=="boundary_conditions" :
                 if word[1].lower()=="slab" :
-                    lslab=True
-                    lmolecule=False
+                    self.ndim=2
                     break
                 if word[1].lower()=="bulk" :
-                    lbulk=True
-                    lmolecule=False
+                    self.ndim=3
                     break
 
         Fat=False
@@ -254,11 +252,11 @@ class POSCAR:
                 continue
             if word[0].lower()=="boundary_sphere_radius": 
                 alat=float(word[1])*0.529177210903*2.0 # in Bohr here
-                if lmolecule :
+                if self.ndim==0 :
                     self.lc[0][0]=alat
                     self.lc[1][1]=alat
                     self.lc[2][2]=alat
-                elif lslab :
+                elif self.ndim==2 :
                     self.lc[2][2]=alat
             if word[0].lower()=="lattice_vector_scale" :
                 factor_lc=float(word[1])
@@ -292,9 +290,9 @@ class POSCAR:
                 self.Natom+=1
         if lcart :
             self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
-        if lmolecule :
+        if self.ndim==0 :
             shift=[0.5,0.5,0.5]
-        elif lslab :
+        elif self.ndim==2 :
             shift=[0.0,0.0,0.5]
         else : # bulk
             shift=[0.0,0.0,0.0]
@@ -313,6 +311,7 @@ class POSCAR:
         if filename=="" :
             print("Error: .xyz file is not found")
             sys.exit()
+        self.ndim=0
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -427,28 +426,25 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, lmolecule=False, lslab=False):
+    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, ndim=3):
         print(" lcartesian = ",lcartesian)
         print(" lbohr = ",lbohr)
-        print(" lmolecule = ",lmolecule)
-        print(" lslab = ",lslab)
-        if lmolecule and lslab :
-            print("Error: both molecule and slab are True.")
-            sys.exit()
-        if lmolecule or lslab :
+        print(" ndim = ",ndim)
+        self.ndim=ndim
+        if self.ndim<3 :
             lcartesian=True
         f2=open(filename,"w")
         if lbohr :
             funit=0.529177210903
         else :
             funit=1.0
-        if lmolecule :
+        if self.ndim==0 :
             radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5/funit
             if lbohr :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
             else :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
-        elif lslab :
+        elif self.ndim==2 :
             f2.write("Boundary_Conditions slab\n")
             radius=self.lc[2][2]*0.5/funit
             if lbohr :
@@ -456,11 +452,11 @@ class POSCAR:
             else :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
             Nx=2
-        else :
+        else : # bulk
             f2.write("Boundary_Conditions bulk\n")
             Nx=3
 
-        if not lmolecule : 
+        if self.ndim>0 : 
             if lbohr==False :
                 f2.write("Lattice_Vector_Scale 1.0 ang\n")
             f2.write("begin Cell_Shape\n")
@@ -502,9 +498,9 @@ class POSCAR:
 
             f2.write("begin Atom_Coord\n")
             if lcartesian :
-                if lmolecule :
+                if self.ndim==0 :
                     shift=[-0.5,-0.5,-0.5]
-                elif lslab :
+                elif self.ndim==2 :
                     shift=[0.0,0.0,-0.5]
                 else : # bulk
                     shift=[0.0,0.0,0.0]
@@ -561,7 +557,8 @@ class POSCAR:
             for ix1 in range(3) :
                 for ix2 in range(3) :
                     apc[ix2]+=(self.ap[ia][ix1]-0.5)*self.lc[ix1][ix2]
-            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:18.12f}{apc[1]:18.12f}{apc[2]:18.12f}\n")
+            # write only 10 digits after the decimal point to eliminate small residuals
+            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:16.10f}{apc[1]:16.10f}{apc[2]:16.10f}\n")
             it2=it2+1
             if it2==self.Naint[it1] :
                 it1=it1+1
