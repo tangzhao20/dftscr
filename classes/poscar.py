@@ -320,7 +320,7 @@ class POSCAR:
         self.Natom=int(line[0].split()[0])
         lbohr=False
         word=line[1].split()
-        if len(word)>=1 and word[0]=="Bohr" :
+        if len(word)>=1 and word[0][0] in ["B","b"] :
             lbohr=True
         if len(line)<self.Natom+2 :
             print("Error: Length of file "+filename+" is less than Natom+2 "+str(self.Natom))
