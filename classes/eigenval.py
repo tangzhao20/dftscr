@@ -9,7 +9,7 @@ class EIGENVAL :
     # Nvb[s]
     # is_semic
     # kp[k][3]
-    # wt[k][3]
+    # wt[k]
 
     def __init__(self, filename="EIGENVAL",is_hse=False,empty=False) :
         self.wt=[]
@@ -148,8 +148,15 @@ class EIGENVAL :
         self.Ns=1
 
     def fileread_parsec(self) :
+        if os.path.isfile("bands.dat") :
+            filename="bands.dat"
+        elif os.path.isfile("eigen.dat"):
+            self.fileread_parsec_eigen()
+            return
+        else :
+            print("Error: Reading parsec eigenval needs bands.dat or eigen.dat")
+            sys.exit()
 
-        filename="bands.dat"
         f1=open(filename,"r")
         line=f1.readlines()
         f1.close()
@@ -198,6 +205,40 @@ class EIGENVAL :
         for ik in range(self.Nk) :
             for ib in range(self.Nb) :
                 self.eig[ik][ib][0]*=13.605693122994
+
+    def fileread_parsec_eigen(self) :
+        # Read the eigenvalues from eigen.dat.
+        # kp is missing in this file, so we assume the first k is gamma and read only this point.
+        filename="eigen.dat"
+
+        f0=open(filename,"r")
+        line=f0.readlines()
+        f0.close()
+
+        # Reading for Ns=1
+        self.Nk=1
+        self.Ns=1
+        self.eig=[[]]
+        self.occ=[[]]
+        for l in line :
+            word=l.split() 
+            if len(word)==0 or word[0][0] in ["!","#"] :
+                continue
+            if not word[0].isdigit() :
+                continue
+            ik=int(word[5])-1
+            if ik>0 :
+                break
+            ib=int(word[0])-1
+            eig0=float(word[1])*13.605693122994
+            occ0=float(word[3])
+            self.eig[0].append([eig0])
+            self.occ[0].append([occ0])
+        self.Nb=len(self.eig[0])
+        self.kp=[[0.0,0.0,0.0]]
+        self.wt=[[1.0]]
+        self.semic()
+        self.gap()
 
 #########################################################################
     
