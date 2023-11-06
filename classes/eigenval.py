@@ -61,8 +61,23 @@ class EIGENVAL :
                     
         del line
 
+    def __str__(self) :
+        str_out="\nEIGENVAL:\n"
+        str_out+=" Nk = "+str(self.Nk)+'\n'
+        str_out+=" Nb = "+str(self.Nb)+'\n'
+        str_out+=" Ns = "+str(self.Ns)+'\n'
+        if self.is_semic :
+            str_out+=" is_semic = True\n"
+            str_out+=f" vbm = {self.vbm:.2f} eV\n"
+            str_out+=f" cbm = {self.cbm:.2f} eV\n"
+            str_out+=f" Egdir = {self.edg:.2f} eV\n"
+            if self.eindg<self.edg : 
+                str_out+=f" Egind = {self.eindg:.2f} eV\n"
+        else :
+            str_out+=" is_semic = False\n"
+        return str_out
+
     def fileread_qexml(self, filename="") :
-        # only support Ns=1 here
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -83,16 +98,33 @@ class EIGENVAL :
                 lc[ix1][ix2]=lc[ix1][ix2]/factor
 
         self.Nk=len(kpoints)
-        self.Nb=int(kpoints[0].find('eigenvalues').get("size"))
-        self.Ns=1
+        if bool(tree.getroot().find("output").find("band_structure").find("lsda").text.split()) :
+            self.Ns=2
+        else :
+            self.Ns=1
+        self.Nb=int(kpoints[0].find('eigenvalues').get("size"))//self.Ns
         
         for kp in kpoints :
             # energies are in eV, and 2pi/a
             self.kp.append([float(kp1) for kp1 in kp.find('k_point').text.split()])
             self.wt.append(float(kp.find('k_point').get("weight")))
-            # qe xml energies are in Hatree
-            self.eig.append([[float(eig1)*27.211386245988] for eig1 in kp.find('eigenvalues').text.split()])
-            self.occ.append([[float(occ1)] for occ1 in kp.find('occupations').text.split()])
+            eig1=kp.find('eigenvalues').text.split()
+            occ1=kp.find('occupations').text.split()
+            # qe xml energies are in Hatree (Ha)
+            Ha=27.211386245988
+            eig0=[]
+            occ0=[]
+            if self.Ns==1 :
+                for ib in range(self.Nb) :
+                    eig0.append([float(eig1[ib])*Ha])
+                    occ0.append([float(occ1[ib])])
+            else : # Ns==2
+                for ib in range(self.Nb) :
+                    eig0.append([float(eig1[ib])*Ha,float(eig1[ib+self.Nb])*Ha])
+                    occ0.append([float(occ1[ib]),float(occ1[ib+self.Nb])])
+            self.eig.append(eig0)
+            self.occ.append(occ0)
+
         self.kc2kd(lc)
 
         self.semic()
@@ -215,9 +247,8 @@ class EIGENVAL :
         line=f0.readlines()
         f0.close()
 
-        # Reading for Ns=1
         self.Nk=1
-        self.Ns=1
+        self.Ns=0
         self.eig=[[]]
         self.occ=[[]]
         for l in line :
@@ -226,14 +257,26 @@ class EIGENVAL :
                 continue
             if not word[0].isdigit() :
                 continue
+            if self.Ns==0 :
+                if len(word)==7 :
+                    self.Ns=1
+                elif len(word)==8 :
+                    self.Ns=2
+                else :
+                    print("Error: number of columns in eigen.dat should be 7 or 8")
+                    sys.exit()
             ik=int(word[5])-1
             if ik>0 :
-                break
+                continue
             ib=int(word[0])-1
             eig0=float(word[1])*13.605693122994
             occ0=float(word[3])
-            self.eig[0].append([eig0])
-            self.occ[0].append([occ0])
+            if self.Ns==2 and word[7]=="dn" :
+                self.eig[0][ib].append(eig0)
+                self.occ[0][ib].append(occ0)
+            else : # Ns=1 or spin=up
+                self.eig[0].append([eig0])
+                self.occ[0].append([occ0])
         self.Nb=len(self.eig[0])
         self.kp=[[0.0,0.0,0.0]]
         self.wt=[[1.0]]
@@ -318,6 +361,7 @@ class EIGENVAL :
         self.cbm=1e10
         self.cbm_k=0
         self.cbm_s=0
+        # edg: direct band gap
         self.edg=1e10
         self.edg_k=0
         self.edg_s=0

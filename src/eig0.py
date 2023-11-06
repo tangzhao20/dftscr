@@ -34,9 +34,8 @@ elif package in packagename["qe"] :
 
     eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_qexml()
-    
+
 elif package in packagename["parsec"] :
-    # TODO: test parsec
     # Input: bands.dat
 
     eigenval1=EIGENVAL(empty=True)
@@ -82,7 +81,6 @@ mpl.rcParams.update({'font.size': 14})
 # band structure plot
 
 fig=plt.figure(figsize=(1.8,3.75))
-# TODO: Ns=2 need work. 
 gs0=fig.add_gridspec(1,eigenval1.Ns,wspace=0.0,hspace=0.00,left=0.45,right=0.97,top=0.97, bottom=0.07)
 
 ax=[]
