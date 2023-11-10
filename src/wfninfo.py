@@ -204,7 +204,7 @@ for ib in range(nstate0) :
 #f1.write(str(wfn))
 
 # Add any wfn processing code here
-# For example the norm checking:
+# For example the norm checking: ==========
 f1.write("Example of postprocessing:\n")
 remain=0.0
 for ib in range(nstate0) :
@@ -213,6 +213,8 @@ for ib in range(nstate0) :
         summ+=wfn[ib][ig]**2
     remain=max(remain,abs(summ*ntrans0-1))
 f1.write(f"maximum of abs(norm2(wfn[ib])-1): {remain:.2e}\n")
+# =========================================
+
 
 f0.close()
 f1.close()
