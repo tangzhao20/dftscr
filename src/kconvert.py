@@ -27,7 +27,7 @@ if package1 in packagename["vasp"] :
     kpoints1=KPOINTS_band()
 elif package1 in packagename["kpathin"] :
     kpoints1=KPOINTS_band(empty=True)
-    kpoints1.fileread_kpathin(nk_line=N)
+    kpoints1.fileread_kpathin(Nk_line=N)
 else :
     print("Package "+package1+" input is not supported yet.")
     print("python3 kconvert.py package1 package2 (N)")

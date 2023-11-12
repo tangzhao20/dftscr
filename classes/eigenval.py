@@ -62,20 +62,22 @@ class EIGENVAL :
         del line
 
     def __str__(self) :
-        str_out="\nEIGENVAL:\n"
-        str_out+=" Nk = "+str(self.Nk)+'\n'
-        str_out+=" Nb = "+str(self.Nb)+'\n'
-        str_out+=" Ns = "+str(self.Ns)+'\n'
+        str_out = "EIGENVAL:\n"
+        str_out += " Nk = " + str(self.Nk) + "\n"
+        str_out += " Nb = " + str(self.Nb) + "\n"
+        str_out += " Ns = " + str(self.Ns) + "\n"
         if self.is_semic :
-            str_out+=" is_semic = True\n"
-            str_out+=f" vbm = {self.vbm:.2f} eV\n"
-            str_out+=f" cbm = {self.cbm:.2f} eV\n"
-            str_out+=f" Egdir = {self.edg:.2f} eV\n"
-            if self.eindg<self.edg : 
-                str_out+=f" Egind = {self.eindg:.2f} eV\n"
+            str_out += " is_semic = True\n"
+            str_out += f" vbm = {self.vbm:.2f} eV\n"
+            str_out += f" cbm = {self.cbm:.2f} eV\n"
+            str_out += f" Egdir = {self.edg:.2f} eV\n"
+            if self.eindg < self.edg : 
+                str_out += f" Egind = {self.eindg:.2f} eV\n"
         else :
-            str_out+=" is_semic = False\n"
+            str_out += " is_semic = False\n"
         return str_out
+
+#########################################################################
 
     def fileread_qexml(self, filename="") :
         if filename=="" :
@@ -98,7 +100,7 @@ class EIGENVAL :
                 lc[ix1][ix2]=lc[ix1][ix2]/factor
 
         self.Nk=len(kpoints)
-        if bool(tree.getroot().find("output").find("band_structure").find("lsda").text.split()) :
+        if tree.getroot().find("output").find("band_structure").find("lsda").text in ["True", "true"] :
             self.Ns=2
         else :
             self.Ns=1

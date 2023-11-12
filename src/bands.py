@@ -74,6 +74,10 @@ elif package in packagename["qe"]+packagename["qeproj"] :
     
     xticks=kpoints1.xticks_out(rlc)
     xlabels=kpoints1.xlabels_out()
+
+    print(poscar1)
+    print(eigenval1)
+    print(kpoints1)
     
 elif package in packagename["wannier90"] :
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in

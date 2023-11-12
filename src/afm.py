@@ -79,7 +79,7 @@ for ia in range(poscar2.Natom) :
 f2=open("parsec_st.dat","w")
 f2.write("#---------output from afm.py----------\n")
 radius=0.0
-if poscar1.ndim==0:
+if poscar1.Ndim==0:
     for a in poscar1.ap :
         radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
     for a in poscar2.ap :
@@ -91,7 +91,7 @@ if poscar1.ndim==0:
     for a in poscar2.ap :
         radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
     radius=radius**0.5+10.0
-elif poscar1.ndim==2 :
+elif poscar1.Ndim==2 :
     for a in poscar1.ap :
         radius=max(radius,abs(a[2]))
     for a in poscar2.ap :
@@ -115,7 +115,7 @@ elif poscar1.ndim==2 :
     f2.write("0.0  0.0  0.0\n")
     f2.write("end Monkhorst_Pack_Shift\n\n")
 else :
-    print("Error: Only ndim = 0 or 2 are supported.")
+    print("Error: Only Ndim = 0 or 2 are supported.")
     sys.exit()
 
 f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")

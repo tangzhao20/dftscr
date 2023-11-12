@@ -15,7 +15,7 @@ class POSCAR:
     # ap[Natom][3]
     # seldyn[Natom][3] (if f_seldyn)
     # dmass{}
-    # ndim # 3 for bulks, 2 for slabs, and 0 for molecules
+    # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
     
     def __init__(self, filename="POSCAR", empty=False) :
         if empty:
@@ -28,7 +28,7 @@ class POSCAR:
             self.Naint=[]
             self.ap=[]
             self.dmass={}
-            self.ndim=3 
+            self.Ndim=3 
             return
 
         f0=open(filename,"r")
@@ -76,6 +76,17 @@ class POSCAR:
         del word
 
         self.dmass={}
+
+    def __str__(self) :
+        str_out = "POSCAR:\n"
+        str_out += " Ndim = " + str(self.Ndim) + "\n"
+        str_out += " Natom = " + str(self.Natom) + "\n"
+        str_out += " Ntype = " + str(self.Ntype) + "\n"
+        for it in range(self.Ntype) :
+            str_out += "  " + self.atomtype[it] + " " + str(self.Naint[it]) + "\n"
+        return str_out
+
+#########################################################################
 
     def fileread_qe(self, filename):
         f1=open(filename,"r")
@@ -215,17 +226,17 @@ class POSCAR:
         line=f1.readlines()
         f1.close()
 
-        self.ndim=0
+        self.Ndim=0
         for il in range(len(line)):
             word=line[il].replace(":"," ").replace("="," ").split()
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
                 continue
             if word[0].lower()=="boundary_conditions" :
                 if word[1].lower()=="slab" :
-                    self.ndim=2
+                    self.Ndim=2
                     break
                 if word[1].lower()=="bulk" :
-                    self.ndim=3
+                    self.Ndim=3
                     break
 
         Fat=False
@@ -252,11 +263,11 @@ class POSCAR:
                 continue
             if word[0].lower()=="boundary_sphere_radius": 
                 alat=float(word[1])*0.529177210903*2.0 # in Bohr here
-                if self.ndim==0 :
+                if self.Ndim==0 :
                     self.lc[0][0]=alat
                     self.lc[1][1]=alat
                     self.lc[2][2]=alat
-                elif self.ndim==2 :
+                elif self.Ndim==2 :
                     self.lc[2][2]=alat
             if word[0].lower()=="lattice_vector_scale" :
                 factor_lc=float(word[1])
@@ -290,9 +301,9 @@ class POSCAR:
                 self.Natom+=1
         if lcart :
             self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
-        if self.ndim==0 :
+        if self.Ndim==0 :
             shift=[0.5,0.5,0.5]
-        elif self.ndim==2 :
+        elif self.Ndim==2 :
             shift=[0.0,0.0,0.5]
         else : # bulk
             shift=[0.0,0.0,0.0]
@@ -311,7 +322,7 @@ class POSCAR:
         if filename=="" :
             print("Error: .xyz file is not found")
             sys.exit()
-        self.ndim=0
+        self.Ndim=0
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -426,25 +437,25 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, ndim=3):
+    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=3):
         print(" lcartesian = ",lcartesian)
         print(" lbohr = ",lbohr)
-        print(" ndim = ",ndim)
-        self.ndim=ndim
-        if self.ndim<3 :
+        print(" Ndim = ",Ndim)
+        self.Ndim=Ndim
+        if self.Ndim<3 :
             lcartesian=True
         f2=open(filename,"w")
         if lbohr :
             funit=0.529177210903
         else :
             funit=1.0
-        if self.ndim==0 :
+        if self.Ndim==0 :
             radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5/funit
             if lbohr :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
             else :
                 f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
-        elif self.ndim==2 :
+        elif self.Ndim==2 :
             f2.write("Boundary_Conditions slab\n")
             radius=self.lc[2][2]*0.5/funit
             if lbohr :
@@ -456,7 +467,7 @@ class POSCAR:
             f2.write("Boundary_Conditions bulk\n")
             Nx=3
 
-        if self.ndim>0 : 
+        if self.Ndim>0 : 
             if lbohr==False :
                 f2.write("Lattice_Vector_Scale 1.0 ang\n")
             f2.write("begin Cell_Shape\n")
@@ -498,9 +509,9 @@ class POSCAR:
 
             f2.write("begin Atom_Coord\n")
             if lcartesian :
-                if self.ndim==0 :
+                if self.Ndim==0 :
                     shift=[-0.5,-0.5,-0.5]
-                elif self.ndim==2 :
+                elif self.Ndim==2 :
                     shift=[0.0,0.0,-0.5]
                 else : # bulk
                     shift=[0.0,0.0,0.0]

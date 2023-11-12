@@ -63,9 +63,9 @@ else :
     print("Error: pbc present, wavinfo.py need work.")
     sys.exit()
 
-ndim=np.fromfile(f0, dtype=np.int32, count=1)[0]
+Ndim=np.fromfile(f0, dtype=np.int32, count=1)[0]
 f0.read(8)
-f1.write("Ndim = "+str(ndim)+"\n")
+f1.write("Ndim = "+str(Ndim)+"\n")
 
 shift=np.fromfile(f0, dtype=np.double, count=3)
 f0.read(8)

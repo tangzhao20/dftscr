@@ -73,13 +73,13 @@ elif package2 in packagename['prt'] :
 elif package2 in packagename['parsec'] :
     lbohr=False
     lcart=False
-    ndim=3
+    Ndim=3
     for iw in range(len(sys.argv)-1,-1,-1) :
         if sys.argv[iw].startswith("molecule") :
-            ndim=0
+            Ndim=0
             del sys.argv[iw]
         elif sys.argv[iw].startswith("slab") :
-            ndim=2
+            Ndim=2
             del sys.argv[iw]
         elif sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr") :
             lbohr=True
@@ -87,7 +87,7 @@ elif package2 in packagename['parsec'] :
         elif sys.argv[iw].startswith("cart") or sys.argv[iw].startswith("Cart") :
             lcart=True
             del sys.argv[iw]
-    poscar1.filewrite_parsec(lcartesian=lcart,lbohr=lbohr,ndim=ndim)
+    poscar1.filewrite_parsec(lcartesian=lcart,lbohr=lbohr,Ndim=Ndim)
 elif package2 in packagename['wannier90'] :
     poscar1.filewrite_wannier90()
 elif package2 in packagename['xyz'] :

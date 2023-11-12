@@ -9,7 +9,7 @@ class KPOINTS_band :
         # use kpdict[xlabels[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
 
         if empty:
-            self.nk_line=0
+            self.Nk_line=0
             return
 
         f0=open(filename,"r")
@@ -22,7 +22,7 @@ class KPOINTS_band :
             print("fractional coordinates of k-points required.")
             sys.exit()
 
-        self.nk_line=int(line[1].split()[0]) # kpoints on a line
+        self.Nk_line=int(line[1].split()[0]) # kpoints on a line
 
         greek=self.loadgreek()
 
@@ -45,9 +45,21 @@ class KPOINTS_band :
                 self.xlabels[-1].append(label)
             ffirst=not ffirst
 
-    def fileread_kpathin(self,filename="kpath.in",nk_line=40):
+    def __str__(self) :
+        str_out = "KPOINTS:\n"
+        str_out += " Nk_line = " + str(self.Nk_line) + "\n" 
+        for xlabel in self.xlabels :
+            str_out += " "
+            for xlabel0 in xlabel :
+                str_out += " " + xlabel0
+            str_out += "\n"
+        return str_out
 
-        self.nk_line=nk_line
+#########################################################################
+
+    def fileread_kpathin(self,filename="kpath.in",Nk_line=40):
+
+        self.Nk_line=Nk_line
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -98,10 +110,10 @@ class KPOINTS_band :
         for ip in range(len(self.xlabels)):
             kplot.append(self.kpdict[self.xlabels[ip][0]])
             for ih in range(len(self.xlabels[ip])-1):
-                for ik in range(self.nk_line) :
+                for ik in range(self.Nk_line) :
                     k=[0.0,0.0,0.0]
                     for ix in range(3) :
-                        k[ix]=self.kpdict[self.xlabels[ip][ih]][ix]*float(self.nk_line-ik-1)/float(self.nk_line)+self.kpdict[self.xlabels[ip][ih+1]][ix]*float(ik+1)/float(self.nk_line)
+                        k[ix]=self.kpdict[self.xlabels[ip][ih]][ix]*float(self.Nk_line-ik-1)/float(self.Nk_line)+self.kpdict[self.xlabels[ip][ih+1]][ix]*float(ik+1)/float(self.Nk_line)
                     kplot.append(k)
 
         f1=open(filename,"w")
@@ -162,7 +174,7 @@ class KPOINTS_band :
 #########################################################################
 
     def xlabels_out(self):
-        xlabels=[self.xlabels[0]]
+        xlabels=[self.xlabels[0][:]]
         for ip in range(1,len(self.xlabels)) :
             xlabels[-1][-1]=xlabels[-1][-1]+"|"+self.xlabels[ip][0]
             xlabels.append([""])
