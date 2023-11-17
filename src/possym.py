@@ -3,13 +3,24 @@
 # Find the symmetry operations of a structure
 
 import sys
+import os
 from classes import POSCAR
 
 from commons import load_symops
 from v3math import v3matchpp, v3dpp
 
+lname=False
+for iw in range(1,len(sys.argv)) :
+    if os.path.isfile(sys.argv[iw]) :
+        filename1=sys.argv[iw]
+        lname=True
+        del sys.argv[iw]
+        break
 poscar1=POSCAR(empty=True)
-poscar1.fileread_parsec()
+if lname :
+    poscar1.fileread_parsec(filename1)
+else :
+    poscar1.fileread_parsec()
 
 mtx, ops = load_symops()
 
@@ -53,5 +64,5 @@ for isym in range(48) :
             break
     if lwrite :
         #print(isym+1,ops[isym],mtx[isym])
-        symlist.append(isym)
+        symlist.append(isym+1)
 print(symlist)

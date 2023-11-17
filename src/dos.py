@@ -17,13 +17,15 @@ from commons import load_packagename, load_palette
 
 fvertical=False
 filename_out="dos.png"
-if len(sys.argv)>1 and sys.argv[1] in ["v","vertical"] :
-    fvertical=True
-    filename_out="dos_v.png"
-    del sys.argv[1]
 
+for iw in range(1,len(sys.argv)) :
+    if sys.argv[iw] in ["v","vertical"] :
+        fvertical=True
+        filename_out="dos_v.png"
+        del sys.argv[iw]
+        break
 if len(sys.argv)<=1 :
-    print("python dos.py (v) package (Emin) (Emax)")
+    print("python dos.py package (v) (Emin) (Emax)")
     sys.exit()
 package=sys.argv[1]
 

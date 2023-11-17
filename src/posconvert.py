@@ -20,16 +20,23 @@ package1=sys.argv[1]
 package2=sys.argv[2]
 
 if package1 in packagename["vasp"] :
-    if len(sys.argv)>=4 :
-        filename1=sys.argv[3]
-    else :
-        filename1="POSCAR"
+    filename1="POSCAR"
+    for iw in range(3,len(sys.argv)) :
+        if os.path.isfile(sys.argv[iw]) :
+            filename1=sys.argv[iw]
+            del sys.argv[iw]
+            break
     poscar1=POSCAR(filename1)
 elif package1 in packagename['qe'] :
-    if len(sys.argv)>=4 :
-        filename1=sys.argv[3]
-    else :
-        # find a scf.in or nscf.in file
+    lname=False
+    for iw in range(3,len(sys.argv)) :
+        if os.path.isfile(sys.argv[iw]) :
+            filename1=sys.argv[iw]
+            lname=True
+            del sys.argv[iw]
+            break
+    if lname==False :
+        # find a scf/nscf/relax.in file
         files = os.listdir()
         if "scf.in" in files:
             filename1="scf.in"
@@ -53,10 +60,12 @@ elif package1 in packagename['parsec'] :
     poscar1=POSCAR(empty=True)
     poscar1.fileread_parsec()
 elif package1 in packagename['xyz'] :
-    if len(sys.argv)>=4 :
-        filename1=sys.argv[3]
-    else :
-        filename1=""
+    filename1=""
+    for iw in range(3,len(sys.argv)) :
+        if os.path.isfile(sys.argv[iw]) :
+            filename1=sys.argv[iw]
+            del sys.argv[iw]
+            break
     poscar1=POSCAR(empty=True)
     poscar1.fileread_xyz(filename1)
 else :
@@ -75,7 +84,7 @@ elif package2 in packagename['parsec'] :
     lcart=False
     Ndim=3
     for iw in range(len(sys.argv)-1,-1,-1) :
-        if sys.argv[iw].startswith("molecule") :
+        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") :
             Ndim=0
             del sys.argv[iw]
         elif sys.argv[iw].startswith("slab") :
