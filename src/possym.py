@@ -9,6 +9,7 @@ from classes import POSCAR
 from commons import load_symops
 from v3math import v3matchpp, v3dpp
 
+# The structure is read from parsec format
 lname=False
 for iw in range(1,len(sys.argv)) :
     if os.path.isfile(sys.argv[iw]) :
