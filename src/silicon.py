@@ -133,6 +133,7 @@ for ia in range(len(si_b)) :
 
 # write to file
 poscar1=POSCAR(empty=True)
+poscar1.title="Si_r="+str(radius)+"A"
 lc_big=2*radius+10
 poscar1.lc=[[lc_big,0,0],[0,lc_big,0],[0,0,lc_big]]
 poscar1.Natom=len(si_a)+len(si_b)+len(H)

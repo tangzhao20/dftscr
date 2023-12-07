@@ -19,7 +19,7 @@ class POSCAR:
     
     def __init__(self, filename="POSCAR", empty=False) :
         if empty:
-            self.title="SYSTEM\n"
+            self.title="SYSTEM"
             self.lc=[]
             self.Natom=0
             self.Ntype=0
@@ -36,7 +36,7 @@ class POSCAR:
         f0.close()
 
         lineoff=0
-        self.title=line[0]
+        self.title=line[0].rstrip('\n')
         factor=float(line[1].split()[0])
         self.lc=[]
         for i in range(2,5) :
@@ -362,7 +362,7 @@ class POSCAR:
 
     def filewrite(self, filename="POSCAR.new"):
         f1=open(filename,"w")
-        f1.write(self.title)
+        f1.write(self.title+'\n')
         f1.write('1.0\n')
         for i in range(3) :
             for j in range(3) :
