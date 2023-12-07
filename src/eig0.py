@@ -74,11 +74,13 @@ else :
     ymax=5.0
     ymin=-5.0
 
-colpal=load_palette() #color palette: [blue, orange, gray, white, black]
+palette=load_palette() # color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
+
+linecolor=["blue","orange"]
 
 fig=plt.figure(figsize=(1.8,3.75))
 gs0=fig.add_gridspec(1,eigenval1.Ns,wspace=0.0,hspace=0.00,left=0.45,right=0.97,top=0.97, bottom=0.07)
@@ -87,29 +89,29 @@ ax=[]
 for ispin in range(eigenval1.Ns):
     ax.append(fig.add_subplot(gs0[ispin]))
 
-    ax[ispin].grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
-    ax[ispin].axhline(linewidth=1,color=colpal[2],zorder=0)
+    ax[ispin].grid(axis="x",linewidth=1, color=palette["gray"],zorder=0)
+    ax[ispin].axhline(linewidth=1,color=palette["gray"],zorder=0)
 
     for ib in range(eigenval1.Nb) :
         if eigenval1.occ[ik_gamma][ib][ispin] >0.5 :
             linestyle="solid"
         else :
             linestyle="dashed"
-        ax[ispin].axhline(y=eigenval1.eig[ik_gamma][ib][ispin],linestyle=linestyle,linewidth=1,color=colpal[ispin],zorder=2)
+        ax[ispin].axhline(y=eigenval1.eig[ik_gamma][ib][ispin],linestyle=linestyle,linewidth=1,color=palette[linecolor[ispin]],zorder=2)
 
 outputname="eig0.png"
 
-ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
+ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=palette["black"])
 for ispin in range(eigenval1.Ns):
     ax[ispin].set_ylim(ymin,ymax)
     ax[ispin].set_xlim(0,1)
     ax[ispin].set_xticks([])
     ax[ispin].tick_params(axis="x", direction="in", length=0)
-    ax[ispin].tick_params(axis="y", left=False, right=False, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+    ax[ispin].tick_params(axis="y", left=False, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
     if ispin!=0 :
         ax[ispin].yaxis.set_ticklabels([])
     for edge in ["bottom", "top", "left", "right"] :
-        ax[ispin].spines[edge].set_color(colpal[4])
+        ax[ispin].spines[edge].set_color(palette["black"])
         ax[ispin].spines[edge].set_linewidth(1)
         ax[ispin].spines[edge].set_zorder(4)
 ax[0].tick_params(axis="y", left=True)

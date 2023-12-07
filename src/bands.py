@@ -224,11 +224,14 @@ else :
     ymax=5.0
     ymin=-5.0
 
-colpal=load_palette() #color palette: [blue, orange, gray, white, black]
+palette=load_palette() #color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
+
+spinlabel=["spin up","spin down"]
+linecolor=["blue","orange"]
 
 fig=plt.figure(figsize=(5,3.75))
 gs0=fig.add_gridspec(1,len(xticks),wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07,width_ratios=width[:len(xticks)])
@@ -236,15 +239,14 @@ ax=[]
 for ip in range(len(xticks)):
     ax.append(fig.add_subplot(gs0[ip]))
 
-    ax[ip].grid(axis="x",linewidth=1, color=colpal[2],zorder=0)
-    ax[ip].axhline(linewidth=1,color=colpal[2],zorder=0)
-    spinlabel=["spin up","spin down"]
-    for s in range(eigenval1.Ns) :
-        for b in range(eigenval1.Nb) :
-            if eigenval1.Ns==2 and b==0 :
-                ax[ip].plot(x[ip],energy[s][b][ixl[ip]:ixr[ip]],color=colpal[s],label=spinlabel[s],linewidth=1,zorder=3-s)
+    ax[ip].grid(axis="x",linewidth=1, color=palette["gray"],zorder=0)
+    ax[ip].axhline(linewidth=1,color=palette["gray"],zorder=0)
+    for ispin in range(eigenval1.Ns) :
+        for ib in range(eigenval1.Nb) :
+            if eigenval1.Ns==2 and ib==0 :
+                ax[ip].plot(x[ip],energy[ispin][ib][ixl[ip]:ixr[ip]],color=palette[linecolor[ispin]],label=spinlabel[ispin],linewidth=1,zorder=3-ispin)
             else :
-                ax[ip].plot(x[ip],energy[s][b][ixl[ip]:ixr[ip]],color=colpal[s],linewidth=1,zorder=3-s)
+                ax[ip].plot(x[ip],energy[ispin][ib][ixl[ip]:ixr[ip]],color=palette[linecolor[ispin]],linewidth=1,zorder=3-ispin)
 
 outputname="bs.png"
 
@@ -277,7 +279,7 @@ if lproj:
     projplotsize=procar1.plot(atomflag,orbflag,dotsize)
     for ip in range(len(xticks)):
         for ib in range(eigenval1.Nb):
-            ax[ip].scatter(x[ip],energy[0][ib][ixl[ip]:ixr[ip]],s=projplotsize[ib][ixl[ip]:ixr[ip]],c=colpal[1],zorder=2)
+            ax[ip].scatter(x[ip],energy[0][ib][ixl[ip]:ixr[ip]],s=projplotsize[ib][ixl[ip]:ixr[ip]],c=palette["orange"],zorder=2)
     outputname="proj_"+atomlist+"_"+orblist+".png"
     
     f2=open("proj_"+atomlist+"_"+orblist+".dat","w")
@@ -295,8 +297,8 @@ if lproj:
 
 if fsecond :
     for ip in range(len(xticks)):
-        for b in range(eigenval2.Nb):
-            ax[ip].plot(x2[ip],energy2[0][b][ix2l[ip]:ix2r[ip]],color=colpal[1],linewidth=1,zorder=2)
+        for ib in range(eigenval2.Nb):
+            ax[ip].plot(x2[ip],energy2[0][ib][ix2l[ip]:ix2r[ip]],color=palette["orange"],linewidth=1,zorder=2)
     f3=open("eigenval2.dat","w")
     for ib in range(len(energy2[0])):
         for ip in range(len(xticks)):
@@ -307,17 +309,17 @@ if fsecond :
         f3.write("\n")
     f3.close()
 
-ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=colpal[4])
+ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=palette["black"])
 for ip in range(len(xticks)):
     ax[ip].set_ylim(ymin,ymax)
     ax[ip].set_xlim(xticks[ip][0],xticks[ip][-1])
-    ax[ip].set_xticks(xticks[ip],xlabels[ip],color=colpal[4])
+    ax[ip].set_xticks(xticks[ip],xlabels[ip],color=palette["black"])
     ax[ip].tick_params(axis="x", direction="in", length=0)
-    ax[ip].tick_params(axis="y", left=False, right=False, direction="in", color=colpal[2], labelcolor=colpal[4], width=1, zorder=0)
+    ax[ip].tick_params(axis="y", left=False, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
     if ip!=0 :
         ax[ip].yaxis.set_ticklabels([])
     for edge in ["bottom", "top", "left", "right"] :
-        ax[ip].spines[edge].set_color(colpal[4])
+        ax[ip].spines[edge].set_color(palette["black"])
         ax[ip].spines[edge].set_linewidth(1)
         ax[ip].spines[edge].set_zorder(4)
 ax[0].tick_params(axis="y", left=True)

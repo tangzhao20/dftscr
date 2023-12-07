@@ -16,19 +16,19 @@ def load_packagename() :
     return packagename
 
 def load_palette() :
-    # read the color palette from the data/palette.dat into a list [blue, orange, gray, white, black] :
+    # read the color palette from the data/palette.dat into a dictionary :
     # data/palette.dat: key, values
     this_dir, this_filename = os.path.split(__file__)
     DATA_PATH = os.path.join(this_dir, "..", "data", "palette.dat")
     f0=open(DATA_PATH,"r")
     line=f0.readlines()
     f0.close()
-    palette=[]
+    palette={}
     for l in line :
         word=l.split()
         if len(word)==0 or word[0][0] in {"#", "!"} :
             continue
-        palette.append("#"+word[1])
+        palette[word[0]]="#"+word[1]
     return palette
 
 def load_symops() :
