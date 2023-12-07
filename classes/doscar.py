@@ -40,10 +40,17 @@ class DOSCAR :
             self.dos[0][il]=float(word[1])
             if self.Ns==2 :
                 self.dos[1][il]=float(word[2])
-            
-        del line
+
+    def __str__(self) :
+        str_out = "DOSCAR:\n"
+        str_out += " Ns = " + str(self.Ns) + "\n"
+        str_out += " Nedos = " + str(self.Nedos) + "\n"
+        return str_out
+
+#######################################################################
 
     def fileread_xml(self, filename="") :
+        # read dos from .xml file
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -159,7 +166,7 @@ class DOSCAR :
         self.orbname=["s","pz","px","py"]
         self.Lpdos=True
                 
-################################################################################
+#######################################################################
 
     def energyshift(self,ezero) :
         for ie in range(self.Nedos) :
