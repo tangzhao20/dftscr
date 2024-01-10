@@ -203,7 +203,7 @@ class KPOINTS_band :
 
     def loadgreek(self):
         this_dir, this_filename = os.path.split(__file__)
-        DATA_PATH = os.path.join(this_dir, "..", "data", "greek.dat")
+        DATA_PATH = os.path.join(this_dir, "..", "..", "data", "greek.dat")
         f0=open(DATA_PATH,"r")
         line=f0.readlines()
         f0.close()
