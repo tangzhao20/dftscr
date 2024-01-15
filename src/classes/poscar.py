@@ -759,7 +759,7 @@ class POSCAR:
         if self.dmass :
             return
         this_dir, this_filename = os.path.split(__file__)
-        DATA_PATH = os.path.join(this_dir, "..", "data", "atomicmass.dat")
+        DATA_PATH = os.path.join(this_dir, "..", "..", "data", "atomicmass.dat")
         f0=open(DATA_PATH,"r")
         line=f0.readlines()
         f0.close()
