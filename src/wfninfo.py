@@ -9,6 +9,7 @@
 import sys
 import os
 import numpy as np
+from v3math import v3tm3
 
 def formatprint(mat, dim0, fstr) :
     # dim0 is the number of rows
@@ -76,17 +77,25 @@ f0.read(8)
 f1.write("Nwedge = "+str(nwedge)+" (Ndim in irreducible wedge)\n")
 f1.write("Ntrans = "+str(ntrans)+"\n")
 
-rmtrx=np.fromfile(f0, dtype=np.int32, count=9*ntrans)
+rmtrx = np.fromfile(f0, dtype = np.int32, count = 9 * ntrans)
 f0.read(8)
-trans=np.fromfile(f0, dtype=np.double, count= 9*ntrans)
+trans = np.fromfile(f0, dtype = np.double, count = 9 * ntrans)
 f0.read(8)
-tnp=np.fromfile(f0, dtype=np.double, count= 3*ntrans)
+tnp = np.fromfile(f0, dtype = np.double, count = 3 * ntrans)
 f0.read(8)
 ii=0
 if stype[2]==0 :
+    M=[]
     for it in range(ntrans) :
         f1.write("M"+str(it)+" =\n")
         formatprint(trans[ii:ii+9], 3, "{:3.0f}")
+        M0=[]
+        for ix1 in range(3) :
+            M1=[]
+            for ix2 in range(3) :
+                M1.append(trans[ii+ix1*3+ix2])
+            M0.append(M1)
+        M.append(M0)
         ii+=9
 else :
     for it in range(ntrans) :
@@ -114,6 +123,13 @@ chi=np.fromfile(f0, dtype=np.int32, count=ntrans**2)
 f0.read(8)
 f1.write("chi = \n")
 formatprint(chi, ntrans, "{:3}")
+
+chimat=[]
+for isym1 in range(ntrans) :
+    chimat0=[]
+    for isym2 in range(ntrans) :
+        chimat0.append(trans[isym1*ntrans+isym2])
+    chimat.append(chimat0)
 
 kp_read=np.fromfile(f0, dtype=np.int32, count=3*nwedge)
 f0.read(8)
@@ -149,6 +165,8 @@ occ=np.fromfile(f0, dtype=np.double, count=nstate)
 f0.read(8)
 en=en*Ry
 irep=np.flip(irep)
+for ib in range(nstate) :
+    irep[ib]-=1
 en=np.flip(en)
 occ=np.flip(occ)
 for ib in range(nstate) :
@@ -215,6 +233,72 @@ for ib in range(nstate0) :
 f1.write(f"maximum of abs(norm2(wfn[ib])-1): {remain:.2e}\n")
 # =========================================
 
+
+# Checking for symmetries: ================
+f1.write("Checking for symmetries <i|j>, only reduced BZ\n")
+# change this 20 to nstate0
+N=5
+for ib1 in range(5) :
+    for ib2 in range(5) :
+        summ=0
+        for ig in range(nwedge0) :
+            summ+=wfn[ib1][ig]*wfn[ib2][ig]
+        if abs(summ)<=1e-6 : 
+            summ=0
+        f1.write(str(ib1)+" "+str(ib2)+" "+str(summ*ntrans0)+"\n")
+
+# creating a map of all kpr in full BZ
+f1.write("Checking for symmetries <i|j>, FULL BZ\n")
+
+kpr_full=[]
+kmap=[]
+kfactor=[]
+for isym1 in range(ntrans) :
+    kpr0=[]
+    kmap0=[]
+    kfactor0=[]
+    for isym2 in range(ntrans) :
+        for ig1 in range(nwedge0) :
+            # calculate the new kpr in full BZ, test if duplicate, then write
+            kpr1=v3tm3(kpr[ig1],M[isym2])
+            #fdup=False
+            #for ig2 in range(len(kpr0)) :
+            #    summ=0
+            #    for ix in range(3) :
+            #        summ+=abs(kpr0[ig2][ix]-kpr1[ix])
+            #    if summ<1e-8 :
+            #        fdup=True
+            #if fdup :
+            #    continue
+            kpr0.append(kpr1)
+            kmap0.append(ig1)
+            kfactor0.append(chimat[isym1][isym2])
+
+    kpr_full.append(kpr0)
+    kmap.append(kmap0)
+    kfactor.append(kfactor0)
+
+f1.write("kpr: \n")
+f1.write(str(len(kpr))+'\n')
+f1.write("kpr_full: \n")
+f1.write(str(len(kpr_full[0]))+'\n')
+#f1.write(str(kmap)+'\n')
+#f1.write(str(kfactor)+'\n')
+
+nwdge0_full=len(kpr_full[0])
+f1.write("nwdge0_full = "+str(nwdge0_full)+"\n")
+N=10
+f1.write("info of first "+str(N)+" bands:\n")
+for ib in range(N) :
+    f1.write(str(ib)+" "+str(irep[ib])+"\n")
+for ib1 in range(N) :
+    for ib2 in range(N) :
+        summ=0
+        for ig in range(nwdge0_full) :
+            summ+=wfn[ib1][kmap[irep[ib1]][ig]]*wfn[ib2][kmap[irep[ib2]][ig]]*kfactor[irep[ib1]][ig]*kfactor[irep[ib2]][ig]
+        if abs(summ)<=1e-6 :
+            summ=0
+        f1.write(str(ib1)+" "+str(ib2)+" "+str(summ)+"\n")
 
 f0.close()
 f1.close()
