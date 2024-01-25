@@ -128,7 +128,7 @@ chimat=[]
 for isym1 in range(ntrans) :
     chimat0=[]
     for isym2 in range(ntrans) :
-        chimat0.append(trans[isym1*ntrans+isym2])
+        chimat0.append(chi[isym1*ntrans+isym2])
     chimat.append(chimat0)
 
 kp_read=np.fromfile(f0, dtype=np.int32, count=3*nwedge)
@@ -295,10 +295,20 @@ for ib1 in range(N) :
     for ib2 in range(N) :
         summ=0
         for ig in range(nwdge0_full) :
-            summ+=wfn[ib1][kmap[irep[ib1]][ig]]*wfn[ib2][kmap[irep[ib2]][ig]]*kfactor[irep[ib1]][ig]*kfactor[irep[ib2]][ig]
-        if abs(summ)<=1e-6 :
-            summ=0
-        f1.write(str(ib1)+" "+str(ib2)+" "+str(summ)+"\n")
+            ir1=irep[ib1]
+            ir2=irep[ib2]
+            ig1=kmap[irep[ib1]][ig]
+            ig2=kmap[irep[ib2]][ig]
+
+            coul=0
+            # coul: 1/|r-r'|
+            for ix in range(3) :
+                coul==(kpr_full[ib1][ig1][ix]-kpr_full[ib2][ig2][ix])**2
+            coul=coul**(-0.5)
+            summ+=wfn[ib1][ig1]*wfn[ib2][ig2]*kfactor[ir1][ig]*kfactor[ir2][ig]
+        #if abs(summ)<=1e-8 :
+        #    summ=0
+        f1.write(str(ib1)+" "+str(irep[ib1])+" "+str(ib2)+" "+str(irep[ib2])+" "+str(summ)+"\n")
 
 f0.close()
 f1.close()
