@@ -74,79 +74,6 @@ for ia in range(poscar2.Natom) :
     poscar2.ap[ia][1]=(poscar2.ap[ia][1]-apmin[1])*lc2/bohr
     poscar2.ap[ia][2]=(poscar2.ap[ia][2]-apmin[2])*lc2/bohr
 
-#================================================================
-# Write the structure to parsec_st.dat file
-f2=open("parsec_st.dat","w")
-f2.write("#---------output from afm.py----------\n")
-radius=0.0
-if poscar1.Ndim==0:
-    for a in poscar1.ap :
-        radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
-    for a in poscar2.ap :
-        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
-        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
-        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
-        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
-    radius=radius**0.5+10.0
-elif poscar1.Ndim==2 :
-    for a in poscar1.ap :
-        radius=max(radius,abs(a[2]))
-    for a in poscar2.ap :
-        radius=max(radius,abs(a[2]+max(z_sampling)))
-    radius=radius+10.0
-    f2.write("Boundary_Conditions slab\n")
-    f2.write("begin Cell_Shape\n")
-    for ix1 in range(2) :
-        for ix2 in range(3) :
-            f2.write(f"{poscar1.lc[ix1][ix2]/bohr:18.12f}")
-        f2.write("\n")
-    f2.write("end Cell_Shape\n\n")
-
-    f2.write("Kpoint_Method mp\n\n")
-    f2.write("begin Monkhorst_Pack_Grid\n")
-    for ix in range(2) :
-        kgrid=math.floor(30.0/(poscar1.lc[ix][0]**2+poscar1.lc[ix][1]**2+poscar1.lc[ix][2]**2)**0.5)+1
-        f2.write(f"  {kgrid:d}")
-    f2.write("\nend Monkhorst_Pack_Grid\n\n")
-    f2.write("begin Monkhorst_Pack_Shift\n")
-    f2.write("0.0  0.0  0.0\n")
-    f2.write("end Monkhorst_Pack_Shift\n\n")
-else :
-    print("Error: Only Ndim = 0 or 2 are supported.")
-    sys.exit()
-
-f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
-f2.write("Atom_Types_Num "+str(len(poscar1.atomtype)+len(poscar2.atomtype))+"\n")
-f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
-
-f2.write("#------------- begin tip -------------\n")
-k=0
-for i in range(poscar2.Ntype) :
-    f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-    f2.write("Local_Component: \n")
-    f2.write("begin Atom_Coord\n")
-    for ia in range(poscar2.Naint[i]) :
-        f2.write(f"{poscar2.ap[k][0]:18.12f}{poscar2.ap[k][1]:18.12f}{poscar2.ap[k][2]+z_sampling[1]:18.12f}\n")
-        k=k+1
-    f2.write("end Atom_Coord\n\n")
-f2.write("#-------------- end tip --------------\n\n")
-
-f2.write("#------------ begin sample -----------\n")
-k=0
-for i in range(poscar1.Ntype) :
-    f2.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
-    f2.write("Local_Component: \n")
-    f2.write("begin Atom_Coord\n")
-    for ia in range(poscar1.Naint[i]) :
-        f2.write(f"{poscar1.ap[k][0]:18.12f}{poscar1.ap[k][1]:18.12f}{poscar1.ap[k][2]:18.12f}\n")
-        k=k+1
-    f2.write("end Atom_Coord\n\n")
-f2.write("#------------- end sample ------------\n\n")
-
-f2.close()
 
 #================================================================
 # Write the manual.*.dat, which is splitted by the `parallel` parameter.
@@ -200,10 +127,90 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
+radius=0.0
+if poscar1.Ndim==0:
+    for a in poscar1.ap :
+        radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
+    for a in poscar2.ap :
+        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
+    for a in poscar2.ap :
+        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
+    for a in poscar2.ap :
+        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
+    for a in poscar2.ap :
+        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
+    radius=radius**0.5+10.0
+elif poscar1.Ndim==2 :
+    for a in poscar1.ap :
+        radius=max(radius,abs(a[2]))
+    for a in poscar2.ap :
+        radius=max(radius,abs(a[2]+max(z_sampling)))
+    radius=radius+10.0
+
 for iz in range(3) :
     for ip in range(parallel) :
+        #================================================================
+        # Write the structure to parsec_st_iz_ip.dat file
+        f2=open("parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
+        f2.write("#---------output from afm.py----------\n")
+        if poscar1.Ndim==0:
+            pass
+        if poscar1.Ndim==2 :
+            f2.write("Boundary_Conditions slab\n")
+            f2.write("begin Cell_Shape\n")
+            for ix1 in range(2) :
+                for ix2 in range(3) :
+                    f2.write(f"{poscar1.lc[ix1][ix2]/bohr:18.12f}")
+                f2.write("\n")
+            f2.write("end Cell_Shape\n\n")
+        
+            f2.write("Kpoint_Method mp\n\n")
+            f2.write("begin Monkhorst_Pack_Grid\n")
+            for ix in range(2) :
+                kgrid=math.floor(30.0/(poscar1.lc[ix][0]**2+poscar1.lc[ix][1]**2+poscar1.lc[ix][2]**2)**0.5)+1
+                f2.write(f"  {kgrid:d}")
+            f2.write("\nend Monkhorst_Pack_Grid\n\n")
+            f2.write("begin Monkhorst_Pack_Shift\n")
+            f2.write("0.0  0.0  0.0\n")
+            f2.write("end Monkhorst_Pack_Shift\n\n")
+        else :
+            print("Error: Only Ndim = 0 or 2 are supported.")
+            sys.exit()
+        
+        f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+        f2.write("Atom_Types_Num "+str(len(poscar1.atomtype)+len(poscar2.atomtype))+"\n")
+        f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+        
+        f2.write("#------------- begin tip -------------\n")
+        k=0
+        for i in range(poscar2.Ntype) :
+            f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
+            f2.write("Local_Component: \n")
+            f2.write("begin Atom_Coord\n")
+            for ia in range(poscar2.Naint[i]) :
+                #f2.write(f"{poscar2.ap[k][0]:18.12f}{poscar2.ap[k][1]:18.12f}{poscar2.ap[k][2]+z_sampling[1]:18.12f}\n")
+                f2.write(f"{poscar2.ap[k][0]+movelist[ip][0][0]:18.12f}{poscar2.ap[k][1]+movelist[ip][0][1]:18.12f}{poscar2.ap[k][2]+z_sampling[iz]:18.12f}\n")
+                k=k+1
+            f2.write("end Atom_Coord\n\n")
+        f2.write("#-------------- end tip --------------\n\n")
+        
+        f2.write("#------------ begin sample -----------\n")
+        k=0
+        for i in range(poscar1.Ntype) :
+            f2.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
+            f2.write("Local_Component: \n")
+            f2.write("begin Atom_Coord\n")
+            for ia in range(poscar1.Naint[i]) :
+                f2.write(f"{poscar1.ap[k][0]:18.12f}{poscar1.ap[k][1]:18.12f}{poscar1.ap[k][2]:18.12f}\n")
+                k=k+1
+            f2.write("end Atom_Coord\n\n")
+        f2.write("#------------- end sample ------------\n\n")
+        
+        f2.close()
+
+        # write the manual_*.dat file
         f4=open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
-        for istep in range(steplist[ip]) :
+        for istep in range(1,steplist[ip]) :
             for a in poscar2.ap :
                 f4.write(f"{a[0]+movelist[ip][istep][0]:18.12f}{a[1]+movelist[ip][istep][1]:18.12f}{a[2]+z_sampling[iz]:18.12f}\n")
             for a in poscar1.ap :

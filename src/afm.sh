@@ -20,8 +20,10 @@ for (( i=1 ; i<=3 ; i++ )) do
         cat ../parsec.in.head > parsec.in
         STEP=`awk -v j=$j 'NR==j {print}' ../steps.dat`
         echo "movement_num  $((STEP-1))" >> parsec.in
-        cat ../parsec_st.dat >> parsec.in
+        cat ../parsec_st_${i}_${j}.dat >> parsec.in
+        rm ../parsec_st_${i}_${j}.dat
         cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
+        sbatch job.sh | tail -n1 >> ../sbatch.log
         cd ..
     done
 done
