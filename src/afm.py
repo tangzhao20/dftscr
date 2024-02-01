@@ -4,6 +4,7 @@
 
 from classes import POSCAR
 import sys
+import os
 import math
 
 #================================================================
@@ -43,37 +44,59 @@ for l in line :
 # Read the structure from .xyz files
 bohr=0.529177210903
 poscar1=POSCAR(empty=True)
-poscar1.fileread_parsec("sample.parsec_st.dat")
+poscar1.fileread_xyz("tip.xyz")
 poscar2=POSCAR(empty=True)
-poscar2.fileread_xyz("tip.xyz")
+poscar2.fileread_parsec("sample.parsec_st.dat")
+
+# calculate the apc, this should be done before the loop
+if poscar2.Ndim==2 :
+    shift=[0.0,0.0,0.5]
+elif poscar2.Ndim==0 :
+    shift=[0.5,0.5,0.5]
+k=0
+apc1=[]
+for i in range(poscar1.Ntype) :
+    for ia in range(poscar1.Naint[i]) :
+        apc0=[0.0]*3
+        for ix1 in range(3) :
+            for ix2 in range(3) :
+                apc0[ix2]+=(poscar1.ap[k][ix1]-shift[ix1])*poscar1.lc[ix1][ix2]
+        for ix in range(3) :
+            apc0[ix]=apc0[ix]/bohr
+        apc1.append(apc0)
+        k=k+1
+k=0
+apc2=[]
+for i in range(poscar2.Ntype) :
+    for ia in range(poscar2.Naint[i]) :
+        apc0=[0.0]*3
+        for ix1 in range(3) :
+            for ix2 in range(3) :
+                apc0[ix2]+=(poscar2.ap[k][ix1]-shift[ix1])*poscar2.lc[ix1][ix2]
+        for ix in range(3) :
+            apc0[ix]=apc0[ix]/bohr
+        apc2.append(apc0)
+        k=k+1
+
+# move the tip atom to (0,0,0)
+zmin=1e6
+for ia in range(poscar1.Natom) :
+    if zmin>apc1[ia][2] :
+        zmin=apc1[ia][2]
+        itip=ia
+apmin=apc1[itip].copy()
+# write poscar1.ap in Cartesian coordinate in Bohr
+for ia in range(poscar1.Natom) :
+    for ix in range(3) :
+        apc1[ia][ix]=apc1[ia][ix]-apmin[ix]
 
 # move the sample top to z=0
 zmax=-1e6
-for ia in range(poscar1.Natom) :
-    zmax=max(poscar1.ap[ia][2],zmax)
-
-# write poscar2.ap in Cartesian coordinate in Bohr
-lc1=poscar1.lc[0][0]
-for ia in range(poscar1.Natom) :
-    poscar1.ap[ia][0]=(poscar1.ap[ia][0]-0.5)*lc1/bohr
-    poscar1.ap[ia][1]=(poscar1.ap[ia][1]-0.5)*lc1/bohr
-    poscar1.ap[ia][2]=(poscar1.ap[ia][2]-zmax)*lc1/bohr
-
-# move the tip atom to (0,0,zz)
-zmin=1e6
 for ia in range(poscar2.Natom) :
-    if zmin>poscar2.ap[ia][2] :
-        zmin=poscar2.ap[ia][2]
-        itip=ia
-apmin=poscar2.ap[itip].copy()
-
-# write poscar2.ap in Cartesian coordinate in Bohr
-lc2=poscar2.lc[0][0]
+    zmax=max(apc2[ia][2],zmax)
+# write apc2 in Cartesian coordinate in Bohr
 for ia in range(poscar2.Natom) :
-    poscar2.ap[ia][0]=(poscar2.ap[ia][0]-apmin[0])*lc2/bohr
-    poscar2.ap[ia][1]=(poscar2.ap[ia][1]-apmin[1])*lc2/bohr
-    poscar2.ap[ia][2]=(poscar2.ap[ia][2]-apmin[2])*lc2/bohr
-
+    apc2[ia][2]=apc2[ia][2]-zmax
 
 #================================================================
 # Write the manual.*.dat, which is splitted by the `parallel` parameter.
@@ -128,22 +151,22 @@ for iy in range(ny) :
     lxincrease=not lxincrease
 
 radius=0.0
-if poscar1.Ndim==0:
-    for a in poscar1.ap :
+if poscar2.Ndim==0:
+    for a in poscar2.ap :
         radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
-    for a in poscar2.ap :
+    for a in poscar1.ap :
         radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
+    for a in poscar1.ap :
         radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
+    for a in poscar1.ap :
         radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar2.ap :
+    for a in poscar1.ap :
         radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
     radius=radius**0.5+10.0
-elif poscar1.Ndim==2 :
-    for a in poscar1.ap :
-        radius=max(radius,abs(a[2]))
+elif poscar2.Ndim==2 :
     for a in poscar2.ap :
+        radius=max(radius,abs(a[2]))
+    for a in poscar1.ap :
         radius=max(radius,abs(a[2]+max(z_sampling)))
     radius=radius+10.0
 
@@ -151,23 +174,24 @@ for iz in range(3) :
     for ip in range(parallel) :
         #================================================================
         # Write the structure to parsec_st_iz_ip.dat file
-        f2=open("parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
+        filename_parsec="parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat"
+        f2=open(filename_parsec,"w")
         f2.write("#---------output from afm.py----------\n")
-        if poscar1.Ndim==0:
+        if poscar2.Ndim==0:
             pass
-        if poscar1.Ndim==2 :
+        if poscar2.Ndim==2 :
             f2.write("Boundary_Conditions slab\n")
             f2.write("begin Cell_Shape\n")
             for ix1 in range(2) :
                 for ix2 in range(3) :
-                    f2.write(f"{poscar1.lc[ix1][ix2]/bohr:18.12f}")
+                    f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
                 f2.write("\n")
             f2.write("end Cell_Shape\n\n")
         
             f2.write("Kpoint_Method mp\n\n")
             f2.write("begin Monkhorst_Pack_Grid\n")
             for ix in range(2) :
-                kgrid=math.floor(30.0/(poscar1.lc[ix][0]**2+poscar1.lc[ix][1]**2+poscar1.lc[ix][2]**2)**0.5)+1
+                kgrid=math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
                 f2.write(f"  {kgrid:d}")
             f2.write("\nend Monkhorst_Pack_Grid\n\n")
             f2.write("begin Monkhorst_Pack_Shift\n")
@@ -183,38 +207,42 @@ for iz in range(3) :
         
         f2.write("#------------- begin tip -------------\n")
         k=0
-        for i in range(poscar2.Ntype) :
-            f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-            f2.write("Local_Component: \n")
+        for i in range(poscar1.Ntype) :
+            f2.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
+            f2.write("Local_Component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
             f2.write("begin Atom_Coord\n")
-            for ia in range(poscar2.Naint[i]) :
-                #f2.write(f"{poscar2.ap[k][0]:18.12f}{poscar2.ap[k][1]:18.12f}{poscar2.ap[k][2]+z_sampling[1]:18.12f}\n")
-                f2.write(f"{poscar2.ap[k][0]+movelist[ip][0][0]:18.12f}{poscar2.ap[k][1]+movelist[ip][0][1]:18.12f}{poscar2.ap[k][2]+z_sampling[iz]:18.12f}\n")
+            for ia in range(poscar1.Naint[i]) :
+                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}{apc1[k][2]+z_sampling[iz]:18.12f}\n")
                 k=k+1
             f2.write("end Atom_Coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
         
         f2.write("#------------ begin sample -----------\n")
         k=0
-        for i in range(poscar1.Ntype) :
-            f2.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
-            f2.write("Local_Component: \n")
+        for i in range(poscar2.Ntype) :
+            f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
+            f2.write("Local_Component: s\n")
             f2.write("begin Atom_Coord\n")
-            for ia in range(poscar1.Naint[i]) :
-                f2.write(f"{poscar1.ap[k][0]:18.12f}{poscar1.ap[k][1]:18.12f}{poscar1.ap[k][2]:18.12f}\n")
+            for ia in range(poscar2.Naint[i]) :
+                f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
                 k=k+1
             f2.write("end Atom_Coord\n\n")
         f2.write("#------------- end sample ------------\n\n")
         
         f2.close()
 
+        # convert the structure to vasp format
+        if len(sys.argv)>1 and sys.argv[1]=="vasp" :
+            os.system("posconvert.py parsec vasp "+filename_parsec)
+            os.system("mv POSCAR.new "+str(iz+1)+"_"+str(ip+1)+".vasp")
+
         # write the manual_*.dat file
         f4=open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
         for istep in range(1,steplist[ip]) :
-            for a in poscar2.ap :
-                f4.write(f"{a[0]+movelist[ip][istep][0]:18.12f}{a[1]+movelist[ip][istep][1]:18.12f}{a[2]+z_sampling[iz]:18.12f}\n")
-            for a in poscar1.ap :
-                f4.write(f"{a[0]:18.12f}{a[1]:18.12f}{a[2]:18.12f}\n")
+            for ia in range(poscar1.Natom) :
+                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}{apc1[ia][2]+z_sampling[iz]:18.12f}\n")
+            for ia in range(poscar2.Natom) :
+                f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
             f4.write("\n")
         f4.close()
  

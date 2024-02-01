@@ -221,7 +221,7 @@ class POSCAR:
 
         self.movetobox()
 
-    def fileread_parsec(self, filename="parsec.in"):
+    def fileread_parsec(self, filename="parsec.in") :
         f1=open(filename,"r")
         line=f1.readlines()
         f1.close()

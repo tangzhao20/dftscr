@@ -23,7 +23,11 @@ for (( i=1 ; i<=3 ; i++ )) do
         cat ../parsec_st_${i}_${j}.dat >> parsec.in
         rm ../parsec_st_${i}_${j}.dat
         cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
-        sbatch job.sh | tail -n1 >> ../sbatch.log
+        if [ "$1" == "sbatch" ]; then
+            printf "$i $j " >> ../sbatch.log
+            sbatch job.sh | tail -n1 >> ../sbatch.log
+            tail -n1 ../sbatch.log
+        fi
         cd ..
     done
 done

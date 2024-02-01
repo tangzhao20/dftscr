@@ -58,7 +58,13 @@ elif package1 in packagename['prt'] :
     poscar1.fileread_prt("input")
 elif package1 in packagename['parsec'] :
     poscar1=POSCAR(empty=True)
-    poscar1.fileread_parsec()
+    filename1="parsec.in"
+    for iw in range(3,len(sys.argv)) :
+        if os.path.isfile(sys.argv[iw]) :
+            filename1=sys.argv[iw]
+            del sys.argv[iw]
+            break
+    poscar1.fileread_parsec(filename=filename1)
 elif package1 in packagename['xyz'] :
     filename1=""
     for iw in range(3,len(sys.argv)) :
