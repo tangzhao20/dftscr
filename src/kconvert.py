@@ -57,9 +57,11 @@ elif package2 in packagename["qe"] :
             filename1="nscf.in"
         elif "relax.in" in files:
             filename1="relax.in"
+        else :
+            print("Error: kconvert.py with Nk needs a QE structure file: scf.in, nscf.in, or relax.in")
+            sys.exit()
         poscar1.fileread_qe(filename1)
         reclc=poscar1.reclc_out()
-        print("Before kpoints1.filewrite_qe(Nk=Nk,reclc=reclc): Nk="+str(Nk))
         kpoints1.filewrite_qe(Nk=Nk,reclc=reclc)
     else :
         kpoints1.filewrite_qe()

@@ -110,7 +110,6 @@ class KPOINTS_band :
 
     def filewrite_qe(self,filename="kpath.out",Nk=0,reclc=[]):
         if Nk>0 :
-            print(self.Nk_line)
             xticks=self.xticks_out(reclc=reclc)
 
             Ltotal=0.0 
@@ -123,9 +122,6 @@ class KPOINTS_band :
             Nktotal=0
             for ip in range(len(xticks)) :
                 Nktotal+=sum(self.Nk_line[ip])
-            print(Nktotal)
-            print(xticks)
-            print(self.Nk_line)
 
         kplot=[]
         for ip in range(len(self.xlabels)):
@@ -266,30 +262,3 @@ class KPOINTS_band :
                         return "("+h1+","+h2+")"
         return "elsewhere"
 
-    #def kdist(self, Nk, reclc) :
-    #    xticks=[]
-    #    for p in self.xlabels :
-    #        xticks.append([0.0])
-    #        for ik in range(len(p)) :
-    #            if ik>0 :
-    #                kpcold=[kpc[0],kpc[1],kpc[2]]
-    #                del kpc
-    #            kpc=[]
-    #            for i in range(3) :
-    #                kpc0=0.0
-    #                for j in range(3) :
-    #                    kpc0=kpc0+self.kpdict[p[ik]][j]*reclc[i][j]
-    #                kpc.append(kpc0)
-    #            if ik>0 :
-    #                dkpc=((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5
-    #                xticks[-1].append(xticks[-1][-1]+dkpc)
-    #                del kpcold
-
-
-
-
-    #    xticks=self.xticks_out(reclc)
-    #    xticks_path=[]
-    #    for ip in range(len(xticks)) :
-    #        xticks_path.append(xticks[ip][-1]-xticks[ip][0])
-    #    print(xticks_path)
