@@ -3,12 +3,13 @@
 # This script reads the afm simulation results and makes the plot
 
 import sys
+import os
 from commons import load_palette
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-# read the input file
+# ==================== read the input file ====================
 x_spacing=0.6
 y_spacing=0.6
 z_sampling=[5.7,6.0,6.3]
@@ -56,16 +57,6 @@ while (y<y_range[1]+1e-6) :
     y+=y_spacing
     ny+=1
 
-# # calculate the step numbers. Need to minus 1 in the parsec.in file 
-# steplist=[(nx*ny)//parallel]*parallel
-# for ip in range((nx*ny)%parallel) :
-#     steplist[ip]+=1
-# f3=open("steps.dat","w")
-# for ip in range(parallel) :
-#     f3.write(str(steplist[ip])+"\n")
-# f3.close()
-# movelist=[]
-
 f3=open("steps.dat","r")
 line=f3.readlines()
 f3.close()
@@ -102,43 +93,63 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
-# initialize toten matrix
-toten=[]
-for iz in range(3) :
-    toten0=[]
-    for iy in range(ny) :
-        toten0.append([0.0]*nx)
-    toten.append(toten0)
-
-for iz in range(3) :
-    for ip in range(parallel) :
-        istep=-1
-        filename="seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
-        f1=open(filename,"r")
-        line=f1.readlines()
-        f1.close()
-        
-        for l in line: 
-            word=l.split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
-                continue
-            if len(word)>=2 and word[0]=="Starting" and word[1]=="SCF..." :
-                istep+=1
-                print(ip,istep)
-            if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
-                toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3]) # in Ry
-
-print(toten)
 
 
+files = os.listdir()
+fkts=False
+if "kts.dat" in files :
+    f4=open("kts.dat","r")
+    line=f4.readlines()
+    f4.close()
+    il=0
+    kts=[]
+    for ix in range(nx) :
+        kts0=[]
+        for iy in range(ny) :
+            kts0.append(float(line[il].split()[2]))
+            il+=1
+        kts.append(kts0)
 
-kts=[]
-for ix in range(nx) :
-    kts0=[]
-    for iy in range(ny) :
-        kts1=(0.25*toten[0][ix][iy]-0.5*toten[1][ix][iy]+0.25*toten[2][ix][iy])/z_spacing**2
-        kts0.append(kts1)
-    kts.append(kts0)
+else:
+    # initialize toten matrix
+    toten=[]
+    for iz in range(3) :
+        toten0=[]
+        for iy in range(ny) :
+            toten0.append([0.0]*nx)
+        toten.append(toten0)
+
+    for iz in range(3) :
+        for ip in range(parallel) :
+            istep=-1
+            filename="seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
+            f1=open(filename,"r")
+            line=f1.readlines()
+            f1.close()
+            
+            for l in line: 
+                word=l.split()
+                if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+                    continue
+                if len(word)>=2 and word[0]=="Starting" and word[1]=="SCF..." :
+                    istep+=1
+                if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
+                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3]) # in Ry
+
+
+    kts=[]
+    for ix in range(nx) :
+        kts0=[]
+        for iy in range(ny) :
+            kts1=(0.25*toten[0][ix][iy]-0.5*toten[1][ix][iy]+0.25*toten[2][ix][iy])/z_spacing**2
+            kts0.append(kts1)
+        kts.append(kts0)
+
+    f4=open("kts.dat","w")
+    for ix in range(nx) :
+        for iy in range(ny) :
+            f4.write(str(ix+1)+" "+str(iy+1)+" "+str(kts[ix][iy])+"\n")
+    f4.close()
 
 palette=load_palette() #color palette: [blue, orange, gray, white, black]
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
