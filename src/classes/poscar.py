@@ -15,6 +15,7 @@ class POSCAR:
     # ap[Natom][3]
     # seldyn[Natom][3] (if f_seldyn)
     # dmass{}
+    # atomcolor{}
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
     
     def __init__(self, filename="POSCAR", empty=False) :
@@ -28,6 +29,7 @@ class POSCAR:
             self.Naint=[]
             self.ap=[]
             self.dmass={}
+            self.atomcolor={}
             self.Ndim=3 
             return
 
@@ -769,3 +771,18 @@ class POSCAR:
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
                 continue
             self.dmass[word[2]]=float(word[3])
+
+    def load_atomcolor(self):
+        if self.atomcolor :
+            return
+        this_dir, this_filename = os.path.split(__file__)
+        DATA_PATH = os.path.join(this_dir, "..", "..", "data", "atomicmass.dat")
+        f0=open(DATA_PATH,"r")
+        line=f0.readlines()
+        f0.close()
+
+        for l in line:
+            word=l.split()
+            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+                continue
+            self.atomcolor[word[2]]=word[4]

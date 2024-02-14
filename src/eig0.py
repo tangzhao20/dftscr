@@ -74,13 +74,13 @@ else :
     ymax=5.0
     ymin=-5.0
 
-palette=load_palette() # color palette: [blue, orange, gray, white, black]
+palette=load_palette()
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
 
-linecolor=["blue","orange"]
+linecolor=["darkblue","orange"]
 
 fig=plt.figure(figsize=(1.8,3.75))
 gs0=fig.add_gridspec(1,eigenval1.Ns,wspace=0.0,hspace=0.00,left=0.45,right=0.97,top=0.97, bottom=0.07)

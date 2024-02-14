@@ -1,119 +1,119 @@
-#AtomicNumber Element Symbol Mass(u)
-1 Hydrogen H 1.008
-2 Helium He 4.002
-3 Lithium Li 6.94
-4 Beryllium Be 9.0122
-5 Boron B 10.81
-6 Carbon C 12.011
-7 Nitrogen N 14.007
-8 Oxygen O 15.999
-9 Fluorine F 18.998
-10 Neon Ne 20.180
-11 Sodium Na 22.990
-12 Magnesium Mg 24.305
-13 Aluminum Al 26.982
-14 Silicon Si 28.085
-15 Phosphorus P 30.974
-16 Sulfur S 32.06
-17 Chlorine Cl 35.45
-18 Argon Ar 39.948
-19 Potassium K 39.098
-20 Calcium Ca 40.078
-21 Scandium Sc 44.956
-22 Titanium Ti 47.867
-23 Vanadium V 50.942
-24 Chromium Cr 51.996
-25 Manganese Mn 54.938
-26 Iron Fe 55.845
-27 Cobalt Co 58.933
-28 Nickel Ni 58.693
-29 Copper Cu 63.546
-30 Zinc Zn 65.38
-31 Gallium Ga 69.723
-32 Germanium Ge 72.630
-33 Arsenic As 74.922
-34 Selenium Se 78.971
-35 Bromine Br 79.904
-36 Krypton Kr 83.798
-37 Rubidium Rb 85.468
-38 Strontium Sr 87.62
-39 Yttrium Y 88.906
-40 Zirconium Zr 91.224
-41 Niobium Nb 92.906
-42 Molybdenum Mo 95.95
-43 Technetium Tc 98
-44 Ruthenium Ru 101.07
-45 Rhodium Rh 102.91
-46 Palladium Pd 106.42
-47 Silver Ag 107.87
-48 Cadmium Cd 112.41
-49 Indium In 114.82
-50 Tin Sn 118.71
-51 Antimony Sb 121.76
-52 Tellurium Te 127.60
-53 Iodine I 126.90
-54 Xenon Xe 131.29
-55 Caesium Cs 132.91
-56 Barium Ba 137.33
-57 Lanthanum La 138.91
-58 Cerium Ce 140.12
-59 Praseodymium Pr 140.91
-60 Neodymium Nd 144.24
-61 Promethium Pm 145
-62 Samarium Sm 150.36
-63 Europium Eu 151.96
-64 Gadolinium Gd 157.25
-65 Terbium Tb 158.93
-66 Dysprosium Dy 162.50
-67 Holmium Ho 164.93
-68 Erbium Er 167.26
-69 Thulium Tm 168.93
-70 Ytterbium Yb 173.05
-71 Lutetium Lu 174.97
-72 Hafnium Hf 178.49
-73 Tantalum Ta 180.95
-74 Tungsten W 183.84
-75 Rhenium Re 186.21
-76 Osmium Os 190.23
-77 Iridium Ir 192.22
-78 Platinum Pt 195.08
-79 Gold Au 196.97
-80 Mercury Hg 200.59
-81 Thallium Tl 204.38
-82 Lead Pb 207.2
-83 Bismuth Bi 208.98
-84 Polonium Po 209
-85 Astatine At 210
-86 Radon Rn 222
-87 Francium Fr 223
-88 Radium Ra 226
-89 Actinium Ac 227
-90 Thorium Th 232.04
-91 Protactinium Pa 231.04
-92 Uranium U 238.03
-93 Neptunium Np 237
-94 Plutonium Pu 244
-95 Americium Am 243
-96 Curium Cm 247
-97 Berkelium Bk 247
-98 Californium Cf 251
-99 Einsteinium Es 252
-100 Fermium Fm 257
-101 Mendelevium Md 258
-102 Nobelium No 259
-103 Lawrencium Lr 266
-104 Rutherfordium Rf 267
-105 Dubnium Db 268
-106 Seaborgium Sg 269
-107 Bohrium Bh 270
-108 Hassium Hs 277
-109 Meitnerium Mt 278
-110 Darmstadtium Ds 281
-111 Roentgenium Rg 282
-112 Copernicium Cn 285
-113 Nihonium Nh 286
-114 Flerovium Fl 289
-115 Moscovium Mc 290
-116 Livermorium Lv 293
-117 Tennessine Ts 294
-118 Oganesson Og 294
+#AtomicNumber Element Symbol Mass(u) Color
+1 Hydrogen H 1.008 white
+2 Helium He 4.002 teal
+3 Lithium Li 6.94 purple
+4 Beryllium Be 9.0122 darkgreen
+5 Boron B 10.81 beige
+6 Carbon C 12.011 black
+7 Nitrogen N 14.007 blue
+8 Oxygen O 15.999 red
+9 Fluorine F 18.998 green
+10 Neon Ne 20.180 teal
+11 Sodium Na 22.990 purple
+12 Magnesium Mg 24.305 darkgreen
+13 Aluminum Al 26.982 pink
+14 Silicon Si 28.085 pink
+15 Phosphorus P 30.974 orange
+16 Sulfur S 32.06 yellow
+17 Chlorine Cl 35.45 green
+18 Argon Ar 39.948 teal
+19 Potassium K 39.098 purple
+20 Calcium Ca 40.078 darkgreen
+21 Scandium Sc 44.956 beige
+22 Titanium Ti 47.867 darkgray
+23 Vanadium V 50.942 beige
+24 Chromium Cr 51.996 beige
+25 Manganese Mn 54.938 beige
+26 Iron Fe 55.845 darkorange
+27 Cobalt Co 58.933 beige
+28 Nickel Ni 58.693 beige
+29 Copper Cu 63.546 beige
+30 Zinc Zn 65.38 beige
+31 Gallium Ga 69.723 pink
+32 Germanium Ge 72.630 pink
+33 Arsenic As 74.922 pink
+34 Selenium Se 78.971 pink
+35 Bromine Br 79.904 darkred
+36 Krypton Kr 83.798 teal
+37 Rubidium Rb 85.468 purple
+38 Strontium Sr 87.62 darkgreen
+39 Yttrium Y 88.906 beige
+40 Zirconium Zr 91.224 beige
+41 Niobium Nb 92.906 beige
+42 Molybdenum Mo 95.95 beige
+43 Technetium Tc 98 beige
+44 Ruthenium Ru 101.07 beige
+45 Rhodium Rh 102.91 beige
+46 Palladium Pd 106.42 beige
+47 Silver Ag 107.87 beige
+48 Cadmium Cd 112.41 beige
+49 Indium In 114.82 pink
+50 Tin Sn 118.71 pink
+51 Antimony Sb 121.76 pink
+52 Tellurium Te 127.60 pink
+53 Iodine I 126.90 darkpurple
+54 Xenon Xe 131.29 teal
+55 Caesium Cs 132.91 purple
+56 Barium Ba 137.33 darkgreen
+57 Lanthanum La 138.91 pink
+58 Cerium Ce 140.12 pink
+59 Praseodymium Pr 140.91 pink
+60 Neodymium Nd 144.24 pink
+61 Promethium Pm 145 pink
+62 Samarium Sm 150.36 pink
+63 Europium Eu 151.96 pink
+64 Gadolinium Gd 157.25 pink
+65 Terbium Tb 158.93 pink
+66 Dysprosium Dy 162.50 pink
+67 Holmium Ho 164.93 pink
+68 Erbium Er 167.26 pink
+69 Thulium Tm 168.93 pink
+70 Ytterbium Yb 173.05 pink
+71 Lutetium Lu 174.97 pink
+72 Hafnium Hf 178.49 beige
+73 Tantalum Ta 180.95 beige
+74 Tungsten W 183.84 beige
+75 Rhenium Re 186.21 beige
+76 Osmium Os 190.23 beige
+77 Iridium Ir 192.22 beige
+78 Platinum Pt 195.08 beige
+79 Gold Au 196.97 beige
+80 Mercury Hg 200.59 beige
+81 Thallium Tl 204.38 pink
+82 Lead Pb 207.2 pink
+83 Bismuth Bi 208.98 pink
+84 Polonium Po 209 pink
+85 Astatine At 210 pink
+86 Radon Rn 222 teal
+87 Francium Fr 223 purple
+88 Radium Ra 226 darkgreen
+89 Actinium Ac 227 pink
+90 Thorium Th 232.04 pink
+91 Protactinium Pa 231.04 pink
+92 Uranium U 238.03 pink
+93 Neptunium Np 237 pink
+94 Plutonium Pu 244 pink
+95 Americium Am 243 pink
+96 Curium Cm 247 pink
+97 Berkelium Bk 247 pink
+98 Californium Cf 251 pink
+99 Einsteinium Es 252 pink
+100 Fermium Fm 257 pink
+101 Mendelevium Md 258 pink
+102 Nobelium No 259 pink
+103 Lawrencium Lr 266 pink
+104 Rutherfordium Rf 267 beige
+105 Dubnium Db 268 beige
+106 Seaborgium Sg 269 beige
+107 Bohrium Bh 270 beige
+108 Hassium Hs 277 beige
+109 Meitnerium Mt 278 beige
+110 Darmstadtium Ds 281 beige
+111 Roentgenium Rg 282 beige
+112 Copernicium Cn 285 beige
+113 Nihonium Nh 286 pink
+114 Flerovium Fl 289 pink
+115 Moscovium Mc 290 pink
+116 Livermorium Lv 293 pink
+117 Tennessine Ts 294 pink
+118 Oganesson Og 294 teal

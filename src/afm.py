@@ -150,25 +150,35 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
-radius=0.0
 if poscar2.Ndim==0:
-    for a in poscar2.ap :
-        radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
-    for a in poscar1.ap :
+    radius=0.0
+    for a in apc1 :
         radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar1.ap :
+    for a in apc1 :
         radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar1.ap :
+    for a in apc1 :
         radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
-    for a in poscar1.ap :
+    for a in apc1 :
         radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
+    for a in apc2 :
+        radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
     radius=radius**0.5+10.0
+
 elif poscar2.Ndim==2 :
-    for a in poscar2.ap :
-        radius=max(radius,abs(a[2]))
-    for a in poscar1.ap :
-        radius=max(radius,abs(a[2]+max(z_sampling)))
-    radius=radius+10.0
+    radius_min=1e6
+    radius_max=-1e6
+    for a in apc1 :
+        radius_max=max(radius_max,abs(a[2]+max(z_sampling)))
+    for a in apc2 :
+        radius_min=min(radius_min,abs(a[2]))
+    # Move the atoms to centralize the sample-tip structure
+    z_move=0.5*(-radius_max+radius_min)
+    for ia in range(poscar1.Natom) :
+        apc1[ia][2]+=z_move
+    for ia in range(poscar2.Natom) :
+        apc2[ia][2]+=z_move
+    
+    radius=0.5*(radius_max-radius_min)+10.0
 
 for iz in range(3) :
     for ip in range(parallel) :

@@ -94,7 +94,7 @@ for ie in range(doscar0.Nedos) :
     else :
         dosmax=max(dosmax,doscar0.dos[0][ie],doscar0.dos[1][ie])
 
-palette=load_palette() #color palette: [blue, orange, gray, white, black]
+palette=load_palette()
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
@@ -108,7 +108,7 @@ if fvertical==False :
         (ax0,ax1)=gs0.subplots()
 
     ax0.axvline(linewidth=1,color=palette["gray"],zorder=0)
-    ax0.plot(doscar0.energy,doscar0.dos[0],color=palette["blue"],linewidth=1,zorder=3)
+    ax0.plot(doscar0.energy,doscar0.dos[0],color=palette["darkblue"],linewidth=1,zorder=3)
     if package in packagename["qeproj"]:
         pdos=doscar0.plotpdos(atomflag,orbflag)
         ax0.plot(doscar0.energy_pdos,pdos,color=palette["orange"],linewidth=1,zorder=3.5)
@@ -128,7 +128,7 @@ else : # vertical
         (ax1,ax0)=gs0.subplots()
 
     ax0.axhline(linewidth=1,color=palette["gray"],zorder=0)
-    ax0.plot(doscar0.dos[0],doscar0.energy,color=palette["blue"],linewidth=1,zorder=3)
+    ax0.plot(doscar0.dos[0],doscar0.energy,color=palette["darkblue"],linewidth=1,zorder=3)
     if package in packagename["qeproj"]:
         pdos=doscar0.plotpdos(atomflag,orbflag)
         ax0.plot(pdos,doscar0.energy_pdos,color=palette["orange"],linewidth=1,zorder=3.5)
