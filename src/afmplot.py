@@ -2,6 +2,8 @@
 
 # This script reads the afm simulation results and makes the plot
 
+# The matrix in this script are mostly M[ny][nx] or M[3][ny][nx] to match the size of image
+
 import sys
 import os
 from commons import load_palette
@@ -10,17 +12,27 @@ from v3math import v3pvm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 #import matplotlib.cm as cm
+from scipy import interpolate
 
 latom=False
 if "atom" in sys.argv :
     latom=True
     sys.argv.remove("atom")
+lbohr=False
+if "bohr" in sys.argv :
+    lbohr=True
+    sys.argv.remove("bohr")
+ltilt=False
+if "tilt" in sys.argv :
+    ltilt=True
+    sys.argv.remove("tilt")
 
 # ==================== read the input file ====================
 x_spacing=0.6
 y_spacing=0.6
-z_sampling=[5.7,6.0,6.3]
-z_spacing=0.3
+z_spacing=0.03
+z_center=0.6
+parallel=1
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -32,22 +44,22 @@ for l in line :
         x_range=[float(word[1]),float(word[2])]
     elif word[0]=="y_range" :
         y_range=[float(word[1]),float(word[2])]
+    elif word[0]=="z_center" :
+        z_center=float(word[1])
     elif word[0]=="x_spacing" :
         x_spacing=float(word[1])
     elif word[0]=="y_spacing" :
         y_spacing=float(word[1])
-    elif word[0]=="z_sampling" :
-        z_sampling=word[1:]
-        for iz in range(range(z_sampling)) :
-            try :
-                z_sampling[iz]=float(z_sampling[iz])
-            except :
-                del zsampling[iz:]
-                break
+    elif word[0]=="z_spacing" :
+        z_spacing=float(word[1])
     elif word[0]=="parallel" :
         parallel=int(word[1])
     else :
         print("Warning: keyword "+word[0]+" is not defined.")
+
+z_sampling = [z_center-z_spacing, z_center, z_center+z_spacing]
+
+# ==================== prepare the x and y coordinates ====================
 
 x=x_range[0]
 nx=0
@@ -100,14 +112,16 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
+# ==================== calculate or read kts ====================
+
 files = os.listdir()
 fkts=False
 # if the kts.dat exist, read it, if not, read from calculations outputs
-if "kts.dat" in files :
+if "kts.dat" in files and "toten.dat" in files :
     f4=open("kts.dat","r")
     line=f4.readlines()
     f4.close()
-    il=0
+    il=1
     kts=[]
     for ix in range(nx) :
         kts0=[]
@@ -115,6 +129,20 @@ if "kts.dat" in files :
             kts0.append(float(line[il].split()[2]))
             il+=1
         kts.append(kts0)
+
+    f5=open("toten.dat","r")
+    line=f5.readlines()
+    f5.close()
+    il=1
+    toten=[]
+    for iz in range(3) :
+        toten1=[]
+        for ix in range(nx) :
+            toten0=[]
+            for iy in range(ny) :
+                toten0.append(float(line[il].split()[3]))
+                il+=1
+            toten1.append(kts0)
 
 else:
     # initialize toten matrix
@@ -141,25 +169,60 @@ else:
                     istep+=1
                 if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
                     toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3]) # in Ry
+    
+    # write the toten file
+    f5=open("toten.dat","w")
+    f5.write("#iz ix iy toten(Ry)\n")
+    for iz in range(3) :
+        for ix in range(nx) :
+            for iy in range(ny) :
+                f5.write(str(iz)+" "+str(ix)+" "+str(iy)+" "+str(toten[iz][ix][iy])+"\n")
+    f5.close()
 
     kts=[]
     for ix in range(nx) :
         kts0=[]
         for iy in range(ny) :
             # why this is not (2E1-E0-E2)/z^2?
-            kts1=(0.25*toten[0][ix][iy]-0.5*toten[1][ix][iy]+0.25*toten[2][ix][iy])/z_spacing**2*1000
+            kts1=(0.25*toten[0][ix][iy]-0.5*toten[1][ix][iy]+0.25*toten[2][ix][iy])/z_spacing**2
             kts0.append(kts1)
         kts.append(kts0)
-    kts.reverse() # Need to check: imshow needs the matrix with reversed rows?
 
     f4=open("kts.dat","w")
+    f4.write("#ix iy kts(a.u.)\n")
     for ix in range(nx) :
         for iy in range(ny) :
             f4.write(str(ix+1)+" "+str(iy+1)+" "+str(kts[ix][iy])+"\n")
     f4.close()
 
-palette=load_palette() 
+# ==================== caclulate forces for tilt correction ====================
+
+if ltilt :
+    fx=[]
+    fy=[]
+    for iy in range(ny) :
+        fx0=[0.0]*nx
+        fy0=[0.0]*nx
+    for iy in range(ny) :
+        for ix in range(nx) :
+            if ix!=0 and ix!=nx-1 :
+                fx[iy][ix]=(toten[1][ix-1][iy]-toten[1][ix+1][iy])*0.5/step[1]
+            if iy!=0 and ix!=ny-1 :
+                fy[iy][ix]=(toten[1][ix][iy-1]-toten[1][ix][iy+1])*0.5/step[1]
+
+    for iy in range(ny) :
+        # calculate new coordinate with in-plane shift
+        pass
+
+    # interpolation
+
 # ==================== construct the atomic structure ====================
+palette=load_palette()
+bohr=0.529177249
+if lbohr :
+    funit=bohr
+else : 
+    funit=1.0
 if latom :
     poscar1=POSCAR(empty=True)
     poscar1.fileread_parsec(filename="sample.parsec_st.dat")
@@ -181,22 +244,21 @@ if latom :
     for ia in range(len(ap)) :
         zmax=max(zmax,ap[ia][2])
 
-
-    bohr=0.529177249
     atomx=[]
     atomy=[]
     atomcolor=[]
     edgecolor=[]
     for ia in range(len(ap)) :
         if ap[ia][2] > zmax-1.0 :
-            atomx.append(ap[ia][0]/bohr)
-            atomy.append(ap[ia][1]/bohr)
+            atomx.append(ap[ia][0]/funit)
+            atomy.append(ap[ia][1]/funit)
             atomcolor.append(palette[poscar1.atomcolor[atom[ia]]])
             if poscar1.atomcolor[atom[ia]].startswith("dark") or poscar1.atomcolor[atom[ia]]=="black" :
                 edgecolor.append(palette["white"])
             else :
                 edgecolor.append(palette["black"])
 
+# ==================== creating the plot ====================
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 mpl.rcParams.update({'mathtext.default': 'regular'})
@@ -206,19 +268,26 @@ gs0=fig.add_gridspec(1,2,wspace=0.02,hspace=0.00,left=0.14,right=0.80,top=0.95,b
 [ax0,ax1]=gs0.subplots()
 
 #im=ax0.imshow(kts,interpolation='gaussian',cmap=cm.gray,extent=[x_range[0],x_range[1],y_range[0],y_range[1]],aspect='equal',zorder=1)
-im=ax0.imshow(kts,interpolation='bicubic',cmap="YlOrBr_r",extent=[x_range[0],x_range[1],y_range[0],y_range[1]],aspect='equal',zorder=1)
+im_extent=[x_range[0]-x_spacing*0.5,x_range[1]+x_spacing*0.5,y_range[0]-y_spacing*0.5,y_range[1]+y_spacing*0.5]
+for ic in range(len(im_extent)) :
+    im_extent[ic]=im_extent[ic]*(bohr/funit)
+im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r", origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom :
     ax0.scatter(atomx,atomy,c=atomcolor,s=12,edgecolors=edgecolor,linewidths=1,zorder=3)
-ax0.set_xlim([x_range[0],x_range[1]])
-ax0.set_ylim([y_range[0],y_range[1]])
-ax0.set_xlabel("$\mathit{x}\ (Bohr)$",color=palette["black"])
-ax0.set_ylabel("$\mathit{y}\ (Bohr)$",color=palette["black"])
+ax0.set_xlim([x_range[0]*(bohr/funit),x_range[1]*(bohr/funit)])
+ax0.set_ylim([y_range[0]*(bohr/funit),y_range[1]*(bohr/funit)])
+if lbohr :
+    ax0.set_xlabel("$\mathit{x}\ (Bohr)$",color=palette["black"])
+    ax0.set_ylabel("$\mathit{y}\ (Bohr)$",color=palette["black"])
+else :
+    ax0.set_xlabel("$\mathit{x}\ (Å)$",color=palette["black"])
+    ax0.set_ylabel("$\mathit{y}\ (Å)$",color=palette["black"])
 
 cb=fig.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
-ax1.set_ylabel("$\mathit{k}_{ts}\ (10^{-3}\ a.u.)$",color=palette["black"])
+ax1.set_ylabel("$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
 
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
 ax0.tick_params(axis="y", left=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
