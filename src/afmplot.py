@@ -11,8 +11,8 @@ from classes import POSCAR
 from v3math import v3pvm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-#import matplotlib.cm as cm
-from scipy import interpolate
+import scipy
+import numpy as np
 
 latom=False
 if "atom" in sys.argv :
@@ -112,24 +112,11 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
-# ==================== calculate or read kts ====================
+# ==================== calculate or read toten ====================
 
 files = os.listdir()
-fkts=False
-# if the kts.dat exist, read it, if not, read from calculations outputs
-if "kts.dat" in files and "toten.dat" in files :
-    f4=open("kts.dat","r")
-    line=f4.readlines()
-    f4.close()
-    il=1
-    kts=[]
-    for ix in range(nx) :
-        kts0=[]
-        for iy in range(ny) :
-            kts0.append(float(line[il].split()[2]))
-            il+=1
-        kts.append(kts0)
-
+# if the toten.dat exist, read it, if not, read from calculations outputs
+if "toten.dat" in files :
     f5=open("toten.dat","r")
     line=f5.readlines()
     f5.close()
@@ -137,15 +124,17 @@ if "kts.dat" in files and "toten.dat" in files :
     toten=[]
     for iz in range(3) :
         toten1=[]
-        for ix in range(nx) :
+        for iy in range(ny) :
             toten0=[]
-            for iy in range(ny) :
+            for ix in range(nx) :
                 toten0.append(float(line[il].split()[3]))
                 il+=1
-            toten1.append(kts0)
+            toten1.append(toten0)
+        toten.append(toten1)
 
 else:
     # initialize toten matrix
+    # toten[nz][ny][nx] in Ry
     toten=[]
     for iz in range(3) :
         toten0=[]
@@ -172,49 +161,75 @@ else:
     
     # write the toten file
     f5=open("toten.dat","w")
-    f5.write("#iz ix iy toten(Ry)\n")
+    f5.write("#ix iy iz toten(Ry)\n")
     for iz in range(3) :
-        for ix in range(nx) :
-            for iy in range(ny) :
-                f5.write(str(iz)+" "+str(ix)+" "+str(iy)+" "+str(toten[iz][ix][iy])+"\n")
+        for iy in range(ny) :
+            for ix in range(nx) :
+                f5.write(str(ix+1)+" "+str(iy+1)+" "+str(iz+1)+" "+str(toten[iz][iy][ix])+"\n")
     f5.close()
-
-    kts=[]
-    for ix in range(nx) :
-        kts0=[]
-        for iy in range(ny) :
-            # why this is not (2E1-E0-E2)/z^2?
-            kts1=(0.25*toten[0][ix][iy]-0.5*toten[1][ix][iy]+0.25*toten[2][ix][iy])/z_spacing**2
-            kts0.append(kts1)
-        kts.append(kts0)
-
-    f4=open("kts.dat","w")
-    f4.write("#ix iy kts(a.u.)\n")
-    for ix in range(nx) :
-        for iy in range(ny) :
-            f4.write(str(ix+1)+" "+str(iy+1)+" "+str(kts[ix][iy])+"\n")
-    f4.close()
 
 # ==================== caclulate forces for tilt correction ====================
 
 if ltilt :
-    fx=[]
-    fy=[]
+    k_spring = 0.8 # k in N/m
+    fconv_spring = 0.000642304932303402 # N/m in atomic unit
+    k_spring = k_spring * fconv_spring
+
+    fx=[] # fx[ny][nx]
+    fy=[] # fy[ny][nx]
     for iy in range(ny) :
         fx0=[0.0]*nx
+        fx.append(fx0)
         fy0=[0.0]*nx
+        fy.append(fy0)
     for iy in range(ny) :
         for ix in range(nx) :
             if ix!=0 and ix!=nx-1 :
-                fx[iy][ix]=(toten[1][ix-1][iy]-toten[1][ix+1][iy])*0.5/step[1]
-            if iy!=0 and ix!=ny-1 :
-                fy[iy][ix]=(toten[1][ix][iy-1]-toten[1][ix][iy+1])*0.5/step[1]
+                fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix+1])*0.5/x_spacing
+            #elif ix==0 :
+            #    fx[iy][ix]=(toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
+            #elif ix==nx-1 :
+            #    fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
+            if iy!=0 and iy!=ny-1 :
+                fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy+1][ix])*0.5/y_spacing
+            #elif iy==0 :
+            #    fy[iy][ix]=(toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
+            #elif iy==ny-1 :
+            #    fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
 
+    # xy_new [ny][nx][2]
+    xy_new=[]
     for iy in range(ny) :
-        # calculate new coordinate with in-plane shift
-        pass
+        xy_new0=[]
+        for ix in range(nx) :
+            xy_new0.append([xlist[ix] + fx[iy][ix] / k_spring, ylist[iy] + fy[iy][ix] / k_spring])
+        xy_new.append(xy_new0)
 
-    # interpolation
+    # create 2d map from toten
+    toten_2d=[]
+    for iz in range(3) :
+        toten_2d0 = scipy.interpolate.RectBivariateSpline(ylist, xlist, toten[iz])
+        toten_2d.append(toten_2d0)
+
+# ==================== caclulate kts ====================
+
+kts=[]
+if ltilt :
+    for iy in range(ny) :
+        kts0=[]
+        for ix in range(nx) :
+            y_new=xy_new[iy][ix][1]
+            x_new=xy_new[iy][ix][0]
+            kts1=(0.25*toten_2d[0](y_new,x_new)[0,0]-0.5*toten_2d[1](y_new,x_new)[0,0]+0.25*toten_2d[2](y_new,x_new)[0,0])/z_spacing**2
+            kts0.append(kts1)
+        kts.append(kts0)
+else :
+    for iy in range(ny) :
+        kts0=[]
+        for ix in range(nx) :
+            kts1=(0.25*toten[0][iy][ix]-0.5*toten[1][iy][ix]+0.25*toten[2][iy][ix])/z_spacing**2
+            kts0.append(kts1)
+        kts.append(kts0)
 
 # ==================== construct the atomic structure ====================
 palette=load_palette()
