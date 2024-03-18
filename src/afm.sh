@@ -16,7 +16,7 @@ for (( i=1 ; i<=3 ; i++ )) do
         dirname="seq_${i}_${j}"
         mkdir $dirname
         cd $dirname
-        mv ../manual_${i}_${j}.dat manual.dat
+        cp ../manual_${i}_${j}.dat manual.dat
         cat ../parsec.in.head > parsec.in
         STEP=`awk -v j=$j 'NR==j {print}' ../steps.dat`
         echo "movement_num  $((STEP-1))" >> parsec.in

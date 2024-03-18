@@ -93,8 +93,19 @@ for ia in range(poscar1.Natom) :
 # move the sample top to z=0
 zmax=-1e6
 for ia in range(poscar2.Natom) :
-    zmax=max(apc2[ia][2],zmax)
-# write apc2 in Cartesian coordinate in Bohr
+    if apc2[ia][2]>zmax :
+        zmax=apc2[ia][2]
+
+# instead of the very top atom, we select the medium of atoms with in 1 A under the top
+z_toplist=[]
+for ia in range(poscar2.Natom) :
+    if apc2[ia][2]>zmax-1 :
+        z_toplist.append(apc2[ia][2])
+z_toplist.sort()
+ia_mid=len(z_toplist) // 2
+zmax= (z_toplist[ia_mid] + z_toplist[~ia_mid]) / 2
+
+
 for ia in range(poscar2.Natom) :
     apc2[ia][2]=apc2[ia][2]-zmax
 
