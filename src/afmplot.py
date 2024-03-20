@@ -313,9 +313,11 @@ for edge in ["bottom", "top", "left", "right"] :
     ax0.spines[edge].set_linewidth(1)
     ax0.spines[edge].set_zorder(4)
 
+filename="afm"
+if ltilt :
+    filename+="_tilt"
 if latom :
-    fig.savefig("afmatom.png",dpi=1200)
-else :
-    fig.savefig("afm.png",dpi=1200)
-
+    filename+="_atom"
+filename+=".png"
+fig.savefig(filename,dpi=1200)
 

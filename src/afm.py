@@ -99,12 +99,11 @@ for ia in range(poscar2.Natom) :
 # instead of the very top atom, we select the medium of atoms with in 1 A under the top
 z_toplist=[]
 for ia in range(poscar2.Natom) :
-    if apc2[ia][2]>zmax-1 :
+    if apc2[ia][2]>zmax-1.0/bohr :
         z_toplist.append(apc2[ia][2])
 z_toplist.sort()
 ia_mid=len(z_toplist) // 2
 zmax= (z_toplist[ia_mid] + z_toplist[~ia_mid]) / 2
-
 
 for ia in range(poscar2.Natom) :
     apc2[ia][2]=apc2[ia][2]-zmax
@@ -179,16 +178,16 @@ elif poscar2.Ndim==2 :
     radius_min=1e6
     radius_max=-1e6
     for a in apc1 :
-        radius_max=max(radius_max,abs(a[2]+max(z_sampling)))
+        radius_max=max(radius_max,a[2]+max(z_sampling))
     for a in apc2 :
-        radius_min=min(radius_min,abs(a[2]))
+        radius_min=min(radius_min,a[2])
     # Move the atoms to centralize the sample-tip structure
-    z_move=0.5*(-radius_max+radius_min)
+    z_move=0.5*(radius_max+radius_min)
     for ia in range(poscar1.Natom) :
-        apc1[ia][2]+=z_move
+        apc1[ia][2]-=z_move
     for ia in range(poscar2.Natom) :
-        apc2[ia][2]+=z_move
-    
+        apc2[ia][2]-=z_move
+
     radius=0.5*(radius_max-radius_min)+10.0
 
 for iz in range(3) :
