@@ -9,7 +9,6 @@ import sys
 from classes import POSCAR
 
 radius=float(sys.argv[1])
-print(" raidus = "+str(radius)+" ")
 
 si_a0=[[0.0,0.0,0.0],[0.0,0.5,0.5],[0.5,0.0,0.5],[0.5,0.5,0.0]] # the site-A silicon atoms at (0,0,0)
 si_b0=[[0.25,0.25,0.25],[0.25,0.75,0.75],[0.75,0.25,0.75],[0.75,0.75,0.25]] # the site-B silicon atoms at (1/4,1/4,1/4)
@@ -147,4 +146,6 @@ for a in si_b :
 for a in H :
     poscar1.ap.append([a[0]/lc_big+0.5,a[1]/lc_big+0.5,a[2]/lc_big+0.5])
 poscar1.movetobox()
+print(" raidus "+str(radius)+" A  Si "+str(poscar1.Naint[0])+" H "+str(poscar1.Naint[1]))
 poscar1.filewrite("Si"+str(poscar1.Naint[0])+"H"+str(poscar1.Naint[1])+".vasp")
+

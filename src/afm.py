@@ -11,7 +11,8 @@ import math
 # read the input file
 x_spacing=0.6
 y_spacing=0.6
-z_sampling=[5.7,6.0,6.3]
+z_spacing=0.3
+z_range=[5.7,6.3]
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -23,22 +24,43 @@ for l in line :
         x_range=[float(word[1]),float(word[2])]
     elif word[0]=="y_range" :
         y_range=[float(word[1]),float(word[2])]
+    elif word[0]=="z_range" :
+        z_range=[float(word[0]),float(word[1])]
     elif word[0]=="x_spacing" :
         x_spacing=float(word[1])
     elif word[0]=="y_spacing" :
         y_spacing=float(word[1])
-    elif word[0]=="z_sampling" :
-        z_sampling=word[1:]
-        for iz in range(range(z_sampling)) :
-            try :
-                z_sampling[iz]=float(z_sampling[iz])
-            except :
-                del zsampling[iz:]
-                break
+    elif word[0]=="z_spacing" :
+        z_spacing=float(word[1])
     elif word[0]=="parallel" :
         parallel=int(word[1])
     else :
         print("Warning: keyword "+word[0]+" is not defined.")
+
+x=x_range[0]
+nx=0
+xlist=[]
+while (x<x_range[1]+1e-6) :
+    xlist.append(x)
+    x+=x_spacing
+    nx+=1
+x_range[1]=xlist[-1]
+y=y_range[0]
+ny=0
+ylist=[]
+while (y<y_range[1]+1e-6) :
+    ylist.append(y)
+    y+=y_spacing
+    ny+=1
+y_range[1]=ylist[-1]
+z=z_range[0]
+nz=0
+zlist=[]
+while (z<z_range[1]+1e-6) :
+    zlist.append(z)
+    z+=z_spacing
+    nz+=1
+z_range[1]=zlist[-1]
 
 #================================================================
 # Read the structure from .xyz files
@@ -111,21 +133,6 @@ for ia in range(poscar2.Natom) :
 #================================================================
 # Write the manual.*.dat, which is splitted by the `parallel` parameter.
 
-x=x_range[0]
-nx=0
-xlist=[]
-while (x<x_range[1]+1e-6) :
-    xlist.append(x)
-    x+=x_spacing
-    nx+=1
-y=y_range[0]
-ny=0
-ylist=[]
-while (y<y_range[1]+1e-6) :
-    ylist.append(y)
-    y+=y_spacing
-    ny+=1
-
 # calculate the step numbers. Need to minus 1 in the parsec.in file 
 steplist=[(nx*ny)//parallel]*parallel
 for ip in range((nx*ny)%parallel) :
@@ -160,16 +167,16 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
+
+#================================================================
+# Calculate the radius
+
 if poscar2.Ndim==0:
     radius=0.0
     for a in apc1 :
-        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in apc1 :
-        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[0])**2+(a[2]+max(z_sampling))**2)
-    for a in apc1 :
-        radius=max(radius,(a[0]+x_range[0])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
-    for a in apc1 :
-        radius=max(radius,(a[0]+x_range[1])**2+(a[1]+y_range[1])**2+(a[2]+max(z_sampling))**2)
+        for ix in range(2) :
+            for iy in range(2) :
+                radius=max(radius,(a[0]+x_range[ix])**2+(a[1]+y_range[iy])**2+(a[2]+z_range[1])**2)
     for a in apc2 :
         radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
     radius=radius**0.5+10.0
@@ -178,7 +185,7 @@ elif poscar2.Ndim==2 :
     radius_min=1e6
     radius_max=-1e6
     for a in apc1 :
-        radius_max=max(radius_max,a[2]+max(z_sampling))
+        radius_max=max(radius_max,a[2]+z_range[1])
     for a in apc2 :
         radius_min=min(radius_min,a[2])
     # Move the atoms to centralize the sample-tip structure
@@ -187,10 +194,9 @@ elif poscar2.Ndim==2 :
         apc1[ia][2]-=z_move
     for ia in range(poscar2.Natom) :
         apc2[ia][2]-=z_move
-
     radius=0.5*(radius_max-radius_min)+10.0
 
-for iz in range(3) :
+for iz in range(nz) :
     for ip in range(parallel) :
         #================================================================
         # Write the structure to parsec_st_iz_ip.dat file
@@ -232,7 +238,7 @@ for iz in range(3) :
             f2.write("Local_Component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
             f2.write("begin Atom_Coord\n")
             for ia in range(poscar1.Naint[i]) :
-                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}{apc1[k][2]+z_sampling[iz]:18.12f}\n")
+                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}{apc1[k][2]+zlist[iz]:18.12f}\n")
                 k=k+1
             f2.write("end Atom_Coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
@@ -260,7 +266,7 @@ for iz in range(3) :
         f4=open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
         for istep in range(1,steplist[ip]) :
             for ia in range(poscar1.Natom) :
-                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}{apc1[ia][2]+z_sampling[iz]:18.12f}\n")
+                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}{apc1[ia][2]+zlist[iz]:18.12f}\n")
             for ia in range(poscar2.Natom) :
                 f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
             f4.write("\n")
