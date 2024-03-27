@@ -8,8 +8,7 @@ import sys
 
 poscar1=POSCAR()
 for i in range(poscar1.Natom) :
-    for j in range(3) :
-        poscar1.ap[i][j]=1-poscar1.ap[i][j]
+    poscar1.ap[i][2]=1-poscar1.ap[i][2]
 poscar1.movetobox()
 
 poscar1.filewrite("POSCAR.new")

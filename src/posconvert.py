@@ -90,10 +90,10 @@ elif package2 in packagename['parsec'] :
     lcart=False
     Ndim=3
     for iw in range(len(sys.argv)-1,-1,-1) :
-        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") :
+        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") or sys.argv[iw].startswith("0d") :
             Ndim=0
             del sys.argv[iw]
-        elif sys.argv[iw].startswith("slab") :
+        elif sys.argv[iw].startswith("slab") or sys.argv[iw].startswith("2d") :
             Ndim=2
             del sys.argv[iw]
         elif sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr") :

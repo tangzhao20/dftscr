@@ -2,7 +2,7 @@
 
 # This script reads the afm simulation results and makes the plot
 
-# The matrix in this script are mostly M[ny][nx] or M[3][ny][nx] to match the size of image
+# The matrix in this script are mostly M[ny][nx] or M[nz][ny][nx] to match the size of image
 
 import sys
 import os
@@ -26,12 +26,17 @@ ltilt=False
 if "tilt" in sys.argv :
     ltilt=True
     sys.argv.remove("tilt")
+icenter=1
+for word in sys.argv :
+    if word.isnumeric() :
+        icenter=int(word-1)
+        sys.argv.remove(word)
 
 # ==================== read the input file ====================
 x_spacing=0.6
 y_spacing=0.6
-z_spacing=0.03
-z_center=0.6
+z_spacing=0.3
+z_range=[5.7,6.3]
 parallel=1
 f1=open("afm.in","r")
 line=f1.readlines()
@@ -44,8 +49,8 @@ for l in line :
         x_range=[float(word[1]),float(word[2])]
     elif word[0]=="y_range" :
         y_range=[float(word[1]),float(word[2])]
-    elif word[0]=="z_center" :
-        z_center=float(word[1])
+    elif word[0]=="z_range" :
+        z_range=[float(word[1]),float(word[2])]
     elif word[0]=="x_spacing" :
         x_spacing=float(word[1])
     elif word[0]=="y_spacing" :
@@ -55,9 +60,7 @@ for l in line :
     elif word[0]=="parallel" :
         parallel=int(word[1])
     else :
-        print("Warning: keyword "+word[0]+" is not defined.")
-
-z_sampling = [z_center-z_spacing, z_center, z_center+z_spacing]
+        print("Warning: keyword \""+word[0]+"\" is not defined.")
 
 # ==================== prepare the x and y coordinates ====================
 
@@ -75,6 +78,13 @@ while (y<y_range[1]+1e-6) :
     ylist.append(y)
     y+=y_spacing
     ny+=1
+z=z_range[0]
+nz=0
+zlist=[]
+while (z<z_range[1]+1e-6) :
+    zlist.append(z)
+    z+=z_spacing
+    nz+=1
 
 f3=open("steps.dat","r")
 line=f3.readlines()
@@ -122,7 +132,7 @@ if "toten.dat" in files :
     f5.close()
     il=1
     toten=[]
-    for iz in range(3) :
+    for iz in range(nz) :
         toten1=[]
         for iy in range(ny) :
             toten0=[]
@@ -136,13 +146,13 @@ else:
     # initialize toten matrix
     # toten[nz][ny][nx] in Ry
     toten=[]
-    for iz in range(3) :
+    for iz in range(nz) :
         toten0=[]
         for iy in range(ny) :
             toten0.append([0.0]*nx)
         toten.append(toten0)
 
-    for iz in range(3) :
+    for iz in range(nz) :
         for ip in range(parallel) :
             istep=-1
             filename="seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
@@ -162,7 +172,7 @@ else:
     # write the toten file
     f5=open("toten.dat","w")
     f5.write("#ix iy iz toten(Ry)\n")
-    for iz in range(3) :
+    for iz in range(nz) :
         for iy in range(ny) :
             for ix in range(nx) :
                 f5.write(str(ix+1)+" "+str(iy+1)+" "+str(iz+1)+" "+str(toten[iz][iy][ix])+"\n")
@@ -207,7 +217,7 @@ if ltilt :
 
     # create 2d map from toten
     toten_2d=[]
-    for iz in range(3) :
+    for iz in range(nz) :
         toten_2d0 = scipy.interpolate.RectBivariateSpline(ylist, xlist, toten[iz])
         toten_2d.append(toten_2d0)
 
@@ -220,14 +230,14 @@ if ltilt :
         for ix in range(nx) :
             y_new=xy_new[iy][ix][1]
             x_new=xy_new[iy][ix][0]
-            kts1=(0.25*toten_2d[0](y_new,x_new)[0,0]-0.5*toten_2d[1](y_new,x_new)[0,0]+0.25*toten_2d[2](y_new,x_new)[0,0])/z_spacing**2
+            kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
             kts0.append(kts1)
         kts.append(kts0)
 else :
     for iy in range(ny) :
         kts0=[]
         for ix in range(nx) :
-            kts1=(0.25*toten[0][iy][ix]-0.5*toten[1][iy][ix]+0.25*toten[2][iy][ix])/z_spacing**2
+            kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
             kts0.append(kts1)
         kts.append(kts0)
 
@@ -318,6 +328,7 @@ if ltilt :
     filename+="_tilt"
 if latom :
     filename+="_atom"
+filename+="_"+str(icenter+1)
 filename+=".png"
 fig.savefig(filename,dpi=1200)
 
