@@ -11,7 +11,10 @@ if [ ! -f "afm.in" ]; then
 fi
 
 parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
-for (( i=1 ; i<=3 ; i++ )) do
+
+i=1
+manualname="manual_1_1.dat"
+while [ -f $manualname ]; do
     for (( j=1 ; j<=$parallel ; j++ )) do
         dirname="seq_${i}_${j}"
         mkdir $dirname
@@ -21,7 +24,6 @@ for (( i=1 ; i<=3 ; i++ )) do
         STEP=`awk -v j=$j 'NR==j {print}' ../steps.dat`
         echo "movement_num  $((STEP-1))" >> parsec.in
         cat ../parsec_st_${i}_${j}.dat >> parsec.in
-        rm ../parsec_st_${i}_${j}.dat
         cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
         if [ "$1" == "sbatch" ]; then
             printf "$i $j " >> ../sbatch.log
@@ -30,4 +32,6 @@ for (( i=1 ; i<=3 ; i++ )) do
         fi
         cd ..
     done
+    i=$((i+1))
+    manualname="manual_${i}_1.dat"
 done

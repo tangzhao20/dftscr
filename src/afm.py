@@ -25,7 +25,7 @@ for l in line :
     elif word[0]=="y_range" :
         y_range=[float(word[1]),float(word[2])]
     elif word[0]=="z_range" :
-        z_range=[float(word[0]),float(word[1])]
+        z_range=[float(word[1]),float(word[2])]
     elif word[0]=="x_spacing" :
         x_spacing=float(word[1])
     elif word[0]=="y_spacing" :

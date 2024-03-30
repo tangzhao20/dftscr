@@ -29,7 +29,7 @@ if "tilt" in sys.argv :
 icenter=1
 for word in sys.argv :
     if word.isnumeric() :
-        icenter=int(word-1)
+        icenter=int(word)-1
         sys.argv.remove(word)
 
 # ==================== read the input file ====================
