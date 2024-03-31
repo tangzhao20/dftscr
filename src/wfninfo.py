@@ -164,19 +164,22 @@ f0.read(8)
 occ=np.fromfile(f0, dtype=np.double, count=nstate)
 f0.read(8)
 en=en*Ry
-irep=np.flip(irep)
+#irep=np.flip(irep)
 for ib in range(nstate) :
     irep[ib]-=1
-en=np.flip(en)
-occ=np.flip(occ)
+#en=np.flip(en)
+#occ=np.flip(occ)
 for ib in range(nstate) :
-    if occ[ib]>0.5 :
-        nc=ib
+    if occ[ib]<0.5 :
+        nv=ib
         break
-nv=nstate-nc
+nc=nstate-nv
 f1.write("   ib irep energy(eV) occ\n")
-for ib in range(nc-6,nc+6) :
-    f1.write(f"{nstate-ib:6}{irep[ib]:3}{en[ib]:11.6f}{occ[ib]:5.2f}\n")
+
+for ib in range(nstate-1,-1,-1) :
+#for ib in range(nv+49,-1,-1) :
+#for ib in range(nv+5,nv-7,-1) :
+    f1.write(f"{ib+1:6}{irep[ib]:3}{en[ib]:11.6f}{occ[ib]:5.2f}\n")
 f1.write("\n")
 
 pot=np.fromfile(f0, dtype=np.double, count=nwedge)
@@ -221,94 +224,122 @@ for ib in range(nstate0) :
     wfn.append(wfn0)
 #f1.write(str(wfn))
 
+# =========================================
 # Add any wfn processing code here
-# For example the norm checking: ==========
-f1.write("Example of postprocessing:\n")
-remain=0.0
-for ib in range(nstate0) :
-    summ=0
-    for ig in range(nwedge0) :
-        summ+=wfn[ib][ig]**2
-    remain=max(remain,abs(summ*ntrans0-1))
-f1.write(f"maximum of abs(norm2(wfn[ib])-1): {remain:.2e}\n")
+# #For example the norm checking: ==========
+# f1.write("Example of postprocessing:\n")
+# remain=0.0
+# for ib in range(nstate0) :
+#     summ=0
+#     for ig in range(nwedge0) :
+#         summ+=wfn[ib][ig]**2
+#     remain=max(remain,abs(summ*ntrans0-1))
+# f1.write(f"maximum of abs(norm2(wfn[ib])-1): {remain:.2e}\n")
 # =========================================
 
-
 # Checking for symmetries: ================
-f1.write("Checking for symmetries <i|j>, only reduced BZ\n")
-# change this 20 to nstate0
-N=5
-for ib1 in range(5) :
-    for ib2 in range(5) :
-        summ=0
-        for ig in range(nwedge0) :
-            summ+=wfn[ib1][ig]*wfn[ib2][ig]
-        if abs(summ)<=1e-6 : 
-            summ=0
-        f1.write(str(ib1)+" "+str(ib2)+" "+str(summ*ntrans0)+"\n")
-
-# creating a map of all kpr in full BZ
-f1.write("Checking for symmetries <i|j>, FULL BZ\n")
-
-kpr_full=[]
-kmap=[]
-kfactor=[]
-for isym1 in range(ntrans) :
-    kpr0=[]
-    kmap0=[]
-    kfactor0=[]
-    for isym2 in range(ntrans) :
-        for ig1 in range(nwedge0) :
-            # calculate the new kpr in full BZ, test if duplicate, then write
-            kpr1=v3tm3(kpr[ig1],M[isym2])
-            #fdup=False
-            #for ig2 in range(len(kpr0)) :
-            #    summ=0
-            #    for ix in range(3) :
-            #        summ+=abs(kpr0[ig2][ix]-kpr1[ix])
-            #    if summ<1e-8 :
-            #        fdup=True
-            #if fdup :
-            #    continue
-            kpr0.append(kpr1)
-            kmap0.append(ig1)
-            kfactor0.append(chimat[isym1][isym2])
-
-    kpr_full.append(kpr0)
-    kmap.append(kmap0)
-    kfactor.append(kfactor0)
-
-f1.write("kpr: \n")
-f1.write(str(len(kpr))+'\n')
-f1.write("kpr_full: \n")
-f1.write(str(len(kpr_full[0]))+'\n')
-#f1.write(str(kmap)+'\n')
-#f1.write(str(kfactor)+'\n')
-
-nwdge0_full=len(kpr_full[0])
-f1.write("nwdge0_full = "+str(nwdge0_full)+"\n")
-N=10
-f1.write("info of first "+str(N)+" bands:\n")
-for ib in range(N) :
-    f1.write(str(ib)+" "+str(irep[ib])+"\n")
+N=nstate-2
+deg=[-1]*N
+f1.write("Checking for degeneracy\n")
 for ib1 in range(N) :
-    for ib2 in range(N) :
-        summ=0
-        for ig in range(nwdge0_full) :
-            ir1=irep[ib1]
-            ir2=irep[ib2]
-            ig1=kmap[irep[ib1]][ig]
-            ig2=kmap[irep[ib2]][ig]
+    if deg[ib1]!=-1 :
+        continue
+    ideg=0
+    for ib2 in range(2,0,-1) :
+        if abs(en[ib1]-en[ib1+ib2])<=1e-6 :
+            ideg=ib2
+            break
+    for ib2 in range(ideg+1) :
+        deg[ib1+ib2]=ideg
+        
+for ib1 in range(N) :
+    f1.write(str(ib1+1)+" "+str(irep[ib1])+" "+str(deg[ib1]+1)+"\n")
 
-            coul=0
-            # coul: 1/|r-r'|
-            for ix in range(3) :
-                coul==(kpr_full[ib1][ig1][ix]-kpr_full[ib2][ig2][ix])**2
-            coul=coul**(-0.5)
-            summ+=wfn[ib1][ig1]*wfn[ib2][ig2]*kfactor[ir1][ig]*kfactor[ir2][ig]
-        #if abs(summ)<=1e-8 :
-        #    summ=0
-        f1.write(str(ib1)+" "+str(irep[ib1])+" "+str(ib2)+" "+str(irep[ib2])+" "+str(summ)+"\n")
+            
+
+
+
+
+
+
+
+
+
+
+
+
+#f1.write("Checking for symmetries <i|j>, only reduced BZ\n")
+#for ib1 in range(N) :
+#    for ib2 in range(N) :
+#        summ=0
+#        for ig in range(nwedge0) :
+#            summ+=wfn[ib1][ig]*wfn[ib2][ig]
+#        if abs(summ)<=1e-6 : 
+#            summ=0
+#        f1.write(str(ib1)+" "+str(ib2)+" "+str(summ*ntrans0)+"\n")
+#
+## creating a map of all kpr in full BZ
+#f1.write("Checking for symmetries <i|j>, FULL BZ\n")
+#
+#kpr_full=[]
+#kmap=[]
+#kfactor=[]
+#for isym1 in range(ntrans) :
+#    kpr0=[]
+#    kmap0=[]
+#    kfactor0=[]
+#    for isym2 in range(ntrans) :
+#        for ig1 in range(nwedge0) :
+#            # calculate the new kpr in full BZ, test if duplicate, then write
+#            kpr1=v3tm3(kpr[ig1],M[isym2])
+#            #fdup=False
+#            #for ig2 in range(len(kpr0)) :
+#            #    summ=0
+#            #    for ix in range(3) :
+#            #        summ+=abs(kpr0[ig2][ix]-kpr1[ix])
+#            #    if summ<1e-8 :
+#            #        fdup=True
+#            #if fdup :
+#            #    continue
+#            kpr0.append(kpr1)
+#            kmap0.append(ig1)
+#            kfactor0.append(chimat[isym1][isym2])
+#
+#    kpr_full.append(kpr0)
+#    kmap.append(kmap0)
+#    kfactor.append(kfactor0)
+#
+#f1.write("kpr: \n")
+#f1.write(str(len(kpr))+'\n')
+#f1.write("kpr_full: \n")
+#f1.write(str(len(kpr_full[0]))+'\n')
+##f1.write(str(kmap)+'\n')
+##f1.write(str(kfactor)+'\n')
+#
+#nwdge0_full=len(kpr_full[0])
+#f1.write("nwdge0_full = "+str(nwdge0_full)+"\n")
+#N=10
+#f1.write("info of first "+str(N)+" bands:\n")
+#for ib in range(N) :
+#    f1.write(str(ib)+" "+str(irep[ib])+"\n")
+#for ib1 in range(N) :
+#    for ib2 in range(N) :
+#        summ=0
+#        for ig in range(nwdge0_full) :
+#            ir1=irep[ib1]
+#            ir2=irep[ib2]
+#            ig1=kmap[irep[ib1]][ig]
+#            ig2=kmap[irep[ib2]][ig]
+#
+#            #coul=0
+#            ## coul: 1/|r-r'|
+#            #for ix in range(3) :
+#            #    coul=(kpr_full[ib1][ig1][ix]-kpr_full[ib2][ig2][ix])**2
+#            #coul=coul**(-0.5)
+#            summ+=wfn[ib1][ig1]*wfn[ib2][ig2]*kfactor[ir1][ig]*kfactor[ir2][ig]
+#        #if abs(summ)<=1e-8 :
+#        #    summ=0
+#        f1.write(str(ib1)+" "+str(irep[ib1])+" "+str(ib2)+" "+str(irep[ib2])+" "+str(summ)+"\n")
 
 f0.close()
 f1.close()
