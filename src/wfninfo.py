@@ -145,12 +145,14 @@ for irk in range(nwedge) :
         kprabssum0+=abs(kpr0[ix])
     kpr.append(kpr0)
     kprabssum.append(kprabssum0)
-(kprabssum_sort,kp_sort,kpr_sort)=zip(*sorted(zip(kprabssum,kp,kpr)))
+#(kprabssum_sort,kp_sort,kpr_sort)=zip(*sorted(zip(kprabssum,kp,kpr)))
 f1.write("kp of top 10 grid points in wedge\n")
 f1.write("shift = "+str(shift)+"\n")
 f1.write("kpr = (shift(1)+kp)*h\n")
-for irk in range(10) :
-    f1.write(f"[{kp_sort[irk][0]:2}{kp_sort[irk][1]:3}{kp_sort[irk][2]:3} ]  [{kpr_sort[irk][0]:5.2f}{kpr_sort[irk][1]:6.2f}{kpr_sort[irk][2]:6.2f} ]\n")
+for irk in range(nwedge) :
+    if abs(kpr[irk][0])<1.55 and abs(kpr[irk][1])<1.55 and abs(kpr[irk][2])<1.55  and abs(abs(kpr[irk][0])+abs(kpr[irk][1])+abs(kpr[irk][2])-2.7)<0.05 and abs(abs(kpr[irk][0])-abs(kpr[irk][1]))>0.05:
+    #f1.write(f"[{kp_sort[irk][0]:2}{kp_sort[irk][1]:3}{kp_sort[irk][2]:3} ]  [{kpr_sort[irk][0]:5.2f}{kpr_sort[irk][1]:6.2f}{kpr_sort[irk][2]:6.2f} ]\n")
+        f1.write(f"{irk:5d} [{kp[irk][0]:2}{kp[irk][1]:3}{kp[irk][2]:3} ]  [{kpr[irk][0]:5.2f}{kpr[irk][1]:6.2f}{kpr[irk][2]:6.2f} ]\n")
 f1.write("\n")
 
 nstate=np.fromfile(f0, dtype=np.int32, count=1)[0]
@@ -176,8 +178,7 @@ for ib in range(nstate) :
 nc=nstate-nv
 f1.write("   ib irep energy(eV) occ\n")
 
-for ib in range(nstate-1,-1,-1) :
-#for ib in range(nv+49,-1,-1) :
+for ib in range(nv+100,-1,-1) :
 #for ib in range(nv+5,nv-7,-1) :
     f1.write(f"{ib+1:6}{irep[ib]:3}{en[ib]:11.6f}{occ[ib]:5.2f}\n")
 f1.write("\n")
@@ -238,8 +239,8 @@ for ib in range(nstate0) :
 # =========================================
 
 # Checking for symmetries: ================
-N=nstate-2
-deg=[-1]*N
+N=nv+100
+deg=[-1]*(N+2)
 f1.write("Checking for degeneracy\n")
 for ib1 in range(N) :
     if deg[ib1]!=-1 :
@@ -253,7 +254,7 @@ for ib1 in range(N) :
         deg[ib1+ib2]=ideg
         
 for ib1 in range(N) :
-    f1.write(str(ib1+1)+" "+str(irep[ib1])+" "+str(deg[ib1]+1)+"\n")
+    f1.write(f"{ib1+1:5d}{irep[ib1]:2d}{deg[ib1]+1:2d}{wfn[ib1][55330]:10.6f}{wfn[ib1][55329]:10.6f}\n") 
 
             
 
