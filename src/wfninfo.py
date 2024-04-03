@@ -146,12 +146,15 @@ for irk in range(nwedge) :
     kpr.append(kpr0)
     kprabssum.append(kprabssum0)
 #(kprabssum_sort,kp_sort,kpr_sort)=zip(*sorted(zip(kprabssum,kp,kpr)))
-f1.write("kp of top 10 grid points in wedge\n")
+f1.write("Selected grid points:\n")
 f1.write("shift = "+str(shift)+"\n")
 f1.write("kpr = (shift(1)+kp)*h\n")
+sel_kp=[]
 for irk in range(nwedge) :
-    if abs(kpr[irk][0])<1.55 and abs(kpr[irk][1])<1.55 and abs(kpr[irk][2])<1.55  and abs(abs(kpr[irk][0])+abs(kpr[irk][1])+abs(kpr[irk][2])-2.7)<0.05 and abs(abs(kpr[irk][0])-abs(kpr[irk][1]))>0.05:
+    #if abs(kpr[irk][0])<1.55 and abs(kpr[irk][1])<1.55 and abs(kpr[irk][2])<1.55  and abs(abs(kpr[irk][0])+abs(kpr[irk][1])+abs(kpr[irk][2])-2.7)<0.05 and abs(abs(kpr[irk][0])-abs(kpr[irk][1]))>0.05:
+    if abs(kpr[irk][0])<0.4 and abs(kpr[irk][1])<0.4 and abs(kpr[irk][2])<0.4 :
     #f1.write(f"[{kp_sort[irk][0]:2}{kp_sort[irk][1]:3}{kp_sort[irk][2]:3} ]  [{kpr_sort[irk][0]:5.2f}{kpr_sort[irk][1]:6.2f}{kpr_sort[irk][2]:6.2f} ]\n")
+        sel_kp.append(irk)
         f1.write(f"{irk:5d} [{kp[irk][0]:2}{kp[irk][1]:3}{kp[irk][2]:3} ]  [{kpr[irk][0]:5.2f}{kpr[irk][1]:6.2f}{kpr[irk][2]:6.2f} ]\n")
 f1.write("\n")
 
@@ -239,7 +242,7 @@ for ib in range(nstate0) :
 # =========================================
 
 # Checking for symmetries: ================
-N=nv+100
+N=nv+500
 deg=[-1]*(N+2)
 f1.write("Checking for degeneracy\n")
 for ib1 in range(N) :
@@ -252,22 +255,39 @@ for ib1 in range(N) :
             break
     for ib2 in range(ideg+1) :
         deg[ib1+ib2]=ideg
-        
+
+irep_bin={}
+irep_new_bin={}
+
 for ib1 in range(N) :
-    f1.write(f"{ib1+1:5d}{irep[ib1]:2d}{deg[ib1]+1:2d}{wfn[ib1][55330]:10.6f}{wfn[ib1][55329]:10.6f}\n") 
+    if irep[ib1] not in irep_bin :
+        irep_bin[irep[ib1]]=1
+    else :
+        irep_bin[irep[ib1]]+=1
+    f1.write(f"{ib1+1:5d}{irep[ib1]:2d}{deg[ib1]+1:2d}")
+    isigma_d=-1
+    for gg in sel_kp :
+        if abs(wfn[ib1][gg])>1e-6 :
+            isigma_d=1
+        f1.write(f"{wfn[ib1][gg]:10.6f}")
+    f1.write("\n")
+    if deg[ib1]+1==2 :
+        irep_new=2 # E
+    elif deg[ib1]+1==1 and isigma_d==1 :
+        irep_new=0 # A_1
+    elif deg[ib1]+1==1 and isigma_d==-1 :
+        irep_new=1 # A_2
+    elif deg[ib1]+1==3 and isigma_d==-1 :
+        irep_new=3 # T_1
+    elif deg[ib1]+1==3 and isigma_d==1 :
+        irep_new=4 # T_2
+    if irep_new not in irep_new_bin :
+        irep_new_bin[irep_new]=1
+    else :
+        irep_new_bin[irep_new]+=1
 
-            
-
-
-
-
-
-
-
-
-
-
-
+f1.write("Old irep count: "+str(irep_bin)+"\n")
+f1.write("New irep count: "+str(irep_new_bin)+"\n")
 
 #f1.write("Checking for symmetries <i|j>, only reduced BZ\n")
 #for ib1 in range(N) :
