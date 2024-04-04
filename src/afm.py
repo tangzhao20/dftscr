@@ -7,12 +7,14 @@ import sys
 import os
 import math
 
+bohr=0.529177210903
 #================================================================
 # read the input file
 x_spacing=0.6
 y_spacing=0.6
 z_spacing=0.3
 z_range=[5.7,6.3]
+boundary=-1e0
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -32,6 +34,10 @@ for l in line :
         y_spacing=float(word[1])
     elif word[0]=="z_spacing" :
         z_spacing=float(word[1])
+    elif word[0]=="boundary" :
+        boundary=float(word[1])
+        if len(word)>2 and word[2][0] in ["a","A"] :
+            boundary=boundary/bohr
     elif word[0]=="parallel" :
         parallel=int(word[1])
     else :
@@ -64,7 +70,6 @@ z_range[1]=zlist[-1]
 
 #================================================================
 # Read the structure from .xyz files
-bohr=0.529177210903
 poscar1=POSCAR(empty=True)
 poscar1.fileread_xyz("tip.xyz")
 poscar2=POSCAR(empty=True)
@@ -169,32 +174,41 @@ for iy in range(ny) :
 
 
 #================================================================
-# Calculate the radius
-
-if poscar2.Ndim==0:
-    radius=0.0
-    for a in apc1 :
-        for ix in range(2) :
-            for iy in range(2) :
-                radius=max(radius,(a[0]+x_range[ix])**2+(a[1]+y_range[iy])**2+(a[2]+z_range[1])**2)
-    for a in apc2 :
-        radius=max(radius,a[0]**2+a[1]**2+a[2]**2)
-    radius=radius**0.5+10.0
-
-elif poscar2.Ndim==2 :
-    radius_min=1e6
-    radius_max=-1e6
-    for a in apc1 :
-        radius_max=max(radius_max,a[2]+z_range[1])
-    for a in apc2 :
-        radius_min=min(radius_min,a[2])
-    # Move the atoms to centralize the sample-tip structure
-    z_move=0.5*(radius_max+radius_min)
-    for ia in range(poscar1.Natom) :
-        apc1[ia][2]-=z_move
-    for ia in range(poscar2.Natom) :
-        apc2[ia][2]-=z_move
-    radius=0.5*(radius_max-radius_min)+10.0
+# If the boundary is not set, calculate it
+if boundary<0 :
+    if poscar2.Ndim==0 :
+        for a in apc1 :
+            for ix in range(2) :
+                for iy in range(2) :
+                    boundary=max(boundary,(a[0]+x_range[ix])**2+(a[1]+y_range[iy])**2+(a[2]+z_range[1])**2)
+        for a in apc2 :
+            boundary=max(boundary,a[0]**2+a[1]**2+a[2]**2)
+        boundary=boundary**0.5+10.0
+    
+    elif poscar2.Ndim==2 :
+        boundary_min=1e6
+        boundary_max=-1e6
+        for a in apc1 :
+            boundary_max=max(boundary_max,a[2]+z_range[1])
+        for a in apc2 :
+            boundary_min=min(boundary_min,a[2])
+        # Move the atoms to centralize the sample-tip structure
+        z_move=0.5*(boundary_max+boundary_min)
+        for ia in range(poscar1.Natom) :
+            apc1[ia][2]-=z_move
+        for ia in range(poscar2.Natom) :
+            apc2[ia][2]-=z_move
+        boundary=0.5*(boundary_max-boundary_min)+10.0
+else : # Calculate the z_move, make the bottom at 10 bohr from boundary
+    if poscar2.Ndim==2 :
+        boundary_min=1e6
+        for a in apc2 :
+            boundary_min=min(boundary_min,a[2])
+        z_move=boundary_min-(-boundary+10.0)
+        for ia in range(poscar1.Natom) :
+            apc1[ia][2]-=z_move
+        for ia in range(poscar2.Natom) :
+            apc2[ia][2]-=z_move
 
 for iz in range(nz) :
     for ip in range(parallel) :
@@ -227,7 +241,7 @@ for iz in range(nz) :
             print("Error: Only Ndim = 0 or 2 are supported.")
             sys.exit()
         
-        f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+        f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
         f2.write("Atom_Types_Num "+str(len(poscar1.atomtype)+len(poscar2.atomtype))+"\n")
         f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
         
