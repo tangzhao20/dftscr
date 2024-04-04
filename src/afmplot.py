@@ -195,24 +195,23 @@ if ltilt :
     for iy in range(ny) :
         for ix in range(nx) :
             if ix!=0 and ix!=nx-1 :
-                fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix+1])*0.5/x_spacing
+                fx[iy][ix]=(toten[icenter][iy][ix-1]-toten[icenter][iy][ix+1])*0.5/x_spacing
             #elif ix==0 :
             #    fx[iy][ix]=(toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
             #elif ix==nx-1 :
             #    fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
             if iy!=0 and iy!=ny-1 :
-                fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy+1][ix])*0.5/y_spacing
+                fy[iy][ix]=(toten[icenter][iy-1][ix]-toten[icenter][iy+1][ix])*0.5/y_spacing
             #elif iy==0 :
             #    fy[iy][ix]=(toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
             #elif iy==ny-1 :
             #    fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
 
-    # xy_new [ny][nx][2]
-    xy_new=[]
+    xy_new=[] # xy_new[ny][nx][2]
     for iy in range(ny) :
         xy_new0=[]
         for ix in range(nx) :
-            xy_new0.append([xlist[ix] + fx[iy][ix] / k_spring, ylist[iy] + fy[iy][ix] / k_spring])
+            xy_new0.append([ylist[iy] + fy[iy][ix] / k_spring, xlist[ix] + fx[iy][ix] / k_spring])
         xy_new.append(xy_new0)
 
     # create 2d map from toten
@@ -228,16 +227,18 @@ if ltilt :
     for iy in range(ny) :
         kts0=[]
         for ix in range(nx) :
-            y_new=xy_new[iy][ix][1]
-            x_new=xy_new[iy][ix][0]
-            kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
+            y_new=xy_new[iy][ix][0]
+            x_new=xy_new[iy][ix][1]
+            #kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
+            kts1=(toten_2d[icenter-1](y_new,x_new)[0,0]-2*toten_2d[icenter](y_new,x_new)[0,0]+toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
             kts0.append(kts1)
         kts.append(kts0)
 else :
     for iy in range(ny) :
         kts0=[]
         for ix in range(nx) :
-            kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
+            #kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
+            kts1=(toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
             kts0.append(kts1)
         kts.append(kts0)
 
@@ -292,7 +293,6 @@ fig=plt.figure(figsize=(5,3.75))
 gs0=fig.add_gridspec(1,2,wspace=0.02,hspace=0.00,left=0.14,right=0.80,top=0.95,bottom=0.15,width_ratios=[0.6,0.04])
 [ax0,ax1]=gs0.subplots()
 
-#im=ax0.imshow(kts,interpolation='gaussian',cmap=cm.gray,extent=[x_range[0],x_range[1],y_range[0],y_range[1]],aspect='equal',zorder=1)
 im_extent=[x_range[0]-x_spacing*0.5,x_range[1]+x_spacing*0.5,y_range[0]-y_spacing*0.5,y_range[1]+y_spacing*0.5]
 for ic in range(len(im_extent)) :
     im_extent[ic]=im_extent[ic]*(bohr/funit)
