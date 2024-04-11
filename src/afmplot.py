@@ -38,6 +38,8 @@ y_spacing=0.6
 z_spacing=0.3
 z_range=[5.7,6.3]
 parallel=1
+k_spring = 0.8 # k in N/m
+fconv_spring = 0.000642304932303402 # N/m in atomic unit
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -59,6 +61,8 @@ for l in line :
         z_spacing=float(word[1])
     elif word[0]=="parallel" :
         parallel=int(word[1])
+    elif word[0]=="k_spring" :
+        k_spring=float(word[1])
     else :
         print("Warning: keyword \""+word[0]+"\" is not defined.")
 
@@ -167,11 +171,11 @@ else:
                 if len(word)>=2 and word[0]=="Starting" and word[1]=="SCF..." :
                     istep+=1
                 if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3]) # in Ry
+                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3])*0.5 # in Ha
     
     # write the toten file
     f5=open("toten.dat","w")
-    f5.write("#ix iy iz toten(Ry)\n")
+    f5.write("#ix iy iz toten(a.u.)\n")
     for iz in range(nz) :
         for iy in range(ny) :
             for ix in range(nx) :
@@ -181,8 +185,6 @@ else:
 # ==================== caclulate forces for tilt correction ====================
 
 if ltilt :
-    k_spring = 0.8 # k in N/m
-    fconv_spring = 0.000642304932303402 # N/m in atomic unit
     k_spring = k_spring * fconv_spring
 
     fx=[] # fx[ny][nx]
@@ -231,6 +233,8 @@ if ltilt :
             x_new=xy_new[iy][ix][1]
             #kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
             kts1=(toten_2d[icenter-1](y_new,x_new)[0,0]-2*toten_2d[icenter](y_new,x_new)[0,0]+toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
+            if not lbohr :
+                kts1=kts1/fconv_spring
             kts0.append(kts1)
         kts.append(kts0)
 else :
@@ -239,6 +243,8 @@ else :
         for ix in range(nx) :
             #kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
             kts1=(toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
+            if not lbohr :
+                kts1=kts1/fconv_spring
             kts0.append(kts1)
         kts.append(kts0)
 
@@ -312,7 +318,10 @@ else :
 cb=fig.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
-ax1.set_ylabel("$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
+if lbohr :
+    ax1.set_ylabel("$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
+else :
+    ax1.set_ylabel("$\mathit{k}_{ts}\ (N/m)$",color=palette["black"])
 
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
 ax0.tick_params(axis="y", left=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
