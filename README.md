@@ -33,7 +33,7 @@ Inputs: nscf.in, ../bands/\*.xml, \*\_band.kpt, \*\_band.dat, kpath.in
 
 To convert the format of the crystal structure.
 ```
-python posconvert.py package1 package2
+python posconvert.py package1 package2 (filename1)
 ```
 Support packages: VASP, QE (.in or .xml), Paratec, Parsec, .xyz
 
@@ -121,20 +121,31 @@ This Python code, along with the Bash script [afm.sh](src/afm.sh), prepares the 
 
 The Python code can be used to prepare the structure files by
 ```
-python afm.py
+python afm.py (vasp)
 ```
-Input: afm.in, tip.xyz, sample.xyz  
-Output : parsec\_st.dat, manual\_\*\_\*.dat  
-The structure files manual\_\*\_\*.dat will be moved into the seq\_\*\_\* directories in the Bash script.
+Input: afm.in, tip.xyz, sample.parsec\_st.dat  
+Output : parsec\_st\_\*\_\*.dat, manual\_\*\_\*.dat, steps.dat  
+The structure files manual\_\*\_\*.dat will be moved into the seq\_\*\_\* directories in the Bash script.  
+Add the `vasp` at the end to write the structures (tip + sample) in VASP format.
 
 The Bash script can be used to create directories and prepare files by
 ```
-dftscr_dir/jobs/afm.sh
+afm.sh (sbatch) 
 ```
-Input: afm.in, tip.xyz, sample.xyz, job.sh, parsec.in.head  
-Output: seq\_\*\_\*, seq\_\*\_\*/parsec.in, seq\_\*\_\*/job.sh
+Input: afm.in, job.sh, parsec.in.head, parsec\_st\_\*\_\*.dat, manual\_\*\_\*.dat, steps.dat  
+Output: seq\_\*\_\*, seq\_\*\_\*/parsec.in, seq\_\*\_\*/job.sh, sbatch.log  
+Add the `sbatch` option to submit the jobs
 
 Examples of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/inputs) directory.
+
+After all the calculations are done, use the python script [afmplot.py](src/afmplot.py) to make the plots.  
+```
+python afmplot.py (iz) (atom) (tilt) (bohr)
+```
+Input: afm.in, steps.dat, (toten.dat or seq\_\*\_\*/parsec.out)  
+Output: afm\_\*.png, (toten.dat)  
+In the first round, this code read the total energies from seq\_\*\_\*/parsec.out files and write to toten.dat. After that, the toten.dat will be read.  
+`iz` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `iz` should be set to 2 as default. Add the `atom` option to display the atom positions. Only the top layer within 1 A are plotted. Add the `tilt` option to use the tilt correction. The tilt correction method is on development for now. Add the `bohr` option to use the Bohr as the length unit.  
 
 ---
 
