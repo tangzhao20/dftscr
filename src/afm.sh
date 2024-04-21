@@ -13,6 +13,7 @@ fi
 parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
 
 i=1
+k=1
 manualname="manual_1_1.dat"
 while [ -f $manualname ]; do
     for (( j=1 ; j<=$parallel ; j++ )) do
@@ -26,11 +27,12 @@ while [ -f $manualname ]; do
         cat ../parsec_st_${i}_${j}.dat >> parsec.in
         cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
         if [ "$1" == "sbatch" ]; then
-            printf "$i $j " >> ../sbatch.log
+            printf "$k $i $j " >> ../sbatch.log
             sbatch job.sh | tail -n1 >> ../sbatch.log
             tail -n1 ../sbatch.log
         fi
         cd ..
+        k=$((k+1))
     done
     i=$((i+1))
     manualname="manual_${i}_1.dat"
