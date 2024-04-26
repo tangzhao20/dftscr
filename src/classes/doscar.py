@@ -51,6 +51,8 @@ class DOSCAR :
 
     def fileread_xml(self, filename="") :
         # read dos from .xml file
+        Ha=load_constant("rydberg")*2.0
+
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -61,9 +63,9 @@ class DOSCAR :
         tree=ET.parse(filename)
         #TODO: test the metal case
         if tree.getroot().find("output").find("band_structure").find("highestOccupiedLevel") is None :
-            self.ef=float(tree.getroot().find("output").find("band_structure").find("fermi_energy").text)*27.211386245988
+            self.ef=float(tree.getroot().find("output").find("band_structure").find("fermi_energy").text)*Ha
         else :
-            self.ef=float(tree.getroot().find("output").find("band_structure").find("highestOccupiedLevel").text)*27.211386245988
+            self.ef=float(tree.getroot().find("output").find("band_structure").find("highestOccupiedLevel").text)*Ha
 
     def fileread_qe(self, filename="pwscf.dos") :
         f0=open(filename,"r")

@@ -6,7 +6,7 @@
 
 import sys
 import os
-from commons import load_palette
+from commons import load_constant, load_palette
 from classes import POSCAR
 from v3math import v3pvm
 import matplotlib as mpl
@@ -38,8 +38,13 @@ y_spacing=0.6
 z_spacing=0.3
 z_range=[5.7,6.3]
 parallel=1
+bohr=load_constant("bohr")
+rydberg=load_constant("rydberg")
+electron=load_constant("electron")
+angstrom=load_constant("angstrom")
 k_spring = 0.8 # k in N/m
-fconv_spring = 0.000642304932303402 # N/m in atomic unit
+fconv_spring = (bohr*angstrom)**2/(2.0*rydberg*electron) # N/m in atomic unit
+#fconv_spring = 0.000642304932303402 # N/m in atomic unit
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -250,7 +255,6 @@ else :
 
 # ==================== construct the atomic structure ====================
 palette=load_palette()
-bohr=0.529177249
 if lbohr :
     funit=bohr
 else : 

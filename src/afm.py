@@ -3,11 +3,12 @@
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
 from classes import POSCAR
+from commons import load_constant
 import sys
 import os
 import math
 
-bohr=0.529177210903
+bohr=load_constant("bohr")
 #================================================================
 # read the input file
 x_spacing=0.6

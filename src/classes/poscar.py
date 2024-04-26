@@ -3,6 +3,7 @@ import sys
 import math
 import os
 import xml.etree.ElementTree as ET
+from commons import load_constant
 
 class POSCAR:
     # title
@@ -17,6 +18,7 @@ class POSCAR:
     # dmass{}
     # atomcolor{}
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
+
     
     def __init__(self, filename="POSCAR", empty=False) :
         if empty:
@@ -91,6 +93,8 @@ class POSCAR:
 #########################################################################
 
     def fileread_qe(self, filename):
+        bohr=load_constant("bohr")
+
         f1=open(filename,"r")
         line=f1.readlines()
         f1.close()
@@ -104,7 +108,7 @@ class POSCAR:
                 if word[1][0].lower()=="a" :
                     factor=1.0
                 elif word[1][0].lower()=="b" :
-                    factor=0.529177210903
+                    factor=bohr
                 else :
                     print(word[1])
                     print("Only Angstrom and Bohr are supported.")
@@ -139,6 +143,8 @@ class POSCAR:
         self.movetobox()
 
     def fileread_xml(self, filename=""):
+        bohr=load_constant("bohr")
+
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -171,12 +177,14 @@ class POSCAR:
         self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
         for ix in range(3):
             for iy in range(3):
-                self.lc[ix][iy]=self.lc[ix][iy]*0.529177210903
+                self.lc[ix][iy]=self.lc[ix][iy]*bohr
 
         self.Natom=len(self.ap)
         self.Ntype=len(self.atomtype)
 
     def fileread_prt(self, filename):
+        bohr=load_constant("bohr")
+
         f1=open(filename,"r")
         line=f1.readlines()
         f1.close()
@@ -215,7 +223,7 @@ class POSCAR:
                     self.Natom+=1
 
         detlc=self.volume()
-        factor=(volume/detlc)**(1.0/3.0)*0.529177210903
+        factor=(volume/detlc)**(1.0/3.0)*bohr
 
         for i in range(3) :
             for j in range(3) :
@@ -224,6 +232,8 @@ class POSCAR:
         self.movetobox()
 
     def fileread_parsec(self, filename="parsec.in") :
+        bohr=load_constant("bohr")
+
         f1=open(filename,"r")
         line=f1.readlines()
         f1.close()
@@ -244,7 +254,7 @@ class POSCAR:
         Fat=False
         Flc=False
         self.lc=[[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]
-        factor_lc=0.529177210903
+        factor_lc=bohr
         for il in range(len(line)):
             word=line[il].replace(":"," ").replace("="," ").split()
             if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
@@ -264,7 +274,7 @@ class POSCAR:
                 Flc=False
                 continue
             if word[0].lower()=="boundary_sphere_radius": 
-                alat=float(word[1])*0.529177210903*2.0 # in Bohr here
+                alat=float(word[1])*bohr*2.0 # in Bohr here
                 if self.Ndim==0 :
                     self.lc[0][0]=alat
                     self.lc[1][1]=alat
@@ -274,7 +284,7 @@ class POSCAR:
             if word[0].lower()=="lattice_vector_scale" :
                 factor_lc=float(word[1])
                 if len(word)<3 or word[2].lower()!="ang" :
-                    factor_lc=factor_lc*0.529177210903
+                    factor_lc=factor_lc*bohr
             if word[0].lower()=="atom_types_num" :
                 self.Ntype=int(word[1])
             if word[0].lower()=="atom_type" :
@@ -289,7 +299,7 @@ class POSCAR:
                     factor_ap=1.0
                 else : # cartesian_bohr
                     lcart=True
-                    factor_ap=0.529177210903
+                    factor_ap=bohr
             if Flc==True :
                 for ix in range(3) :
                     self.lc[ilc][ix]=float(word[ix])*factor_lc
@@ -314,6 +324,8 @@ class POSCAR:
                 self.ap[ia][ix]+=shift[ix]
 
     def fileread_xyz(self,filename="") :
+        bohr=load_constant("bohr")
+
         if filename=="" :
             # find a .xyz file
             files = os.listdir()
@@ -358,7 +370,7 @@ class POSCAR:
 
         if lbohr :
             for ix in range(3) :
-                self.lc[ix][ix]=self.lc[ix][ix]*0.529177210903
+                self.lc[ix][ix]=self.lc[ix][ix]*bohr
 
 ########################################################################
 
@@ -422,7 +434,9 @@ class POSCAR:
         f2.close()
 
     def filewrite_prt(self, filename="prt_st.dat"):
-        volume=self.volume()*6.74833449460037308669
+        bohr=load_constant("bohr")
+
+        volume=self.volume()*bohr**(-3)
         # convert Angstrom^3 to bohr^3
 
         f2=open(filename,"w")
@@ -440,6 +454,8 @@ class POSCAR:
         f2.close()
 
     def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=3):
+        bohr=load_constant("bohr")
+
         print(" lcartesian = ",lcartesian)
         print(" lbohr = ",lbohr)
         print(" Ndim = ",Ndim)
@@ -448,7 +464,7 @@ class POSCAR:
             lcartesian=True
         f2=open(filename,"w")
         if lbohr :
-            funit=0.529177210903
+            funit=bohr
         else :
             funit=1.0
         if self.Ndim==0 :
@@ -748,10 +764,12 @@ class POSCAR:
         return(self.ap)
 
     def reclc_out(self) :
+        pi=load_constant("pi")
+
         reclc=np.linalg.inv(np.array(self.lc)).tolist()
         for i in range(3) :
             for j in range(3) :
-                reclc[i][j]=reclc[i][j]*2.0*3.141592653589793238463 
+                reclc[i][j]=reclc[i][j]*2.0*pi
         return(reclc)
    
     def volume(self) :

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import xml.etree.ElementTree as ET
+from commons import load_constant
 
 class EIGENVAL : 
     # Nk, Nb, Ns
@@ -80,6 +81,8 @@ class EIGENVAL :
 #########################################################################
 
     def fileread_qexml(self, filename="") :
+        Ha=load_constant("rydberg")*2.0
+
         if filename=="" :
             # find a .xml file
             files = os.listdir()
@@ -113,7 +116,6 @@ class EIGENVAL :
             eig1=kp.find('eigenvalues').text.split()
             occ1=kp.find('occupations').text.split()
             # qe xml energies are in Hatree (Ha)
-            Ha=27.211386245988
             eig0=[]
             occ0=[]
             if self.Ns==1 :
@@ -182,6 +184,10 @@ class EIGENVAL :
         self.Ns=1
 
     def fileread_parsec(self) :
+        bohr=load_constant("bohr")
+        pi=load_constant("pi")
+        rydberg=load_constant("rydberg")
+
         if os.path.isfile("bands.dat") :
             filename="bands.dat"
         elif os.path.isfile("eigen.dat"):
@@ -222,7 +228,7 @@ class EIGENVAL :
         # convert kp from 1/bohr to 1/A
         for ik in range(self.Nk) :
             for ix in range(3) :
-                self.kp[ik][ix]=self.kp[ik][ix]/0.529177210903*0.5/3.141592653589793238463
+                self.kp[ik][ix]=self.kp[ik][ix]/bohr*0.5/pi
 
         self.eigshift(ef)
         Nvb=[]
@@ -238,11 +244,13 @@ class EIGENVAL :
             self.is_semic=False
         for ik in range(self.Nk) :
             for ib in range(self.Nb) :
-                self.eig[ik][ib][0]*=13.605693122994
+                self.eig[ik][ib][0]*=rydberg
 
     def fileread_parsec_eigen(self) :
         # Read the eigenvalues from eigen.dat.
         # kp is missing in this file, so we assume the first k is gamma and read only this point.
+        rydberg=load_constant("rydberg")
+
         filename="eigen.dat"
 
         f0=open(filename,"r")
@@ -271,7 +279,7 @@ class EIGENVAL :
             if ik>0 :
                 continue
             ib=int(word[0])-1
-            eig0=float(word[1])*13.605693122994
+            eig0=float(word[1])*rydberg
             occ0=float(word[3])
             if self.Ns==2 and word[7]=="dn" :
                 self.eig[0][ib].append(eig0)

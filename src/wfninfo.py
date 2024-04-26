@@ -6,9 +6,11 @@
 
 # outputs (wfninfo.out) are shown on the screen
 
+from commons import load_constant
 import sys
 import os
 import numpy as np
+
 
 def formatprint(mat, dim0, fstr) :
     # dim0 is the number of rows
@@ -19,7 +21,7 @@ def formatprint(mat, dim0, fstr) :
         f1.write(strformat.format(*mat[ii*dim1:(ii+1)*dim1]))
         f1.write("\n")
 
-Ry=13.605703976
+Ry=load_constant("rydberg")
 
 f0=open("parsec.dat","rb")
 f1=open("wfninfo.out","w")
