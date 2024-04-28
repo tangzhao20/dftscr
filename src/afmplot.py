@@ -14,6 +14,12 @@ import matplotlib.pyplot as plt
 import scipy
 import numpy as np
 
+bohr=load_constant("bohr")
+rydberg=load_constant("rydberg")
+Ha=rydberg*2.0
+electron=load_constant("electron")
+angstrom=load_constant("angstrom")
+
 latom=False
 if "atom" in sys.argv :
     latom=True
@@ -33,18 +39,14 @@ for word in sys.argv :
         sys.argv.remove(word)
 
 # ==================== read the input file ====================
-x_spacing=0.6
-y_spacing=0.6
-z_spacing=0.3
-z_range=[5.7,6.3]
-parallel=1
-bohr=load_constant("bohr")
-rydberg=load_constant("rydberg")
-electron=load_constant("electron")
-angstrom=load_constant("angstrom")
+x_spacing = 0.6
+y_spacing = 0.6
+z_spacing = 0.3
+z_range = [5.7,6.3]
+parallel = 1
 k_spring = 0.8 # k in N/m
-fconv_spring = (bohr*angstrom)**2/(2.0*rydberg*electron) # N/m in atomic unit
-#fconv_spring = 0.000642304932303402 # N/m in atomic unit
+k_spring = k_spring * angstrom**2/electron # convert spring constant to eV/A^2
+
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
@@ -70,6 +72,14 @@ for l in line :
         k_spring=float(word[1])
     else :
         print("Warning: keyword \""+word[0]+"\" is not defined.")
+
+
+x_spacing = x_spacing * bohr
+y_spacing = y_spacing * bohr
+z_spacing = z_spacing * bohr
+x_range = [ x_range[0] * bohr, x_range[1] * bohr ]
+y_range = [ y_range[0] * bohr, y_range[1] * bohr ]
+z_range = [ z_range[0] * bohr, z_range[1] * bohr ]
 
 # ==================== prepare the x and y coordinates ====================
 
@@ -176,11 +186,11 @@ else:
                 if len(word)>=2 and word[0]=="Starting" and word[1]=="SCF..." :
                     istep+=1
                 if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3])*0.5 # in Ha
+                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3])*rydberg # convert Ry to eV
     
     # write the toten file
     f5=open("toten.dat","w")
-    f5.write("#ix iy iz toten(a.u.)\n")
+    f5.write("#ix iy iz toten(eV)\n")
     for iz in range(nz) :
         for iy in range(ny) :
             for ix in range(nx) :
@@ -190,8 +200,6 @@ else:
 # ==================== caclulate forces for tilt correction ====================
 
 if ltilt :
-    k_spring = k_spring * fconv_spring
-
     fx=[] # fx[ny][nx]
     fy=[] # fy[ny][nx]
     for iy in range(ny) :
@@ -238,8 +246,9 @@ if ltilt :
             x_new=xy_new[iy][ix][1]
             #kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
             kts1=(toten_2d[icenter-1](y_new,x_new)[0,0]-2*toten_2d[icenter](y_new,x_new)[0,0]+toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
-            if not lbohr :
-                kts1=kts1/fconv_spring
+            if lbohr :
+                # convert k_ts from eV/A^2 to Ha/a0^2
+                kts1 = kts1 * bohr**2/Ha
             kts0.append(kts1)
         kts.append(kts0)
 else :
@@ -248,8 +257,9 @@ else :
         for ix in range(nx) :
             #kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
             kts1=(toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
-            if not lbohr :
-                kts1=kts1/fconv_spring
+            if lbohr :
+                # convert k_ts from eV/A^2 to Ha/a0^2
+                kts1 = kts1 * bohr**2/Ha
             kts0.append(kts1)
         kts.append(kts0)
 
@@ -305,13 +315,13 @@ gs0=fig.add_gridspec(1,2,wspace=0.02,hspace=0.00,left=0.14,right=0.80,top=0.95,b
 
 im_extent=[x_range[0]-x_spacing*0.5,x_range[1]+x_spacing*0.5,y_range[0]-y_spacing*0.5,y_range[1]+y_spacing*0.5]
 for ic in range(len(im_extent)) :
-    im_extent[ic]=im_extent[ic]*(bohr/funit)
+    im_extent[ic]=im_extent[ic]/funit
 im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r", origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom :
     ax0.scatter(atomx,atomy,c=atomcolor,s=12,edgecolors=edgecolor,linewidths=1,zorder=3)
-ax0.set_xlim([x_range[0]*(bohr/funit),x_range[1]*(bohr/funit)])
-ax0.set_ylim([y_range[0]*(bohr/funit),y_range[1]*(bohr/funit)])
+ax0.set_xlim([x_range[0]/funit,x_range[1]/funit])
+ax0.set_ylim([y_range[0]/funit,y_range[1]/funit])
 if lbohr :
     ax0.set_xlabel("$\mathit{x}\ (Bohr)$",color=palette["black"])
     ax0.set_ylabel("$\mathit{y}\ (Bohr)$",color=palette["black"])
@@ -325,7 +335,7 @@ cb.outline.set_color(palette["black"])
 if lbohr :
     ax1.set_ylabel("$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
 else :
-    ax1.set_ylabel("$\mathit{k}_{ts}\ (N/m)$",color=palette["black"])
+    ax1.set_ylabel("$\mathit{k}_{ts}\ (eV/Å^2)$",color=palette["black"])
 
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
 ax0.tick_params(axis="y", left=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
@@ -341,6 +351,8 @@ if ltilt :
     filename+="_tilt"
 if latom :
     filename+="_atom"
+if lbohr :
+    filename+="_bohr"
 filename+="_"+str(icenter+1)
 filename+=".png"
 fig.savefig(filename,dpi=1200)
