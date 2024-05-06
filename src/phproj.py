@@ -7,7 +7,12 @@
 
 import yaml
 import matplotlib.pyplot as plt
+from commons import load_constant
 from classes import POSCAR
+
+Ha=load_constant("rydberg")*2.0
+electron=load_constant("electron")
+h=load_constant("planck")
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
@@ -50,5 +55,5 @@ for ib in range(Nb) :
 freq_out=freq_out/summ
                 
 print("average frequency: "+str(freq_out)+" THz")
-freq_out=freq_out*0.0001519828500716
+freq_out=freq_out*h*1e12/(Ha*electron)
 print(" = "+str(freq_out)+" a.u.")
