@@ -9,6 +9,11 @@ import os
 import math
 
 bohr=load_constant("bohr")
+lvasp=False
+if "vasp" in sys.argv :
+    lvasp=True
+    sys.argv.remove("vasp")
+
 #================================================================
 # read the input file
 x_spacing=0.6
@@ -16,9 +21,12 @@ y_spacing=0.6
 z_spacing=0.3
 z_range=[5.7,6.3]
 boundary=-1e0
+lfdet=False
+
 f1=open("afm.in","r")
 line=f1.readlines()
 f1.close()
+
 for l in line :
     word=l.split()
     if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
@@ -41,6 +49,10 @@ for l in line :
             boundary=boundary/bohr
     elif word[0]=="parallel" :
         parallel=int(word[1])
+    elif word[0]=="fdet" :
+        lfdet=True
+        if len(word)>1 and word[1].lower() in ["false",".false."] :
+            lfdet=False
     else :
         print("Warning: keyword "+word[0]+" is not defined.")
 
@@ -70,17 +82,38 @@ while (z<z_range[1]+1e-6) :
 z_range[1]=zlist[-1]
 
 #================================================================
-# Read the structure from .xyz files
+# Read the structure from tip.xyz and sample.parsec_st.dat
 poscar1=POSCAR(empty=True)
 poscar1.fileread_xyz("tip.xyz")
 poscar2=POSCAR(empty=True)
 poscar2.fileread_parsec("sample.parsec_st.dat")
 
+if poscar2.Ndim!=0 and poscar2.Ndim!=2 :
+    print("Error: Only Ndim = 0 or 2 are supported.")
+    sys.exit()
+
+#================================================================
+# Read the core charge from pp files *_POTRE.DAT
+zion1=[]
+for i in range(poscar1.Ntype) :
+    pp_name=poscar1.atomtype[i]+"_POTRE.DAT"
+    f5=open(pp_name,"r")
+    line=f5.readlines()
+    f5.close()
+    zion1.append(int(float(line[3].split()[5])+0.5))
+zion2=[]
+for i in range(poscar2.Ntype) :
+    pp_name=poscar2.atomtype[i]+"_POTRE.DAT"
+    f5=open(pp_name,"r")
+    line=f5.readlines()
+    f5.close()
+    zion2.append(int(float(line[3].split()[5])+0.5))
+
 # calculate the apc, this should be done before the loop
-if poscar2.Ndim==2 :
-    shift=[0.0,0.0,0.5]
-elif poscar2.Ndim==0 :
+if poscar2.Ndim==0 :
     shift=[0.5,0.5,0.5]
+elif poscar2.Ndim==2 :
+    shift=[0.0,0.0,0.5]
 k=0
 apc1=[]
 for i in range(poscar1.Ntype) :
@@ -173,7 +206,6 @@ for iy in range(ny) :
                 k=0
     lxincrease=not lxincrease
 
-
 #================================================================
 # If the boundary is not set, calculate it
 if boundary<0 :
@@ -185,7 +217,7 @@ if boundary<0 :
         for a in apc2 :
             boundary=max(boundary,a[0]**2+a[1]**2+a[2]**2)
         boundary=boundary**0.5+10.0
-    
+
     elif poscar2.Ndim==2 :
         boundary_min=1e6
         boundary_max=-1e6
@@ -211,6 +243,49 @@ else : # Calculate the z_move, make the bottom at 10 bohr from boundary
         for ia in range(poscar2.Natom) :
             apc2[ia][2]-=z_move
 
+if lfdet :
+    filename_parsec="parsec_st_spot.dat"
+    f2=open(filename_parsec,"w")
+    f2.write("#---------output from afm.py----------\n")
+    if poscar2.Ndim==0:
+        pass
+    if poscar2.Ndim==2 :
+        f2.write("Boundary_Conditions slab\n")
+        f2.write("begin Cell_Shape\n")
+        for ix1 in range(2) :
+            for ix2 in range(3) :
+                f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
+            f2.write("\n")
+        f2.write("end Cell_Shape\n\n")
+
+        f2.write("Kpoint_Method mp\n\n")
+        f2.write("begin Monkhorst_Pack_Grid\n")
+        for ix in range(2) :
+            kgrid=math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
+            f2.write(f"  {kgrid:d}")
+        f2.write("\nend Monkhorst_Pack_Grid\n\n")
+        f2.write("begin Monkhorst_Pack_Shift\n")
+        f2.write("0.0  0.0  0.0\n")
+        f2.write("end Monkhorst_Pack_Shift\n\n")
+
+    f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
+    f2.write("Atom_Types_Num "+str(len(poscar2.atomtype))+"\n")
+    f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+
+    f2.write("#------------ begin sample -----------\n")
+    k=0
+    for i in range(poscar2.Ntype) :
+        f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
+        f2.write("Local_Component: s\n")
+        f2.write("begin Atom_Coord\n")
+        for ia in range(poscar2.Naint[i]) :
+            f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
+            k=k+1
+        f2.write("end Atom_Coord\n\n")
+    f2.write("#------------- end sample ------------\n\n")
+
+    f2.close()
+
 for iz in range(nz) :
     for ip in range(parallel) :
         #================================================================
@@ -218,6 +293,10 @@ for iz in range(nz) :
         filename_parsec="parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat"
         f2=open(filename_parsec,"w")
         f2.write("#---------output from afm.py----------\n")
+        if lfdet :
+            f2.write("Potential_Field: .TRUE.\n")
+            f2.write("Potential_Field_Name: s_pot.dat\n")
+            f2.write("Kinetic_Energy_Functional: pb\n")
         if poscar2.Ndim==0:
             pass
         if poscar2.Ndim==2 :
@@ -228,7 +307,7 @@ for iz in range(nz) :
                     f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
                 f2.write("\n")
             f2.write("end Cell_Shape\n\n")
-        
+
             f2.write("Kpoint_Method mp\n\n")
             f2.write("begin Monkhorst_Pack_Grid\n")
             for ix in range(2) :
@@ -238,12 +317,25 @@ for iz in range(nz) :
             f2.write("begin Monkhorst_Pack_Shift\n")
             f2.write("0.0  0.0  0.0\n")
             f2.write("end Monkhorst_Pack_Shift\n\n")
-        else :
-            print("Error: Only Ndim = 0 or 2 are supported.")
-            sys.exit()
-        
+
         f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
-        f2.write("Atom_Types_Num "+str(len(poscar1.atomtype)+len(poscar2.atomtype))+"\n")
+        if lfdet :
+            nb=0
+            for i in range(poscar1.Ntype) :
+                nb+=zion1[i]*poscar1.Naint[i]
+            f2.write("States_Num "+str(nb)+"\n")
+            f2.write("Atom_Types_Num "+str(poscar1.Ntype)+"\n")
+        else :
+            nb1=0
+            for i in range(poscar1.Ntype) :
+                nb1+=zion1[i]*poscar1.Naint[i]
+            nb2=0
+            for i in range(poscar2.Ntype) :
+                nb2+=zion2[i]*poscar2.Naint[i]
+            # Set the number of bands. Modify this line if needed
+            nb=int(nb1+nb2/2*1.1)
+            f2.write("States_Num "+str(nb)+"\n")
+            f2.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype))+"\n")
         f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
         
         f2.write("#------------- begin tip -------------\n")
@@ -259,21 +351,34 @@ for iz in range(nz) :
         f2.write("#-------------- end tip --------------\n\n")
         
         f2.write("#------------ begin sample -----------\n")
+        if lfdet :
+            f2.write("Add_Point_Charges: .TRUE.\n")
+            f2.write("Point_Typ_Num: "+str(len(poscar2.atomtype))+"\n")
+
         k=0
         for i in range(poscar2.Ntype) :
-            f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-            f2.write("Local_Component: s\n")
-            f2.write("begin Atom_Coord\n")
+            if lfdet:
+                f2.write("Pt_Chg: "+str(zion2[i])+"\n")
+                f2.write("begin Point_Coord\n")
+            else:
+                f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
+                f2.write("Local_Component: s\n")
+                f2.write("begin Atom_Coord\n")
+
             for ia in range(poscar2.Naint[i]) :
                 f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
                 k=k+1
-            f2.write("end Atom_Coord\n\n")
+
+            if lfdet:
+                f2.write("end Point_Coord\n\n")
+            else :
+                f2.write("end Atom_Coord\n\n")
         f2.write("#------------- end sample ------------\n\n")
         
         f2.close()
 
         # convert the structure to vasp format
-        if len(sys.argv)>1 and sys.argv[1]=="vasp" :
+        if lvasp :
             os.system("posconvert.py parsec vasp "+filename_parsec)
             os.system("mv POSCAR.new "+str(iz+1)+"_"+str(ip+1)+".vasp")
 

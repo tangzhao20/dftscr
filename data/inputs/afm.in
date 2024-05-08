@@ -13,3 +13,5 @@ y_range -9.3 9.3
 # boundary 15.568814
 
 parallel 8
+
+fdet True
