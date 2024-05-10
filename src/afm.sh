@@ -4,6 +4,10 @@
 # The afm.py script should be run first, and then the PARSEC input file should be modified as needed.
 #
 # Input: afm.in
+if [ "$1" == "remove" ]; then
+    rm manual_*.dat parsec_st_*.dat steps.dat toten.dat sbatch.log
+    exit
+fi
 
 if [ ! -f "afm.in" ]; then
     echo "Error: afm.in doesn't exist"

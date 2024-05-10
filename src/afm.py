@@ -3,7 +3,7 @@
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
 from classes import POSCAR
-from commons import load_constant
+from commons import load_constant, load_atom_dic
 import sys
 import os
 import math
@@ -108,6 +108,39 @@ for i in range(poscar2.Ntype) :
     line=f5.readlines()
     f5.close()
     zion2.append(int(float(line[3].split()[5])+0.5))
+
+# Calculate the maximum of Nb for in advance.
+atomdir=load_atom_dic()
+z_full_list=[2,10,18,36,54,86,118]
+Nb1_max=0
+for i in range(poscar1.Ntype) :
+    # Nb_atom=(z_full-z_atom+z_pp)/2
+    z_atom=atomdir[poscar1.atomtype[i]]
+    for j in range(7):
+        if z_full_list[j] >= z_atom :
+            z_full=z_full_list[j]
+            break
+    z_pp=zion1[i]
+    Nb1_max+=(z_full-z_atom+z_pp)*poscar1.Naint[i]
+Nb1_max=Nb1_max//2
+Nb2_max=0
+for i in range(poscar2.Ntype) :
+    # Nb_atom=(z_full-z_atom+z_pp)/2
+    z_atom=atomdir[poscar2.atomtype[i]]
+    for j in range(7):
+        if z_full_list[j] >= z_atom :
+            z_full=z_full_list[j]
+            break
+    z_pp=zion2[i]
+    Nb2_max+=(z_full-z_atom+z_pp)*poscar2.Naint[i]
+Nb2_max=Nb2_max//2
+# Calculate the prefered Nb of sample.
+Nb2=0
+for i in range(poscar2.Ntype) :
+    Nb2+=zion2[i]*poscar2.Naint[i]
+# Modify the following line if needed.
+Nb2=int(Nb2/2*1.1+10)
+Nb2=min(Nb2,Nb2_max)
 
 # calculate the apc, this should be done before the loop
 if poscar2.Ndim==0 :
@@ -243,10 +276,12 @@ else : # Calculate the z_move, make the bottom at 10 bohr from boundary
         for ia in range(poscar2.Natom) :
             apc2[ia][2]-=z_move
 
+# if FDET, we do a calculation for a sample potential file
 if lfdet :
     filename_parsec="parsec_st_spot.dat"
     f2=open(filename_parsec,"w")
     f2.write("#---------output from afm.py----------\n")
+    f2.write("States_Num "+str(Nb2)+"\n\n")
     if poscar2.Ndim==0:
         pass
     if poscar2.Ndim==2 :
@@ -269,7 +304,7 @@ if lfdet :
         f2.write("end Monkhorst_Pack_Shift\n\n")
 
     f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
-    f2.write("Atom_Types_Num "+str(len(poscar2.atomtype))+"\n")
+    f2.write("Atom_Types_Num "+str(poscar2.Ntype)+"\n")
     f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
 
     f2.write("#------------ begin sample -----------\n")
@@ -286,6 +321,7 @@ if lfdet :
 
     f2.close()
 
+# main loop
 for iz in range(nz) :
     for ip in range(parallel) :
         #================================================================
@@ -296,7 +332,11 @@ for iz in range(nz) :
         if lfdet :
             f2.write("Potential_Field: .TRUE.\n")
             f2.write("Potential_Field_Name: s_pot.dat\n")
-            f2.write("Kinetic_Energy_Functional: pb\n")
+            f2.write("Kinetic_Energy_Functional: pb\n\n")
+        if lfdet :
+            f2.write("States_Num "+str(Nb1_max)+"\n\n")
+        else :
+            f2.write("States_Num "+str(Nb1_max+Nb2)+"\n\n")
         if poscar2.Ndim==0:
             pass
         if poscar2.Ndim==2 :
@@ -320,22 +360,9 @@ for iz in range(nz) :
 
         f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
         if lfdet :
-            nb=0
-            for i in range(poscar1.Ntype) :
-                nb+=zion1[i]*poscar1.Naint[i]
-            f2.write("States_Num "+str(nb)+"\n")
             f2.write("Atom_Types_Num "+str(poscar1.Ntype)+"\n")
         else :
-            nb1=0
-            for i in range(poscar1.Ntype) :
-                nb1+=zion1[i]*poscar1.Naint[i]
-            nb2=0
-            for i in range(poscar2.Ntype) :
-                nb2+=zion2[i]*poscar2.Naint[i]
-            # Set the number of bands. Modify this line if needed
-            nb=int(nb1+nb2/2*1.1)
-            f2.write("States_Num "+str(nb)+"\n")
-            f2.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype))+"\n")
+            f2.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
         f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
         
         f2.write("#------------- begin tip -------------\n")
@@ -353,7 +380,7 @@ for iz in range(nz) :
         f2.write("#------------ begin sample -----------\n")
         if lfdet :
             f2.write("Add_Point_Charges: .TRUE.\n")
-            f2.write("Point_Typ_Num: "+str(len(poscar2.atomtype))+"\n")
+            f2.write("Point_Typ_Num: "+str(poscar2.Ntype)+"\n\n")
 
         k=0
         for i in range(poscar2.Ntype) :
@@ -387,8 +414,9 @@ for iz in range(nz) :
         for istep in range(1,steplist[ip]) :
             for ia in range(poscar1.Natom) :
                 f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}{apc1[ia][2]+zlist[iz]:18.12f}\n")
-            for ia in range(poscar2.Natom) :
-                f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
+            if not lfdet :
+                for ia in range(poscar2.Natom) :
+                    f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
             f4.write("\n")
         f4.close()
  
