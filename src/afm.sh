@@ -29,8 +29,9 @@ if [ "$1" == "seq" ]; then
             mkdir $dirname
             cd $dirname
             cat ../parsec.in.head > parsec.in
+            echo "" >> parsec.in
             cat ../parsec_st_spot.dat >> parsec.in
-            cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
+            cat ../job.sh | sed "s/%%jobname%%/a_spot/g" > job.sh
             cd ..
         done
     fi
@@ -45,10 +46,19 @@ if [ "$1" == "seq" ]; then
             cd $dirname
             cp ../manual_${i}_${j}.dat manual.dat
             cat ../parsec.in.head > parsec.in
+            echo "" >> parsec.in
+            echo "#---------output from afm.sh----------" >> parsec.in
+            echo "Potential_Field: .TRUE." >> parsec.in
+            echo "Potential_Field_Name: s_pot.dat" >> parsec.in
+            echo "Kinetic_Energy_Functional: pb" >> parsec.in
+            echo "" >> parsec.in
+            echo "Minimization manual" >> parsec.in
             STEP=`awk -v j=$j 'NR==j {print}' ../steps.dat`
             echo "movement_num  $((STEP-1))" >> parsec.in
+            echo "" >> parsec.in
             cat ../parsec_st_${i}_${j}.dat >> parsec.in
             cat ../job.sh | sed "s/%%jobname%%/a_${i}_${j}/g" > job.sh
+            ln -s ../spot/pot.dat s_pot.dat
             cd ..
             k=$((k+1))
         done
@@ -61,6 +71,7 @@ if [ "$1" == "sbatch" ]; then
     i=1
     k=1
     dirname1="seq_1_1"
+    parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
     while [ -d $dirname1 ]; do
         for (( j=1 ; j<=$parallel ; j++ )) do
             dirname="seq_${i}_${j}"

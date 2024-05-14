@@ -330,10 +330,6 @@ for iz in range(nz) :
         f2=open(filename_parsec,"w")
         f2.write("#---------output from afm.py----------\n")
         if lfdet :
-            f2.write("Potential_Field: .TRUE.\n")
-            f2.write("Potential_Field_Name: s_pot.dat\n")
-            f2.write("Kinetic_Energy_Functional: pb\n\n")
-        if lfdet :
             f2.write("States_Num "+str(Nb1_max)+"\n\n")
         else :
             f2.write("States_Num "+str(Nb1_max+Nb2)+"\n\n")
