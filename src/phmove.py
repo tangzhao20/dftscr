@@ -18,6 +18,7 @@ else :
     ib=int(sys.argv[1])
 
 poscar0=POSCAR()
+poscar0.fileread_vasp()
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
@@ -43,4 +44,4 @@ ph_eigvec=np.array(ph_eigvec)
 
 poscar0.movebyvector(ph_eigvec,0.4) # scale: 0.2 A
 
-poscar0.filewrite("POSCAR."+str(ib))
+poscar0.filewrite_vasp("POSCAR."+str(ib))

@@ -23,21 +23,28 @@ package=sys.argv[1]
 
 packagename=load_packagename()
 
+
+poscar1=POSCAR()
+eigenval1=EIGENVAL()
+kpoints1=KPOINTS_band()
+
 if package in packagename["vasp"]+packagename["vaspproj"] : 
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
     # TODO: test VASP
 
-    poscar1=POSCAR()
+    poscar1.fileread_vasp()
     rlc=poscar1.reclc_out()
     
-    eigenval1=EIGENVAL()
-    kpoints1=KPOINTS_band()
+    eigenval1.fileread_vasp()
+
+    kpoints1.fileread_vasp()
     
     if eigenval1.is_semic==True :
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
         doscar1=DOSCAR()
+        doscar1.fileread_vasp()
         eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
@@ -50,22 +57,18 @@ elif package in packagename["qe"]+packagename["qeproj"] :
     # Input: *.xml, kpath.in
     # No need to run bands.x
 
-    poscar1=POSCAR(empty=True)
-    #poscar1.fileread_qe("nscf.in")
     poscar1.fileread_xml()
     rlc=poscar1.reclc_out()
     
-    eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_qexml()
     
-    kpoints1=KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin()
     
     if eigenval1.is_semic==True :
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
-        doscar1=DOSCAR(empty=True)
+        doscar1=DOSCAR()
         doscar1.fileread_xml()
         eigenval1.eigshift(doscar1.ef)
     
@@ -79,7 +82,6 @@ elif package in packagename["wannier90"] :
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
     # Only semiconductors are supported
 
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_qe("nscf.in")
     rlc=poscar1.reclc_out()
 
@@ -90,10 +92,8 @@ elif package in packagename["wannier90"] :
             sys.argv.remove(w)
             break
 
-    eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_wan(Nb_pad=pad)
 
-    kpoints1=KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin()
 
     # find a ../bands/*.xml file
@@ -105,7 +105,7 @@ elif package in packagename["wannier90"] :
             break
 
     if fsecond :
-        eigenval2=EIGENVAL(empty=True)
+        eigenval2=EIGENVAL()
         eigenval2.fileread_qexml("../bands/"+filename)
 
         eigenval2.gap()
@@ -144,15 +144,12 @@ elif package in packagename["wannier90"] :
 elif package in packagename["parsec"] :
     # Input: bands.dat, parsec.in, kpath.in
 
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_parsec()
     rlc=poscar1.reclc_out()
 
-    eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_parsec()
     eigenval1.kc2kd(poscar1.lc)
     
-    kpoints1=KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin()
     
     x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
@@ -199,12 +196,13 @@ if package in packagename["vaspproj"]+packagename["qeproj"] :
     if eigenval1.Ns==2 :
         print("Spin polarized projected band structure not supported yet.\n")
         sys.exit()
+
+    procar1=PROCAR()
     if package in packagename["vaspproj"] :
         # Input: PROCAR
-        procar1=PROCAR()
+        procar1.fileread_vasp()
     elif package in packagename["qeproj"] :
         # Input: projwfc.out
-        procar1=PROCAR(empty=True)
         procar1.fileread_qe()
     
     atomlist=sys.argv[2]

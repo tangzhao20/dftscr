@@ -270,7 +270,7 @@ if lbohr :
 else : 
     funit=1.0
 if latom :
-    poscar1=POSCAR(empty=True)
+    poscar1=POSCAR()
     poscar1.fileread_parsec(filename="sample.parsec_st.dat")
     poscar1.load_atomcolor()
     atom=[]

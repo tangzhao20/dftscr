@@ -12,7 +12,8 @@ N=41
 # False: eigenvalues
 is_toten=True
 
-poscar_0=POSCAR("POSCAR_i")
+poscar_0=POSCAR()
+poscar_0.fileread_vasp(filename="POSCAR_i")
 
 energy=[]
 pos=[]
@@ -27,7 +28,8 @@ for i in range(N) :
         energy.append(float(word[2]))
     else :
         #not needed
-        eigenval_1=EIGENVAL(str(i+1)+"/EIGENVAL")
+        eigenval_1=EIGENVAL()
+        eigenval_1.fileread_vasp(str(i+1)+"/EIGENVAL")
         energy0=[]
         for ispin in range(2) :
             for ib in range(140,145) :

@@ -83,9 +83,9 @@ z_range[1]=zlist[-1]
 
 #================================================================
 # Read the structure from tip.xyz and sample.parsec_st.dat
-poscar1=POSCAR(empty=True)
+poscar1=POSCAR()
 poscar1.fileread_xyz("tip.xyz")
-poscar2=POSCAR(empty=True)
+poscar2=POSCAR()
 poscar2.fileread_parsec("sample.parsec_st.dat")
 
 if poscar2.Ndim!=0 and poscar2.Ndim!=2 :

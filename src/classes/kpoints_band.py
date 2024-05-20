@@ -2,15 +2,26 @@ import os
 import sys
 
 class KPOINTS_band :
-    def __init__(self, filename="KPOINTS",empty=False) :
+    def __init__(self) :
         
         self.kpdict={} # a dictionary which maps label to b-coordinate
         self.xlabels=[] # a path of high symmetry k-points. xlabels[Np][Nh[ip]]
         # use kpdict[xlabels[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
         self.Nk_line=[]
 
-        if empty:
-            return
+    def __str__(self) :
+        str_out = "KPOINTS:\n"
+        str_out += " Nk_line = " + str(self.Nk_line) + "\n" 
+        for xlabel in self.xlabels :
+            str_out += " "
+            for xlabel0 in xlabel :
+                str_out += " " + xlabel0
+            str_out += "\n"
+        return str_out
+
+#########################################################################
+
+    def fileread_vasp(self,filename="KPOINTS"):
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -46,18 +57,6 @@ class KPOINTS_band :
                 self.xlabels[-1].append(label)
                 self.Nk_line[-1].append(Nk_line)
             ffirst=not ffirst
-
-    def __str__(self) :
-        str_out = "KPOINTS:\n"
-        str_out += " Nk_line = " + str(self.Nk_line) + "\n" 
-        for xlabel in self.xlabels :
-            str_out += " "
-            for xlabel0 in xlabel :
-                str_out += " " + xlabel0
-            str_out += "\n"
-        return str_out
-
-#########################################################################
 
     def fileread_kpathin(self,filename="kpath.in",Nk_line=40):
 

@@ -10,15 +10,24 @@ class DOSCAR :
     # Nedos : integer
     # energy[Nedos]
     # dos[Ns][Nedos]
-    def __init__(self, filename="DOSCAR",empty=False) :
-        if empty:
-            self.ef=0.0
-            self.Ns=0
-            self.Nedos=0
-            self.energy=[]
-            self.dos=[[]]
-            self.Lpdos=False
-            return
+
+    def __init__(self) :
+        self.ef=0.0
+        self.Ns=0
+        self.Nedos=0
+        self.energy=[]
+        self.dos=[[]]
+        self.Lpdos=False
+
+    def __str__(self) :
+        str_out = "DOSCAR:\n"
+        str_out += " Ns = " + str(self.Ns) + "\n"
+        str_out += " Nedos = " + str(self.Nedos) + "\n"
+        return str_out
+
+#######################################################################
+
+    def fileread_vasp(self, filename="DOSCAR") :
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -40,14 +49,6 @@ class DOSCAR :
             self.dos[0][il]=float(word[1])
             if self.Ns==2 :
                 self.dos[1][il]=float(word[2])
-
-    def __str__(self) :
-        str_out = "DOSCAR:\n"
-        str_out += " Ns = " + str(self.Ns) + "\n"
-        str_out += " Nedos = " + str(self.Nedos) + "\n"
-        return str_out
-
-#######################################################################
 
     def fileread_xml(self, filename="") :
         # read dos from .xml file

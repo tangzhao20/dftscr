@@ -34,22 +34,21 @@ if Nk!=0 and Nk_line!=0 :
 package1=sys.argv[1]
 package2=sys.argv[2]
 
+kpoints1=KPOINTS_band()
 if package1 in packagename["vasp"] :
-    kpoints1=KPOINTS_band()
+    kpoints1.fileread_vasp()
 elif package1 in packagename["kpathin"] :
-    kpoints1=KPOINTS_band(empty=True)
     kpoints1.fileread_kpathin(Nk_line=Nk_line)
 else :
     print("Package "+package1+" input is not supported yet.")
     print("python3 kconvert.py package1 package2 (Nk or Nk_line)")
     sys.exit()
 
-
 if package2 in packagename["kpathin"] :
     kpoints1.filewrite_kpathin()
 elif package2 in packagename["qe"] :
     if Nk!=0 :
-        poscar1=POSCAR(empty=True)
+        poscar1=POSCAR()
         files = os.listdir()
         if "scf.in" in files:
             filename1="scf.in"

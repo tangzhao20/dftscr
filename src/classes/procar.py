@@ -10,16 +10,17 @@ class PROCAR :
     # proj[k][b][a][orb]
     # orbname[orb]
  
-    def __init__(self,filename="PROCAR",empty=False) :
-        if empty :
-            self.Nk=0
-            self.Nb=0
-            self.Na=0
-            self.Nlm=0
-            self.proj=[]
-            self.orb=[]
-            self.orbname=[]
-            return
+    def __init__(self) :
+        self.Nk=0
+        self.Nb=0
+        self.Na=0
+        self.Nlm=0
+        self.proj=[]
+        self.orb=[]
+        self.orbname=[]
+
+    def fileread_vasp(self, filename="PROCAR") :
+
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()

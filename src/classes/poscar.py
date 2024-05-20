@@ -19,21 +19,31 @@ class POSCAR:
     # atomcolor{}
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
 
-    
-    def __init__(self, filename="POSCAR", empty=False) :
-        if empty:
-            self.title="SYSTEM"
-            self.lc=[]
-            self.Natom=0
-            self.Ntype=0
-            self.f_seldyn=False
-            self.atomtype=[]
-            self.Naint=[]
-            self.ap=[]
-            self.dmass={}
-            self.atomcolor={}
-            self.Ndim=3 
-            return
+    def __init__(self) :
+        self.title="SYSTEM"
+        self.lc=[]
+        self.Natom=0
+        self.Ntype=0
+        self.f_seldyn=False
+        self.atomtype=[]
+        self.Naint=[]
+        self.ap=[]
+        self.dmass={}
+        self.atomcolor={}
+        self.Ndim=3 
+
+    def __str__(self) :
+        str_out = "POSCAR:\n"
+        str_out += " Ndim = " + str(self.Ndim) + "\n"
+        str_out += " Natom = " + str(self.Natom) + "\n"
+        str_out += " Ntype = " + str(self.Ntype) + "\n"
+        for it in range(self.Ntype) :
+            str_out += "  " + self.atomtype[it] + " " + str(self.Naint[it]) + "\n"
+        return str_out
+
+#########################################################################
+
+    def fileread_vasp(self, filename="POSCAR") :
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -42,18 +52,14 @@ class POSCAR:
         lineoff=0
         self.title=line[0].rstrip('\n')
         factor=float(line[1].split()[0])
-        self.lc=[]
         for i in range(2,5) :
             word=line[i].split()
             self.lc.append([float(word[0])*factor,float(word[1])*factor,float(word[2])*factor])
         word=line[5].split()
         self.Ntype=len(word)
-        self.atomtype=[]
         for i in range(self.Ntype) :
             self.atomtype.append(word[i])
         word=line[6].split()
-        self.Naint=[]
-        self.Natom=0
         for i in range(self.Ntype) :
             self.Naint.append(int(word[i]))
             self.Natom=self.Natom+self.Naint[i]
@@ -66,8 +72,7 @@ class POSCAR:
         word=line[7+lineoff].split()
         if word[0][0].lower()!='d' :
             print("Only atomic position 'Direct' supported")
-            exit()
-        self.ap=[]
+            sys.exit()
         if self.f_seldyn :
             self.seldyn=[]
         for i in range(self.Natom) :
@@ -78,19 +83,6 @@ class POSCAR:
         self.movetobox()
         del line
         del word
-
-        self.dmass={}
-
-    def __str__(self) :
-        str_out = "POSCAR:\n"
-        str_out += " Ndim = " + str(self.Ndim) + "\n"
-        str_out += " Natom = " + str(self.Natom) + "\n"
-        str_out += " Ntype = " + str(self.Ntype) + "\n"
-        for it in range(self.Ntype) :
-            str_out += "  " + self.atomtype[it] + " " + str(self.Naint[it]) + "\n"
-        return str_out
-
-#########################################################################
 
     def fileread_qe(self, filename):
         bohr=load_constant("bohr")
@@ -374,7 +366,7 @@ class POSCAR:
 
 ########################################################################
 
-    def filewrite(self, filename="POSCAR.new"):
+    def filewrite_vasp(self, filename="POSCAR.new"):
         f1=open(filename,"w")
         f1.write(self.title+'\n')
         f1.write('1.0\n')

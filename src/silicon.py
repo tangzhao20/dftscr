@@ -131,7 +131,7 @@ for ia in range(len(si_b)) :
         H.append([si_b[ia][0]+si_h_4, si_b[ia][1]+si_h_4, si_b[ia][2]-si_h_4])
 
 # write to file
-poscar1=POSCAR(empty=True)
+poscar1=POSCAR()
 poscar1.title="Si_r="+str(radius)+"A"
 lc_big=2*radius+10
 poscar1.lc=[[lc_big,0,0],[0,lc_big,0],[0,0,lc_big]]
@@ -147,5 +147,5 @@ for a in H :
     poscar1.ap.append([a[0]/lc_big+0.5,a[1]/lc_big+0.5,a[2]/lc_big+0.5])
 poscar1.movetobox()
 print(" raidus "+str(radius)+" A  Si "+str(poscar1.Naint[0])+" H "+str(poscar1.Naint[1]))
-poscar1.filewrite("Si"+str(poscar1.Naint[0])+"H"+str(poscar1.Naint[1])+".vasp")
+poscar1.filewrite_vasp("Si"+str(poscar1.Naint[0])+"H"+str(poscar1.Naint[1])+".vasp")
 

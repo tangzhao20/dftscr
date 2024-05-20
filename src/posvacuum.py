@@ -22,6 +22,8 @@ if z_vac<0 :
     sys.exit()
 
 poscar1=POSCAR()
+poscar1.fileread_vasp()
+
 if max(abs(poscar1.lc[2][0]), abs(poscar1.lc[2][1]))>0.000001 :
     print("Error: a3 doesn't parllel to z")
     sys.exit()
@@ -49,4 +51,4 @@ for ia in range(poscar1.Natom) :
 
 poscar1.lc[2][2]=a3_new
 
-poscar1.filewrite("POSCAR.new")
+poscar1.filewrite_vasp()

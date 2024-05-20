@@ -17,8 +17,10 @@ h=load_constant("planck")
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
 
-poscar_i=POSCAR("POSCAR_i")
-poscar_f=POSCAR("POSCAR_f")
+poscar_i=POSCAR()
+poscar_i.fileread_vasp(filename="POSCAR_i")
+poscar_f=POSCAR()
+poscar_f.fileread_vasp(filename="POSCAR_f")
 
 disp=poscar_f.displacement(poscar_i)
 

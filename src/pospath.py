@@ -12,8 +12,10 @@ import sys
 import copy
 
 N=int(sys.argv[1])
-poscar0=POSCAR("POSCAR_i")
-poscar1=POSCAR("POSCAR_f")
+poscar0=POSCAR()
+poscar0.fileread_vasp(filename="POSCAR_i")
+poscar1=POSCAR()
+poscar1.fileread_vasp(filename="POSCAR_f")
 if poscar0.match(poscar1) :
     pass
 else : 
@@ -23,5 +25,5 @@ else :
 for i in range(0,3*N+1) :
     Ptmp=copy.deepcopy(poscar0) 
     Ptmp.moveatoms(poscar1,float(i)/float(N)-1.0)
-    Ptmp.filewrite("POSCAR."+str(i+1))
+    Ptmp.filewrite_vasp("POSCAR."+str(i+1))
     del Ptmp

@@ -10,18 +10,14 @@ from commons import load_symops
 from v3math import v3matchpp, v3dpp
 
 # The structure is read from parsec format
-lname=False
+lname="parsec.in"
 for iw in range(1,len(sys.argv)) :
     if os.path.isfile(sys.argv[iw]) :
         filename1=sys.argv[iw]
-        lname=True
         del sys.argv[iw]
         break
-poscar1=POSCAR(empty=True)
-if lname :
-    poscar1.fileread_parsec(filename1)
-else :
-    poscar1.fileread_parsec()
+poscar1=POSCAR()
+poscar1.fileread_parsec(filename1)
 
 mtx, ops = load_symops()
 

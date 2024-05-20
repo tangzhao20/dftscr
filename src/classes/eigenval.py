@@ -17,13 +17,29 @@ class EIGENVAL :
         self.kp=[]
         self.eig=[]
         self.occ=[]
+        self.Nk=0
+        self.Nb=0
+        self.Ns=1
 
-        if empty:
-            self.Nk=0
-            self.Nb=0
-            self.Ns=1
-            return
+    def __str__(self) :
+        str_out = "EIGENVAL:\n"
+        str_out += " Nk = " + str(self.Nk) + "\n"
+        str_out += " Nb = " + str(self.Nb) + "\n"
+        str_out += " Ns = " + str(self.Ns) + "\n"
+        if self.is_semic :
+            str_out += " is_semic = True\n"
+            str_out += f" vbm = {self.vbm:.2f} eV\n"
+            str_out += f" cbm = {self.cbm:.2f} eV\n"
+            str_out += f" Egdir = {self.edg:.2f} eV\n"
+            if self.eindg < self.edg : 
+                str_out += f" Egind = {self.eindg:.2f} eV\n"
+        else :
+            str_out += " is_semic = False\n"
+        return str_out
 
+#########################################################################
+
+    def fileread_vasp(self, filename="EIGENVAL", is_hse=False) :
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -61,24 +77,6 @@ class EIGENVAL :
             self.gap()
                     
         del line
-
-    def __str__(self) :
-        str_out = "EIGENVAL:\n"
-        str_out += " Nk = " + str(self.Nk) + "\n"
-        str_out += " Nb = " + str(self.Nb) + "\n"
-        str_out += " Ns = " + str(self.Ns) + "\n"
-        if self.is_semic :
-            str_out += " is_semic = True\n"
-            str_out += f" vbm = {self.vbm:.2f} eV\n"
-            str_out += f" cbm = {self.cbm:.2f} eV\n"
-            str_out += f" Egdir = {self.edg:.2f} eV\n"
-            if self.eindg < self.edg : 
-                str_out += f" Egind = {self.eindg:.2f} eV\n"
-        else :
-            str_out += " is_semic = False\n"
-        return str_out
-
-#########################################################################
 
     def fileread_qexml(self, filename="") :
         Ha=load_constant("rydberg")*2.0

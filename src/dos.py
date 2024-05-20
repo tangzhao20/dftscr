@@ -31,10 +31,10 @@ package=sys.argv[1]
 
 packagename=load_packagename()
 
+doscar0=DOSCAR()
 if package in packagename["vasp"]: 
-    doscar0=DOSCAR()
+    doscar0.fileread_vasp()
 elif package in packagename["qe"]+packagename["qeproj"]:
-    doscar0=DOSCAR(empty=True)
     # find a *.dos file
     files = os.listdir(".")
     fxml=False

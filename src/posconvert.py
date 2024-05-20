@@ -19,23 +19,21 @@ packagename=load_packagename()
 package1=sys.argv[1]
 package2=sys.argv[2]
 
+# Read filename1 from the command line
+filename1=""
+for iw in range(3,len(sys.argv)) :
+    if os.path.isfile(sys.argv[iw]) :
+        filename1=sys.argv[iw]
+        del sys.argv[iw]
+        break
+
+poscar1=POSCAR()
 if package1 in packagename["vasp"] :
-    filename1="POSCAR"
-    for iw in range(3,len(sys.argv)) :
-        if os.path.isfile(sys.argv[iw]) :
-            filename1=sys.argv[iw]
-            del sys.argv[iw]
-            break
-    poscar1=POSCAR(filename1)
+    if filename1=="" :
+        filename1="POSCAR"
+    poscar1.fileread_vasp(filename1)
 elif package1 in packagename['qe'] :
-    lname=False
-    for iw in range(3,len(sys.argv)) :
-        if os.path.isfile(sys.argv[iw]) :
-            filename1=sys.argv[iw]
-            lname=True
-            del sys.argv[iw]
-            break
-    if lname==False :
+    if filename1=="" :
         # find a scf/nscf/relax.in file
         files = os.listdir()
         if "scf.in" in files:
@@ -48,31 +46,16 @@ elif package1 in packagename['qe'] :
             print("package1 is qe. Use input scf/nscf/relax.in, or add the filename at the end:")
             print("python3 posconvert.py qe package2 filename1")
             sys.exit()
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_qe(filename1)
 elif package1 in packagename['qexml'] :
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_xml()
 elif package1 in packagename['prt'] :
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_prt("input")
 elif package1 in packagename['parsec'] :
-    poscar1=POSCAR(empty=True)
-    filename1="parsec.in"
-    for iw in range(3,len(sys.argv)) :
-        if os.path.isfile(sys.argv[iw]) :
-            filename1=sys.argv[iw]
-            del sys.argv[iw]
-            break
+    if filename1=="" :
+        filename1="parsec.in"
     poscar1.fileread_parsec(filename=filename1)
 elif package1 in packagename['xyz'] :
-    filename1=""
-    for iw in range(3,len(sys.argv)) :
-        if os.path.isfile(sys.argv[iw]) :
-            filename1=sys.argv[iw]
-            del sys.argv[iw]
-            break
-    poscar1=POSCAR(empty=True)
     poscar1.fileread_xyz(filename1)
 else :
     print("Package "+package1+" input is not supported yet.")
@@ -80,7 +63,7 @@ else :
     sys.exit()
 
 if package2 in packagename["vasp"] :
-    poscar1.filewrite()
+    poscar1.filewrite_vasp()
 elif  package2 in packagename['qe'] :
     poscar1.filewrite_qe()
 elif package2 in packagename['prt'] :

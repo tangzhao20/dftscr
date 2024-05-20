@@ -23,22 +23,18 @@ package=sys.argv[1]
 
 packagename=load_packagename()
 
+eigenval1=EIGENVAL()
 if package in packagename["vasp"] : 
     # Input: EIGENVAL
     # TODO: test VASP
-
-    eigenval1=EIGENVAL()
+    eigenval1.fileread_vasp()
     
 elif package in packagename["qe"] :
     # Input: *.xml
-
-    eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_qexml()
 
 elif package in packagename["parsec"] :
     # Input: bands.dat
-
-    eigenval1=EIGENVAL(empty=True)
     eigenval1.fileread_parsec()
 
 else:
