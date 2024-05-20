@@ -58,7 +58,13 @@ elif package1 in packagename['prt'] :
     poscar1.fileread_prt("input")
 elif package1 in packagename['parsec'] :
     poscar1=POSCAR(empty=True)
-    poscar1.fileread_parsec()
+    filename1="parsec.in"
+    for iw in range(3,len(sys.argv)) :
+        if os.path.isfile(sys.argv[iw]) :
+            filename1=sys.argv[iw]
+            del sys.argv[iw]
+            break
+    poscar1.fileread_parsec(filename=filename1)
 elif package1 in packagename['xyz'] :
     filename1=""
     for iw in range(3,len(sys.argv)) :
@@ -84,10 +90,10 @@ elif package2 in packagename['parsec'] :
     lcart=False
     Ndim=3
     for iw in range(len(sys.argv)-1,-1,-1) :
-        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") :
+        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") or sys.argv[iw].startswith("0d") :
             Ndim=0
             del sys.argv[iw]
-        elif sys.argv[iw].startswith("slab") :
+        elif sys.argv[iw].startswith("slab") or sys.argv[iw].startswith("2d") :
             Ndim=2
             del sys.argv[iw]
         elif sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr") :

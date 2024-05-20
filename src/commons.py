@@ -52,3 +52,33 @@ def load_symops() :
         name.append(word[2])
     return mtx, name
 
+def load_constant(const_name) :
+    # read the constants from the data/constant.dat file
+    this_dir, this_filename = os.path.split(__file__)
+    DATA_PATH = os.path.join(this_dir, "..", "data", "constant.dat")
+    f0=open(DATA_PATH,"r")
+    line=f0.readlines()
+    f0.close()
+    const_name=const_name.lower()
+    for l in line :
+        word=l.split()
+        if len(word)==0 or word[0][0] in {"#", "!"} :
+            continue
+        if word[0]==const_name :
+            const=float(word[1])
+    return const
+
+def load_atom_dic() :
+    # return a dictionary of atom name -> atom number
+    this_dir, this_filename = os.path.split(__file__)
+    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(DATA_PATH,"r")
+    line=f0.readlines()
+    f0.close()
+    atomdir={}
+    for l in line :
+        word=l.split()
+        if len(word)==0 or word[0][0] in {"#", "!"} :
+            continue
+        atomdir[word[2]]=int(word[0])
+    return atomdir

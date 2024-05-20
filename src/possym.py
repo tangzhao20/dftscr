@@ -65,5 +65,7 @@ for isym in range(48) :
             break
     if lwrite :
         #print(isym+1,ops[isym],mtx[isym])
-        symlist.append(isym+1)
+        symlist.append(isym)
 print(symlist)
+for isym in symlist :
+    print(str(isym)+" "+ops[isym]+" " +str(mtx[isym]))

@@ -7,9 +7,9 @@ class KPOINTS_band :
         self.kpdict={} # a dictionary which maps label to b-coordinate
         self.xlabels=[] # a path of high symmetry k-points. xlabels[Np][Nh[ip]]
         # use kpdict[xlabels[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
+        self.Nk_line=[]
 
         if empty:
-            self.Nk_line=0
             return
 
         f0=open(filename,"r")
@@ -22,7 +22,7 @@ class KPOINTS_band :
             print("fractional coordinates of k-points required.")
             sys.exit()
 
-        self.Nk_line=int(line[1].split()[0]) # kpoints on a line
+        Nk_line=int(line[1].split()[0]) # kpoints on a line
 
         greek=self.loadgreek()
 
@@ -41,8 +41,10 @@ class KPOINTS_band :
             if ffirst==True:
                 if len(self.xlabels)==0 or label != self.xlabels[-1][-1]:
                     self.xlabels.append([label])
+                    self.Nk_line.append([Nk_line])
             else:
                 self.xlabels[-1].append(label)
+                self.Nk_line[-1].append(Nk_line)
             ffirst=not ffirst
 
     def __str__(self) :
@@ -59,7 +61,7 @@ class KPOINTS_band :
 
     def fileread_kpathin(self,filename="kpath.in",Nk_line=40):
 
-        self.Nk_line=Nk_line
+        #self.Nk_line=Nk_line
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -78,6 +80,7 @@ class KPOINTS_band :
                 float(word[2])
             except :
                 self.xlabels.append(word)
+                self.Nk_line.append([Nk_line]*(len(word)-1))
                 for ik in range(len(self.xlabels[-1])) :
                     if self.xlabels[-1][ik] in greek :
                         self.xlabels[-1][ik]=greek[self.xlabels[-1][ik]]
@@ -105,15 +108,29 @@ class KPOINTS_band :
                 f1.write(p[ih+1]+"\n\n")
         f1.close()
 
-    def filewrite_qe(self,filename="kpath.out"):
+    def filewrite_qe(self,filename="kpath.out",Nk=0,reclc=[]):
+        if Nk>0 :
+            xticks=self.xticks_out(reclc=reclc)
+
+            Ltotal=0.0 
+            for ip in range(len(xticks)) : 
+                Ltotal+=xticks[ip][-1]
+            for ip in range(len(xticks)) : 
+                for ih in range(1,len(xticks[ip])) :
+                    self.Nk_line[ip][ih-1]=int((xticks[ip][ih]-xticks[ip][ih-1])/Ltotal*Nk)
+
+            Nktotal=0
+            for ip in range(len(xticks)) :
+                Nktotal+=sum(self.Nk_line[ip])
+
         kplot=[]
         for ip in range(len(self.xlabels)):
             kplot.append(self.kpdict[self.xlabels[ip][0]])
             for ih in range(len(self.xlabels[ip])-1):
-                for ik in range(self.Nk_line) :
+                for ik in range(self.Nk_line[ip][ih]) :
                     k=[0.0,0.0,0.0]
                     for ix in range(3) :
-                        k[ix]=self.kpdict[self.xlabels[ip][ih]][ix]*float(self.Nk_line-ik-1)/float(self.Nk_line)+self.kpdict[self.xlabels[ip][ih+1]][ix]*float(ik+1)/float(self.Nk_line)
+                        k[ix]=self.kpdict[self.xlabels[ip][ih]][ix]*float(self.Nk_line[ip][ih]-ik-1)/float(self.Nk_line[ip][ih])+self.kpdict[self.xlabels[ip][ih+1]][ix]*float(ik+1)/float(self.Nk_line[ip][ih])
                     kplot.append(k)
 
         f1=open(filename,"w")

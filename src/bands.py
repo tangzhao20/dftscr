@@ -224,14 +224,14 @@ else :
     ymax=5.0
     ymin=-5.0
 
-palette=load_palette() #color palette: [blue, orange, gray, white, black]
+palette=load_palette()
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
 
 spinlabel=["spin up","spin down"]
-linecolor=["blue","orange"]
+linecolor=["darkblue","orange"]
 
 fig=plt.figure(figsize=(5,3.75))
 gs0=fig.add_gridspec(1,len(xticks),wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07,width_ratios=width[:len(xticks)])
