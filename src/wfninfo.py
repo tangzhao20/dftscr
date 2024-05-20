@@ -10,7 +10,7 @@ from commons import load_constant
 import sys
 import os
 import numpy as np
-from v3math import v3tm3
+from v3math import v3pvm
 
 
 def formatprint(mat, dim0, fstr) :
@@ -314,7 +314,7 @@ f1.write("New irep count: "+str(irep_new_bin)+"\n")
 #    for isym2 in range(ntrans) :
 #        for ig1 in range(nwedge0) :
 #            # calculate the new kpr in full BZ, test if duplicate, then write
-#            kpr1=v3tm3(kpr[ig1],M[isym2])
+#            kpr1=v3pvm(kpr[ig1],M[isym2])
 #            #fdup=False
 #            #for ig2 in range(len(kpr0)) :
 #            #    summ=0
