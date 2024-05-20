@@ -23,17 +23,14 @@ if [ "$1" == "seq" ]; then
 
     # if FDET, create the spot dir
     if [[ "$lfdet" == 1 ]]; then
-        manualname="manual_${i}_1.dat"
-        for (( j=1 ; j<=$parallel ; j++ )) do
-            dirname="spot"
-            mkdir $dirname
-            cd $dirname
-            cat ../parsec.in.head > parsec.in
-            echo "" >> parsec.in
-            cat ../parsec_st_spot.dat >> parsec.in
-            cat ../job.sh | sed "s/%%jobname%%/a_spot/g" > job.sh
-            cd ..
-        done
+        dirname="spot"
+        mkdir $dirname
+        cd $dirname
+        cat ../parsec.in.head > parsec.in
+        echo "" >> parsec.in
+        cat ../parsec_st_spot.dat >> parsec.in
+        cat ../job.sh | sed "s/%%jobname%%/a_spot/g" > job.sh
+        cd ..
     fi
 
     i=1
