@@ -299,10 +299,10 @@ class EIGENVAL :
                 for s in range(self.Ns) :
                     self.eig[k][b][s]=self.eig[k][b][s]-ezero
 
-    def bandkpout(self,kp,reclc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
+    def bandkpout(self,kp,rlc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
         # transfer the fractional to cartesian in k space
-        # if kp is already in cartisian, simply set reclc=I
-        kpc=np.array(self.kp)@(np.array(reclc).T)
+        # if kp is already in cartisian, simply set rlc=I
+        kpc=np.array(self.kp)@(np.array(rlc).T)
         kplabelold=""
         kpout=[]
         for ik in range(self.Nk) :

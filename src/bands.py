@@ -33,7 +33,7 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
     # TODO: test VASP
 
     poscar1.fileread_vasp()
-    rlc=poscar1.reclc_out()
+    rlc=poscar1.rlc()
     
     eigenval1.fileread_vasp()
 
@@ -47,7 +47,7 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
         doscar1.fileread_vasp()
         eigenval1.eigshift(doscar1.ef)
     
-    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
     energy=eigenval1.eigtrans()
     
     xticks=kpoints1.xticks_out(rlc)
@@ -58,7 +58,7 @@ elif package in packagename["qe"]+packagename["qeproj"] :
     # No need to run bands.x
 
     poscar1.fileread_xml()
-    rlc=poscar1.reclc_out()
+    rlc=poscar1.rlc()
     
     eigenval1.fileread_qexml()
     
@@ -72,7 +72,7 @@ elif package in packagename["qe"]+packagename["qeproj"] :
         doscar1.fileread_xml()
         eigenval1.eigshift(doscar1.ef)
     
-    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
     energy=eigenval1.eigtrans()
     
     xticks=kpoints1.xticks_out(rlc)
@@ -83,7 +83,7 @@ elif package in packagename["wannier90"] :
     # Only semiconductors are supported
 
     poscar1.fileread_qe("nscf.in")
-    rlc=poscar1.reclc_out()
+    rlc=poscar1.rlc()
 
     pad=0
     for w in sys.argv :
@@ -130,14 +130,14 @@ elif package in packagename["wannier90"] :
     else : 
         print("Metal band structure are not shifted")
 
-    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
     energy=eigenval1.eigtrans()
 
     xticks=kpoints1.xticks_out(rlc)
     xlabels=kpoints1.xlabels_out()
 
     if fsecond :
-        x2=eigenval2.bandkpout(kp=kpoints1,reclc=rlc)
+        x2=eigenval2.bandkpout(kp=kpoints1,rlc=rlc)
         energy2=eigenval2.eigtrans()
 
 
@@ -145,14 +145,14 @@ elif package in packagename["parsec"] :
     # Input: bands.dat, parsec.in, kpath.in
 
     poscar1.fileread_parsec()
-    rlc=poscar1.reclc_out()
+    rlc=poscar1.rlc()
 
     eigenval1.fileread_parsec()
     eigenval1.kc2kd(poscar1.lc)
     
     kpoints1.fileread_kpathin()
     
-    x=eigenval1.bandkpout(kp=kpoints1,reclc=rlc)
+    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
     energy=eigenval1.eigtrans()
     
     xticks=kpoints1.xticks_out(rlc)

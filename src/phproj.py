@@ -9,6 +9,7 @@ import yaml
 import matplotlib.pyplot as plt
 from commons import load_constant
 from classes import POSCAR
+from pos2 import displacement
 
 Ha=load_constant("rydberg")*2.0
 electron=load_constant("electron")
@@ -22,7 +23,7 @@ poscar_i.fileread_vasp(filename="POSCAR_i")
 poscar_f=POSCAR()
 poscar_f.fileread_vasp(filename="POSCAR_f")
 
-disp=poscar_f.displacement(poscar_i)
+disp=displacement(poscar_i,poscar_f)
 
 # read phonopy output file
 Nb=len(q1["phonon"][0]["band"])

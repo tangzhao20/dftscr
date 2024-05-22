@@ -253,7 +253,7 @@ class POSCAR:
                 continue
             if len(word)>=2 and word[0].lower()=="begin" and word[1].lower()=="atom_coord" :
                 Fat=True
-                reclc=np.linalg.inv(np.array(self.lc)).tolist()
+                rlc=np.linalg.inv(np.array(self.lc)).tolist()
                 continue
             if len(word)>=2 and word[0].lower()=="end" and word[1].lower()=="atom_coord" :
                 Fat=False
@@ -503,11 +503,17 @@ class POSCAR:
                 f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
             else :
                 f2.write("Coordinate_Unit Cartesian_Ang\n\n")
+            if self.Ndim==0 :
+                shift=[-0.5,-0.5,-0.5]
+            elif self.Ndim==2 :
+                shift=[0.0,0.0,-0.5]
+            else : # bulk
+                shift=[0.0,0.0,0.0]
+            apc=self.cartesian(shift=shift, factor=1.0/funit)
         else :
             f2.write("Coordinate_Unit Lattice_Vectors\n\n")
         k=0
         for i in range(self.Ntype) :
-            #f2.write("#------------- new atom type -------------\n")
             f2.write("Atom_Type: "+self.atomtype[i]+"\n")
             #f2.write("Pseudopotential_Format: \n")
             #f2.write("Core_Cutoff_Radius: \n")
@@ -519,23 +525,10 @@ class POSCAR:
 
             f2.write("begin Atom_Coord\n")
             if lcartesian :
-                if self.Ndim==0 :
-                    shift=[-0.5,-0.5,-0.5]
-                elif self.Ndim==2 :
-                    shift=[0.0,0.0,-0.5]
-                else : # bulk
-                    shift=[0.0,0.0,0.0]
                 for ia in range(self.Naint[i]) :
-                    apc=[0.0]*3
-                    for ix1 in range(3) :
-                        for ix2 in range(3) :
-                            apc[ix2]+=(self.ap[k][ix1]+shift[ix1])*self.lc[ix1][ix2]
-                    for ix in range(3) :
-                        apc[ix]=apc[ix]/funit
-                    f2.write(f"{apc[0]:18.12f}{apc[1]:18.12f}{apc[2]:18.12f}\n")
+                    f2.write(f"{apc[k][0]:18.12f}{apc[k][1]:18.12f}{apc[k][2]:18.12f}\n")
                     k=k+1
             else :
-
                 for ia in range(self.Naint[i]) :
                     f2.write(f"{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
                     k=k+1
@@ -573,13 +566,10 @@ class POSCAR:
         f2.write(str(self.Natom)+"\n\n")
         it1=0
         it2=0
+        apc=self.cartesian()
         for ia in range(self.Natom) :
-            apc=[0.0]*3
-            for ix1 in range(3) :
-                for ix2 in range(3) :
-                    apc[ix2]+=(self.ap[ia][ix1]-0.5)*self.lc[ix1][ix2]
             # write only 10 digits after the decimal point to eliminate small residuals
-            f2.write(f"  {self.atomtype[it1]:2s}{apc[0]:16.10f}{apc[1]:16.10f}{apc[2]:16.10f}\n")
+            f2.write(f"  {self.atomtype[it1]:2s}{apc[ia][0]:16.10f}{apc[ia][1]:16.10f}{apc[ia][2]:16.10f}\n")
             it2=it2+1
             if it2==self.Naint[it1] :
                 it1=it1+1
@@ -596,55 +586,23 @@ class POSCAR:
                 if self.ap[i][j]<0.00000001 or self.ap[i][j]>0.99999999 :
                     self.ap[i][j]=0.0
 
-    def match(self, Pright):
-        for i in range(3):
-            for j in range(3):
-                if abs(self.lc[i][j]-Pright.lc[i][j])>0.0000001 :
-                    print("Lattice vectors don't match.")
-                    return False
-        if self.Natom!=Pright.Natom or self.Ntype!=Pright.Ntype :
-            print("Atoms don't match: #atoms of #types")
-            return False
-        for i in range(self.Ntype) :
-            if self.atomtype[i]!=Pright.atomtype[i] or self.Naint[i]!=Pright.Naint[i] :
-                print("Atoms don't match: "+str(i+1)+": "+self.atomtype[i]+" "+str(self.Naint[i])+" vs "+Pright.atomtype[i]+" "+str(Pright.Naint[i]))
-                return False
-        print("Structures match each other.")
-        return True
-
-    def moveatoms(self, Pright, factor):
-        # move atoms by a new structure
-        # Pright: POSCAR object
-        for i in range(self.Natom) :
-            for j in range(3) :
-                if Pright.ap[i][j]-self.ap[i][j]>=0.5 :
-                    newap=Pright.ap[i][j]-1.0
-                elif Pright.ap[i][j]-self.ap[i][j]< -0.5 :
-                    newap=Pright.ap[i][j]+1.0
-                else :
-                    newap=Pright.ap[i][j]
-                self.ap[i][j]=self.ap[i][j]*(1.0-factor)+newap*factor
-        self.movetobox()
-
     def movebyvector(self, disp, factor):
         # move atoms by a set of vectors
         # The vector is defined in a cartesian coordinate system using angstrom.
         # disp[Na][3]
         if len(disp)!=self.Natom:
             print("Warning: the length of displacement vector != Natom")
+        disp=np.array(disp)
         fdisp=0.0
         for ia in range(self.Natom):
-            fdisp += (disp[ia][0]**2+disp[ia][1]**2+disp[ia][2]**2)**0.5
+            #fdisp += (disp[ia][0]**2+disp[ia][1]**2+disp[ia][2]**2)**0.5
+            fdisp += np.linalg.norm(disp[ia])
         # the sum of all vectors are set to 1 A
-        for ia in range(self.Natom):
-            disp[ia][0]=disp[ia][0]/fdisp
-            disp[ia][1]=disp[ia][1]/fdisp
-            disp[ia][2]=disp[ia][2]/fdisp
-        reclc=self.reclc_out()
-        disp=(np.array(disp)@np.array(reclc)).tolist()
-        for ia in range(self.Natom) :
-            for ix in range(3) :
-                self.ap[ia][ix]=self.ap[ia][ix]+disp[ia][ix]*factor
+        disp=disp/fdisp
+        rlc=self.rlc()
+        # convert disp from cartesian to direct
+        disp=np.array(disp)@np.array(rlc)
+        self.ap=(np.array(self.ap)+disp*factor).tolist()
         self.movetobox()
 
     def addatom(self, itype, ap, newtype="X") :
@@ -667,105 +625,15 @@ class POSCAR:
         else :
             print("Error: itype > Ntype in addatom function.")
 
-    def displacement(self, Pright):
-        # find the displacement vector of two POSCARs
-        # designed for a structural difference (poscar1.displacement(poscar2))
-        disp=[]
-        # disp[Na][3]
-        for i in range(self.Natom) :
-            disp0=[0.0,0.0,0.0]
-            for j in range(3) :
-                d=self.ap[i][j]-Pright.ap[i][j]
-                while (True):
-                   if d > 0.5+1.e-6 :
-                       d=d-1.0
-                   elif d < -0.5-1.e-6 :
-                       d=d+1.0
-                   else :
-                       break
-                disp0[0]=disp0[0]+d*self.lc[0][j]
-                disp0[1]=disp0[1]+d*self.lc[1][j]
-                disp0[2]=disp0[2]+d*self.lc[2][j]
-            disp.append(disp0)
-        return disp 
-
-    def total_distance(self, Pright):
-        # calculate the total distance (to zero) of a poscar
-        # designed for a structural difference (poscar1.total_distance(poscar2))
-        tot=0.0
-        for i in range(self.Natom) :
-            dis_i=[0.0,0.0,0.0]
-            for j in range(3) :
-                newap=self.ap[i][j]-Pright.ap[i][j]
-                while (True):
-                   if newap > 0.5+1.e-6 :
-                       newap=newap-1.0
-                   elif newap < -0.5-1.e-6 :
-                       newap=newap+1.0
-                   else :
-                       break
-                dis_i[0]=dis_i[0]+newap*self.lc[0][j]
-                dis_i[1]=dis_i[1]+newap*self.lc[1][j]
-                dis_i[2]=dis_i[2]+newap*self.lc[2][j]
-            tot=tot+dis_i[0]**2+dis_i[1]**2+dis_i[2]**2
-        tot=tot**0.5
-        return tot 
-            
-    def general_q(self, Pright):
-        self.load_dmass()
-        # calculate the generalized cordinate of a total distance (to zero) of a poscar
-        # designed for a structural difference (poscar1.general_q(poscar2))
-        tot=0.0
-        count=0
-        it=0
-        for i in range(self.Natom) :
-            dis_i=[0.0,0.0,0.0]
-            count+=1
-            if count>self.Naint[it]:
-                count=0
-                it+=1
-            for j in range(3) :
-                newap=self.ap[i][j]-Pright.ap[i][j]
-                while (True):
-                   if newap > 0.5+1.e-6 :
-                       newap=newap-1.0
-                   elif newap < -0.5-1.e-6 :
-                       newap=newap+1.0
-                   else :
-                       break
-                dis_i[0]=dis_i[0]+newap*self.lc[0][j]
-                dis_i[1]=dis_i[1]+newap*self.lc[1][j]
-                dis_i[2]=dis_i[2]+newap*self.lc[2][j]
-            tot=tot+(dis_i[0]**2+dis_i[1]**2+dis_i[2]**2)*self.dmass[self.atomtype[it]]
-        tot=tot**0.5
-        return tot 
-
-    def new_seldyn(self) :
-        self.f_seldyn=True
-        self.seldyn=[]
-        for i in range(self.Natom) :
-            self.seldyn.append([True,True,True])
-
-    def del_seldyn(self) :
-        self.f_seldyn=False
-        del self.seldyn
-
-    def ap_out(self) :
-        for i in range(self.Natom) :
-            print(str(self.ap[i][0])+"  "+str(self.ap[i][1])+"  "+str(self.ap[i][2]))
-        return(self.ap)
-
-    def reclc_out(self) :
+    def rlc(self) :
         pi=load_constant("pi")
-
-        reclc=np.linalg.inv(np.array(self.lc)).tolist()
-        for i in range(3) :
-            for j in range(3) :
-                reclc[i][j]=reclc[i][j]*2.0*pi
-        return(reclc)
+        return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
    
     def volume(self) :
-        return  self.lc[0][0]*(self.lc[1][1]*self.lc[2][2]-self.lc[1][2]*self.lc[2][1])+self.lc[0][1]*(self.lc[1][2]*self.lc[2][0]-self.lc[1][0]*self.lc[2][2])+self.lc[0][2]*(self.lc[1][0]*self.lc[2][1]-self.lc[1][1]*self.lc[2][0])
+        return abs(np.linalg.det(self.lc))
+
+    def cartesian(self, shift=[0.0,0.0,0.0], factor=1.0) :
+        return ((np.array(self.ap)+np.array(shift))@np.array(self.lc)*factor).tolist()
 
     def load_dmass(self) :
         if self.dmass :

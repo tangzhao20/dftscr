@@ -8,6 +8,7 @@
 import yaml
 import matplotlib.pyplot as plt
 from classes import POSCAR
+from pos2 import displacement
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
@@ -17,7 +18,7 @@ poscar_i.fileread_vasp(filename="POSCAR_i")
 poscar_f=POSCAR()
 poscar_f.fileread_vasp(filename="POSCAR_f")
 
-disp=poscar_f.displacement(poscar_i)
+disp=displacement(poscar_i,poscar_f)
 
 # read phonopy output file
 Nb=len(q1["phonon"][0]["band"])

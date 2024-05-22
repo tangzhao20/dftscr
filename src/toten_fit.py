@@ -5,6 +5,7 @@
 # Input: POSCAR_i, pos_*/OSZICAR, pos_*/POSCAR, (pos_*/EIGENVAL)
 
 from classes import POSCAR, EIGENVAL
+from pos2 import general_q
 
 N=41
 
@@ -43,7 +44,7 @@ for i in range(N) :
 #    pos.append(poscar_1.total_distance(poscar_0))
 
 #   Q = Generalized coordinates (renormalization factor weighted by atomic mass)
-    pos.append(poscar_1.general_q(poscar_0))
+    pos.append(general_q(poscar_0,poscar_1))
 
 ##   Q = Displacement of the central factor
 #    pos.append(poscar_1.lc[2][2]*poscar_1.ap[35][2])
