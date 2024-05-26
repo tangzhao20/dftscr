@@ -6,22 +6,12 @@
 
 from classes import POSCAR
 import sys
-import math
 
-theta=math.radians(float(sys.argv[1]))
-costheta=math.cos(theta)
-sintheta=math.sin(theta)
+theta=float(sys.argv[1])
 
 poscar1=POSCAR()
 poscar1.fileread_vasp()
 
-aa=poscar1.lc[0][0]
-bb=poscar1.lc[0][1]
-cc=poscar1.lc[1][0]
-dd=poscar1.lc[1][1]
-poscar1.lc[0][0]=aa*costheta-bb*sintheta
-poscar1.lc[0][1]=aa*sintheta+bb*costheta
-poscar1.lc[1][0]=cc*costheta-dd*sintheta
-poscar1.lc[1][1]=cc*sintheta+dd*costheta
+poscar1.rotate(theta=theta)
 
 poscar1.filewrite_vasp()

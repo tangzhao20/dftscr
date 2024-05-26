@@ -580,30 +580,101 @@ class POSCAR:
 ########################################################################
 
     def movetobox(self) :
-        for i in range(self.Natom) :
-            for j in range(3) :
-                self.ap[i][j]=self.ap[i][j]-self.ap[i][j]//1.0
-                if self.ap[i][j]<0.00000001 or self.ap[i][j]>0.99999999 :
-                    self.ap[i][j]=0.0
+        tol=1e-8
+        ap=np.array(self.ap)
+        ap=ap-ap//1.0
+        ap[ (ap<tol) | (ap>1.0-tol) ]=0.0
+        self.ap=ap.tolist()
 
-    def movebyvector(self, disp, factor):
+    def move(self, disp, lcart=False) :
         # move atoms by a set of vectors
-        # The vector is defined in a cartesian coordinate system using angstrom.
-        # disp[Na][3]
-        if len(disp)!=self.Natom:
-            print("Warning: the length of displacement vector != Natom")
+        # if lcart=True, the vector is defined in a cartesian coordinate system using angstrom.
+        # if lcart=False, the vector is defined in the lattice coordinate
+        # disp[Na][3] or disp[3]
         disp=np.array(disp)
-        fdisp=0.0
-        for ia in range(self.Natom):
-            #fdisp += (disp[ia][0]**2+disp[ia][1]**2+disp[ia][2]**2)**0.5
-            fdisp += np.linalg.norm(disp[ia])
-        # the sum of all vectors are set to 1 A
-        disp=disp/fdisp
-        rlc=self.rlc()
-        # convert disp from cartesian to direct
-        disp=np.array(disp)@np.array(rlc)
-        self.ap=(np.array(self.ap)+disp*factor).tolist()
+        shape=disp.shape
+        if not (shape==(3,) or shape==(self.Natom,3)) :
+            print("Error: the dimension of displacement vector should be (3) or (Na,3)")
+            sys.exit()
+        if lcart :
+            # if the disp is in cartesian, convert it to direct
+            rlc=self.rlc()
+            disp=np.array(disp)@np.array(rlc)
+        self.ap=(np.array(self.ap)+disp).tolist()
         self.movetobox()
+
+    def rotate(self, theta) :
+        # rotate the structure around the z-axis (in degree)
+        t=math.radians(theta)
+        c=math.cos(t)
+        s=math.sin(t)
+        M=np.array([[c, s, 0], [-s, c, 0], [0, 0, 1]])
+        self.lc=(np.array(self.lc)@M).tolist()
+
+    def flip(self) :
+        # flip the z coordinate of the structure
+        ap=np.array(self.ap)
+        ap[:,2]=1.0-ap[:,2]
+        self.ap=ap.tolist()
+        self.movetobox()
+
+    def supercell(self, N) :
+        # N should be a list of 3 integers
+        N_total=N[0]*N[1]*N[2]
+
+        M=np.array([[ N[0], 0, 0 ], [ 0, N[1], 0 ], [ 0, 0, N[2] ]])
+        self.lc=(M@np.array(self.lc)).tolist()
+
+        shift=np.zeros((N_total,3))
+        i=0
+        for iz in range(N[2]) :
+            for iy in range(N[1]) :
+                for ix in range(N[0]) :
+                    shift[i,:]=np.array([ix,iy,iz])/np.array(N)
+                    i+=1
+
+        ap=np.array(self.ap)
+        apnew=np.zeros((N_total*self.Natom,3))
+        for ia in range(self.Natom) :
+            apnew[ia*N_total:(ia+1)*N_total,:]=ap[ia,:]/np.array(N)+shift
+        self.ap=apnew.tolist()
+
+        for itype in range(self.Ntype) :
+            self.Naint[itype]=self.Naint[itype]*N_total
+        self.Natom=self.Natom*N_total
+
+        self.movetobox()
+
+    def vacuum(self, z_vac) :
+        # Add a vacuum layer to the structure
+        # z_vac is in angstrom
+        # This version assumes a1 x a2 // a3 // z
+        if z_vac<=0 :
+            print("Error: z_vac <= 0")
+            sys.exit()
+
+        a3_new=self.lc[2][2]+z_vac
+
+        self.movetobox()
+
+        ia=0
+        ap_new=[]
+        for itype in range(self.Ntype) :
+            ap_new0=[]
+            for iaint in range(self.Naint[itype]) :
+                if self.ap[ia][2]<1e-8 :
+                    ap_new0.append([self.ap[ia][0],self.ap[ia][1],1.0])
+                ia+=1
+            ap_new.append(ap_new0)
+
+        for itype in range(self.Ntype) :
+            for ap in ap_new[itype] :
+                self.addatom(itype,ap)
+
+        for ia in range(self.Natom) :
+            self.ap[ia][2]=(self.ap[ia][2]-0.5)*self.lc[2][2]/a3_new+0.5
+
+        self.lc[2][2]=a3_new
 
     def addatom(self, itype, ap, newtype="X") :
         if itype<0 :
