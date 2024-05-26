@@ -4,6 +4,8 @@
 
 # Convert a package1 to package2 structure format.
 
+# Optional input: posconvert.in
+
 from classes import POSCAR
 from commons import load_packagename
 import sys
@@ -19,7 +21,7 @@ packagename=load_packagename()
 package1=sys.argv[1]
 package2=sys.argv[2]
 
-# Read filename1 from the command line
+# read filename1 from the command line
 filename1=""
 for iw in range(3,len(sys.argv)) :
     if os.path.isfile(sys.argv[iw]) :
@@ -27,6 +29,7 @@ for iw in range(3,len(sys.argv)) :
         del sys.argv[iw]
         break
 
+# read poscar
 poscar1=POSCAR()
 if package1 in packagename["vasp"] :
     if filename1=="" :
@@ -62,6 +65,47 @@ else :
     print("python3 posconvert.py package1 package2")
     sys.exit()
 
+# read the file posconvert.in if it exists, then do some operations here
+files = os.listdir()
+if "posconvert.in" in files:
+    f1=open("posconvert.in","r")
+    line=f1.readlines()
+    f1.close()
+    for l in line :
+        word=l.split()
+        if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+            continue
+        if word[0]=="movetobox" :
+            poscar1.movetobox()
+        elif word[0]=="move" :
+            lcart=False
+            if "cart" in word :
+                lcart=True
+                word.remove("cart")
+            disp=[float(word[1]),float(word[2]),float(word[3])]
+            poscar1.move(disp=disp,lcart=lcart)
+        elif word[0]=="rotate" :
+            theta=float(word[1])
+            poscar1.rotate(theta=theta)
+        elif word[0]=="flip" :
+            poscar1.flip()
+        elif word[0]=="supercell" :
+            N=[int(word[1]),int(word[2]),int(word[3])]
+            poscar1.supercell(N=N)
+        elif word[0]=="vacuum" :
+            z_vac=float(word[1])
+            poscar1.vacuum(z_vac=z_vac)
+        elif word[0]=="addatom" :
+            itype=int(word[1])
+            ap=[float(word[2]),float(word[3]),float(word[4])]
+            newtype="X"
+            if itype==poscar1.Ntype :
+                newtype=word[5]
+            poscar1.addatom(itype=itype,ap=ap,newtype=newtype)
+        else :
+            print("Warning: in posconvert.in, keyword "+word[0]+" is not supported yet")
+
+# write poscar
 if package2 in packagename["vasp"] :
     poscar1.filewrite_vasp()
 elif  package2 in packagename['qe'] :

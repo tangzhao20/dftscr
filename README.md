@@ -37,9 +37,14 @@ python posconvert.py package1 package2 (filename1)
 ```
 Support packages: VASP, QE (.in or .xml), Paratec, Parsec, .xyz
 
-VASP input: POSCAR
-QE input: scf.in
-Paratec input: input
+VASP input: POSCAR  
+QE input: nscf.in/scf.in/relax.in  
+QExml input: \*.xml  
+Paratec input: input  
+PARSEC input: parsec.in  
+.xyz input: \*.xyz  
+
+Optional input: posconvert.in  
 
 ---
 
