@@ -12,7 +12,7 @@ class EIGENVAL :
     # kp[k][3]
     # wt[k]
 
-    def __init__(self, filename="EIGENVAL",is_hse=False,empty=False) :
+    def __init__(self) :
         self.wt=[]
         self.kp=[]
         self.eig=[]
@@ -40,6 +40,7 @@ class EIGENVAL :
 #########################################################################
 
     def fileread_vasp(self, filename="EIGENVAL", is_hse=False) :
+
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -79,7 +80,6 @@ class EIGENVAL :
         del line
 
     def fileread_qexml(self, filename="") :
-        Ha=load_constant("rydberg")*2.0
 
         if filename=="" :
             # find a .xml file
@@ -88,6 +88,9 @@ class EIGENVAL :
                 if f.endswith('.xml'):
                     filename=f
                     break
+
+        Ha=load_constant("rydberg")*2.0
+
         tree=ET.parse(filename)
         kpoints=tree.getroot().find("output").find("band_structure").findall("ks_energies")
         cell=tree.getroot().find("input").find("atomic_structure").find("cell")

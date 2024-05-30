@@ -43,7 +43,10 @@ class POSCAR:
 
 #########################################################################
 
-    def fileread_vasp(self, filename="POSCAR") :
+    def fileread_vasp(self, filename="") :
+
+        if filename=="" :
+            filename="POSCAR"
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -84,7 +87,21 @@ class POSCAR:
         del line
         del word
 
-    def fileread_qe(self, filename):
+def fileread_qe(self, filename="") :
+
+        # find a scf.in/nscf.in/relax.in file
+        if filename=="" :
+            files = os.listdir()
+            if "scf.in" in files:
+                filename1="scf.in"
+            elif "nscf.in" in files:
+                filename1="nscf.in"
+            elif "relax.in" in files:
+                filename1="relax.in"
+            else :
+                print("Error: In fileread_qe, use input files scf.in, nscf.in, or relax.in, or specify the input file name.")
+                sys.exit()
+
         bohr=load_constant("bohr")
 
         f1=open(filename,"r")
@@ -135,7 +152,6 @@ class POSCAR:
         self.movetobox()
 
     def fileread_xml(self, filename=""):
-        bohr=load_constant("bohr")
 
         if filename=="" :
             # find a .xml file
@@ -148,6 +164,7 @@ class POSCAR:
             print("Error: .xml file is not found")
             sys.exit()
 
+        bohr=load_constant("bohr")
 
         tree=ET.parse(filename)
         cell=tree.getroot().find("output").find("atomic_structure").find("cell")
@@ -174,7 +191,11 @@ class POSCAR:
         self.Natom=len(self.ap)
         self.Ntype=len(self.atomtype)
 
-    def fileread_prt(self, filename):
+    def fileread_prt(self, filename=""):
+
+        if filename=="" :
+            filename="input"
+
         bohr=load_constant("bohr")
 
         f1=open(filename,"r")
@@ -223,7 +244,11 @@ class POSCAR:
 
         self.movetobox()
 
-    def fileread_parsec(self, filename="parsec.in") :
+    def fileread_parsec(self, filename="") :
+
+        if filename=="" :
+            filename="parsec.in"
+
         bohr=load_constant("bohr")
 
         f1=open(filename,"r")
@@ -316,7 +341,6 @@ class POSCAR:
                 self.ap[ia][ix]+=shift[ix]
 
     def fileread_xyz(self,filename="") :
-        bohr=load_constant("bohr")
 
         if filename=="" :
             # find a .xyz file
@@ -328,6 +352,9 @@ class POSCAR:
         if filename=="" :
             print("Error: .xyz file is not found")
             sys.exit()
+
+        bohr=load_constant("bohr")
+
         self.Ndim=0
         f0=open(filename,"r")
         line=f0.readlines()

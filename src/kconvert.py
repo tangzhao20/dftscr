@@ -49,17 +49,7 @@ if package2 in packagename["kpathin"] :
 elif package2 in packagename["qe"] :
     if Nk!=0 :
         poscar1=POSCAR()
-        files = os.listdir()
-        if "scf.in" in files:
-            filename1="scf.in"
-        elif "nscf.in" in files:
-            filename1="nscf.in"
-        elif "relax.in" in files:
-            filename1="relax.in"
-        else :
-            print("Error: kconvert.py with Nk needs a QE structure file: scf.in, nscf.in, or relax.in")
-            sys.exit()
-        poscar1.fileread_qe(filename1)
+        poscar1.fileread_qe()
         rlc=poscar1.rlc()
         kpoints1.filewrite_qe(Nk=Nk,rlc=rlc)
     else :

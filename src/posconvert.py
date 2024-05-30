@@ -32,37 +32,20 @@ for iw in range(3,len(sys.argv)) :
 # read poscar
 poscar1=POSCAR()
 if package1 in packagename["vasp"] :
-    if filename1=="" :
-        filename1="POSCAR"
     poscar1.fileread_vasp(filename1)
 elif package1 in packagename['qe'] :
-    if filename1=="" :
-        # find a scf/nscf/relax.in file
-        files = os.listdir()
-        if "scf.in" in files:
-            filename1="scf.in"
-        elif "nscf.in" in files:
-            filename1="nscf.in"
-        elif "relax.in" in files:
-            filename1="relax.in"
-        else :
-            print("package1 is qe. Use input scf/nscf/relax.in, or add the filename at the end:")
-            print("python3 posconvert.py qe package2 filename1")
-            sys.exit()
-    poscar1.fileread_qe(filename1)
+   poscar1.fileread_qe(filename1)
 elif package1 in packagename['qexml'] :
-    poscar1.fileread_xml()
+    poscar1.fileread_xml(filename1)
 elif package1 in packagename['prt'] :
-    poscar1.fileread_prt("input")
+    poscar1.fileread_prt(filename1)
 elif package1 in packagename['parsec'] :
-    if filename1=="" :
-        filename1="parsec.in"
-    poscar1.fileread_parsec(filename=filename1)
+    poscar1.fileread_parsec(filename1)
 elif package1 in packagename['xyz'] :
     poscar1.fileread_xyz(filename1)
 else :
     print("Package "+package1+" input is not supported yet.")
-    print("python3 posconvert.py package1 package2")
+    print("python3 posconvert.py package1 package2 (filename1)")
     sys.exit()
 
 # read the file posconvert.in if it exists, then do some operations here
