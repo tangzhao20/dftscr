@@ -87,17 +87,17 @@ class POSCAR:
         del line
         del word
 
-def fileread_qe(self, filename="") :
+    def fileread_qe(self, filename="") :
 
         # find a scf.in/nscf.in/relax.in file
         if filename=="" :
             files = os.listdir()
             if "scf.in" in files:
-                filename1="scf.in"
+                filename="scf.in"
             elif "nscf.in" in files:
-                filename1="nscf.in"
+                filename="nscf.in"
             elif "relax.in" in files:
-                filename1="relax.in"
+                filename="relax.in"
             else :
                 print("Error: In fileread_qe, use input files scf.in, nscf.in, or relax.in, or specify the input file name.")
                 sys.exit()
