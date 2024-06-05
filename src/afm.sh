@@ -83,3 +83,33 @@ if [ "$1" == "sbatch" ]; then
         dirname1="seq_${i}_1"
     done
 fi
+
+if [ "$1" == "check" ]; then
+    if [ ! -f "afm.in" ]; then
+        echo "Error: afm.in doesn't exist"
+        exit
+    fi
+    parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
+    i=1
+    k=1
+    seqname="seq_1_1"
+    while [ -d $seqname ]; do
+        for (( j=1 ; j<=$parallel ; j++ )) do
+            dirname="seq_${i}_${j}"
+            cd $dirname
+            if [ ! -f "parsec.out" ]; then
+                echo "$dirname : parsec.out not found"
+                cd ..
+                continue
+            fi
+            line4=$(tail -n 4 parsec.out | head -n 1)
+            if [[ $line4 != " Current date/time:"* ]]; then
+                echo "$dirname : the calculation did not finish"
+            fi
+            cd ..
+            k=$((k+1))
+        done
+        i=$((i+1))
+        seqname="seq_${i}_1"
+    done
+fi

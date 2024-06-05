@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# This tool prints some information from parsec wavefunction file parsec.dat
+# This tool prints the symmetry information of from parsec wavefunction file parsec.dat
+# It works for the Td point group systems, such as silicon clusters
 # Now only support the real wavefunction of cluster, which has 1 k-point (Gamma)
 
 # python3 wfninfo.py
@@ -10,8 +11,7 @@ from commons import load_constant
 import sys
 import os
 import numpy as np
-from v3math import v3pvm
-
+#from v3math import v3pvm
 
 def formatprint(mat, dim0, fstr) :
     # dim0 is the number of rows
