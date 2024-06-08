@@ -472,13 +472,14 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=3):
+    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=-1):
         bohr=load_constant("bohr")
 
-        print(" lcartesian = ",lcartesian)
-        print(" lbohr = ",lbohr)
-        print(" Ndim = ",Ndim)
-        self.Ndim=Ndim
+        #print(" lcartesian = ",lcartesian)
+        #print(" lbohr = ",lbohr)
+        if Ndim>=0 :
+            self.Ndim=Ndim
+        #print(" Ndim = ",self.Ndim)
         if self.Ndim<3 :
             lcartesian=True
         f2=open(filename,"w")
@@ -530,13 +531,7 @@ class POSCAR:
                 f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
             else :
                 f2.write("Coordinate_Unit Cartesian_Ang\n\n")
-            if self.Ndim==0 :
-                shift=[-0.5,-0.5,-0.5]
-            elif self.Ndim==2 :
-                shift=[0.0,0.0,-0.5]
-            else : # bulk
-                shift=[0.0,0.0,0.0]
-            apc=self.cartesian(shift=shift, factor=1.0/funit)
+            apc=self.cartesian(factor=1.0/funit)
         else :
             f2.write("Coordinate_Unit Lattice_Vectors\n\n")
         k=0
@@ -696,16 +691,16 @@ class POSCAR:
 
         for itype in range(self.Ntype) :
             for ap in ap_new[itype] :
-                self.addatom(itype,ap)
+                self.add_atom(itype,ap)
 
         for ia in range(self.Natom) :
             self.ap[ia][2]=(self.ap[ia][2]-0.5)*self.lc[2][2]/a3_new+0.5
 
         self.lc[2][2]=a3_new
 
-    def addatom(self, itype, ap, newtype="X") :
+    def add_atom(self, itype, ap, newtype="X") :
         if itype<0 :
-            print("Error: itype < 0 in addatom function.")
+            print("Error: itype < 0 in add_atom function.")
             sys.exit()
         elif itype<self.Ntype :
             self.Natom+=1
@@ -716,12 +711,29 @@ class POSCAR:
             self.Natom+=1
             self.Ntype+=1
             if newtype=="X" :
-                print("Warning: atom name is not defined in the addatom function.")
+                print("Warning: atom name is not defined in the add_atom function.")
             self.atomtype.append(newtype)
             self.Naint.append(1)
             self.ap.append(ap)
         else :
-            print("Error: itype > Ntype in addatom function.")
+            print("Error: itype > Ntype in add_atom function.")
+
+    def delete_atom(self, ia) :
+        if ia<0 or ia>=self.Natom :
+            print("Error: ia ("+ia+") is out of range")
+            sys.exit()
+        self.Natom-=1
+        del self.ap[ia]
+        iat=0
+        for itype in range(self.Ntype) :
+            iat=iat+self.Naint[itype]
+            if iat>ia :
+                self.Naint[itype]-=1
+                if self.Naint[itype]==0 :
+                    del self.Naint[itype]
+                    del self.atomtype[itype]
+                    self.Ntype-=1
+                break
 
     def rlc(self) :
         pi=load_constant("pi")
@@ -730,7 +742,13 @@ class POSCAR:
     def volume(self) :
         return abs(np.linalg.det(self.lc))
 
-    def cartesian(self, shift=[0.0,0.0,0.0], factor=1.0) :
+    def cartesian(self, factor=1.0) :
+        if self.Ndim==3 :
+            shift=[0.0,0.0,0.0]
+        elif self.Ndim==2 :
+            shift=[0.0,0.0,-0.5]
+        elif self.Ndim==0 :
+            shift=[-0.5,-0.5,-0.5]
         return ((np.array(self.ap)+np.array(shift))@np.array(self.lc)*factor).tolist()
 
     def load_dmass(self) :

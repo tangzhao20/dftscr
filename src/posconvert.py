@@ -78,13 +78,16 @@ if "posconvert.in" in files:
         elif word[0]=="vacuum" :
             z_vac=float(word[1])
             poscar1.vacuum(z_vac=z_vac)
-        elif word[0]=="addatom" :
+        elif word[0]=="add_atom" :
             itype=int(word[1])
             ap=[float(word[2]),float(word[3]),float(word[4])]
             newtype="X"
             if itype==poscar1.Ntype :
                 newtype=word[5]
-            poscar1.addatom(itype=itype,ap=ap,newtype=newtype)
+            poscar1.add_atom(itype=itype,ap=ap,newtype=newtype)
+        elif word[0]=="delete_atom" :
+            ia=int(word[1])
+            poscar1.delete_atom(ia=ia)
         else :
             print("Warning: in posconvert.in, keyword "+word[0]+" is not supported yet")
 
@@ -98,13 +101,16 @@ elif package2 in packagename['prt'] :
 elif package2 in packagename['parsec'] :
     lbohr=False
     lcart=False
-    Ndim=3
+    Ndim=-1
     for iw in range(len(sys.argv)-1,-1,-1) :
         if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") or sys.argv[iw].startswith("0d") :
             Ndim=0
             del sys.argv[iw]
         elif sys.argv[iw].startswith("slab") or sys.argv[iw].startswith("2d") :
             Ndim=2
+            del sys.argv[iw]
+        elif sys.argv[iw].startswith("bulk") or sys.argv[iw].startswith("3d") :
+            Ndim=3
             del sys.argv[iw]
         elif sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr") :
             lbohr=True

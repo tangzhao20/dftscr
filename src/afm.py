@@ -143,12 +143,8 @@ Nb2=int(Nb2/2*1.1+10)
 Nb2=min(Nb2,Nb2_max)
 
 # calculate the apc, this should be done before the loop
-apc1=poscar1.cartesian(shift=[-0.5,-0.5,-0.5],factor=1.0/bohr)
-if poscar2.Ndim==0 :
-    shift=[-0.5,-0.5,-0.5]
-elif poscar2.Ndim==2 :
-    shift=[0.0,0.0,-0.5]
-apc2=poscar2.cartesian(shift=shift,factor=1.0/bohr)
+apc1=poscar1.cartesian(factor=1.0/bohr)
+apc2=poscar2.cartesian(factor=1.0/bohr)
 
 # move the tip atom to (0,0,0)
 zmin=1e6
