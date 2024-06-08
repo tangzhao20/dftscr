@@ -1,5 +1,5 @@
-import os
 import sys
+import os
 
 class KPOINTS_band :
     def __init__(self) :

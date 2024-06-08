@@ -1,7 +1,7 @@
-import numpy as np
 import sys
-import math
 import os
+import numpy as np
+import math
 import xml.etree.ElementTree as ET
 from commons import load_constant
 
