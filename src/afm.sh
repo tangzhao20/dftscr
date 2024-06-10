@@ -5,22 +5,32 @@
 #
 # Input: afm.in
 #
-if [ "$1" == "remove" ]; then
+if [[ "$1" == "remove" ]]; then
     rm manual_*.dat parsec_st_*.dat steps.dat toten.dat sbatch.log
     exit
 fi
 
-if [ "$1" == "seq" ]; then
-
-    if [ ! -f "afm.in" ]; then
+if [[ "$1" == "seq" || "$1" == "sbatch" || "$1" == "check" ]]; then
+    # read afm.in
+    if [[ ! -f "afm.in" ]]; then
         echo "Error: afm.in doesn't exist"
         exit
     fi
-    parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
-    lfdet=0
-    lfdet=$(awk 'NF==1 && $1=="fdet" { print 1; exit }' afm.in)
-    lfdet=$(awk '$1=="fdet" && tolower($2) ~ /^(true|\.true\.)$/ { print 1; exit }' afm.in)
+    sed 's/[#!].*//' afm.in > afm.in.tmp
 
+    parallel=$(awk -v flag="parallel" '$1==flag { print $2 }' afm.in.tmp)
+    lfdet=$(awk '$1=="fdet" && ( NF==1 || tolower($2) ~ /^(true|\.true\.)$/ ) { print 1; found=1; exit } END { if (!found) print 0 }' afm.in.tmp)
+
+    z_min=$(awk -v flag="z_range" '$1==flag { print $2 }' afm.in.tmp)
+    z_max=$(awk -v flag="z_range" '$1==flag { print $3 }' afm.in.tmp)
+    z_spacing="0.3"
+    z_spacing=$(awk -v flag="z_spacing" '$1==flag { print $2; found=1; exit } END { if (!found) print 0.3 } ' afm.in.tmp)
+    Nz=$(echo "($z_max - $z_min) / $z_spacing + 0.000001" | bc | cut -d '.' -f1)
+
+    rm afm.in.tmp
+fi
+
+if [[ "$1" == "seq" ]]; then
     # if FDET, create the spot dir
     if [[ "$lfdet" == 1 ]]; then
         dirname="spot"
@@ -33,10 +43,8 @@ if [ "$1" == "seq" ]; then
         cd ..
     fi
 
-    i=1
     k=1
-    manualname="manual_1_1.dat"
-    while [ -f $manualname ]; do
+    for (( i=1 ; i<=$Nz ; i++ )) do
         for (( j=1 ; j<=$parallel ; j++ )) do
             dirname="seq_${i}_${j}"
             mkdir $dirname
@@ -59,17 +67,12 @@ if [ "$1" == "seq" ]; then
             cd ..
             k=$((k+1))
         done
-        i=$((i+1))
-        manualname="manual_${i}_1.dat"
     done
 fi
 
-if [ "$1" == "sbatch" ]; then
-    i=1
+if [[ "$1" == "sbatch" ]]; then
     k=1
-    dirname1="seq_1_1"
-    parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
-    while [ -d $dirname1 ]; do
+    for (( i=1 ; i<=$Nz ; i++ )) do
         for (( j=1 ; j<=$parallel ; j++ )) do
             dirname="seq_${i}_${j}"
             cd $dirname
@@ -79,25 +82,16 @@ if [ "$1" == "sbatch" ]; then
             cd ..
             k=$((k+1))
         done
-        i=$((i+1))
-        dirname1="seq_${i}_1"
     done
 fi
 
-if [ "$1" == "check" ]; then
-    if [ ! -f "afm.in" ]; then
-        echo "Error: afm.in doesn't exist"
-        exit
-    fi
-    parallel=$(awk -v p="parallel" '$1==p { print $2 }' afm.in)
-    i=1
+if [[ "$1" == "check" ]]; then
     k=1
-    seqname="seq_1_1"
-    while [ -d $seqname ]; do
+    for (( i=1 ; i<=$Nz ; i++ )) do
         for (( j=1 ; j<=$parallel ; j++ )) do
             dirname="seq_${i}_${j}"
             cd $dirname
-            if [ ! -f "parsec.out" ]; then
+            if [[ ! -f "parsec.out" ]]; then
                 echo "$dirname : parsec.out not found"
                 cd ..
                 continue
@@ -109,7 +103,5 @@ if [ "$1" == "check" ]; then
             cd ..
             k=$((k+1))
         done
-        i=$((i+1))
-        seqname="seq_${i}_1"
     done
 fi

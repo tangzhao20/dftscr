@@ -53,6 +53,8 @@ for l in line :
         lfdet=True
         if len(word)>1 and word[1].lower() in ["false",".false."] :
             lfdet=False
+    elif word[0] in ["k_spring"] :
+        pass
     else :
         print("Warning: keyword "+word[0]+" is not defined.")
 
