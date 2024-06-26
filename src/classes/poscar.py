@@ -3,7 +3,7 @@ import os
 import numpy as np
 import math
 import xml.etree.ElementTree as ET
-from commons import load_constant
+from commons import load_constant, load_mass
 
 class POSCAR:
     # title
@@ -15,7 +15,6 @@ class POSCAR:
     # Naint[Ntype]
     # ap[Natom][3]
     # seldyn[Natom][3] (if f_seldyn)
-    # dmass{}
     # atomcolor{}
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
 
@@ -28,7 +27,6 @@ class POSCAR:
         self.atomtype=[]
         self.Naint=[]
         self.ap=[]
-        self.dmass={}
         self.atomcolor={}
         self.Ndim=3 
 
@@ -423,12 +421,12 @@ class POSCAR:
         f1.close()
 
     def filewrite_qe(self, filename="qe_st.dat"):
-        self.load_dmass()
+        mass=load_mass()
 
         kgrid=[]
         for i in range(3) :
             kgrid.append(math.floor(30.0/(self.lc[i][0]**2+self.lc[i][1]**2+self.lc[i][2]**2)**0.5)+1)
-   
+
         f2=open(filename,"w")
         f2.write("CELL_PARAMETERS angstrom\n")
         for ix1 in range(3) :
@@ -438,7 +436,7 @@ class POSCAR:
 
         f2.write("ATOMIC_SPECIES\n")
         for i in range(self.Ntype) :
-            f2.write("  "+self.atomtype[i]+"  "+str(self.dmass[self.atomtype[i]])+"  "+self.atomtype[i]+".upf\n")
+            f2.write("  "+self.atomtype[i]+"  "+str(mass[self.atomtype[i]])+"  "+self.atomtype[i]+".upf\n")
         f2.write("ATOMIC_POSITIONS crystal\n")
         ij=0
         ik=0
@@ -738,7 +736,7 @@ class POSCAR:
     def rlc(self) :
         pi=load_constant("pi")
         return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
-   
+
     def volume(self) :
         return abs(np.linalg.det(self.lc))
 
@@ -750,21 +748,6 @@ class POSCAR:
         elif self.Ndim==0 :
             shift=[-0.5,-0.5,-0.5]
         return ((np.array(self.ap)+np.array(shift))@np.array(self.lc)*factor).tolist()
-
-    def load_dmass(self) :
-        if self.dmass :
-            return
-        this_dir, this_filename = os.path.split(__file__)
-        DATA_PATH = os.path.join(this_dir, "..", "..", "data", "atom.dat")
-        f0=open(DATA_PATH,"r")
-        line=f0.readlines()
-        f0.close()
-
-        for l in line:
-            word=l.split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
-                continue
-            self.dmass[word[2]]=float(word[3])
 
     def load_atomcolor(self):
         if self.atomcolor :

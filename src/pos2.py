@@ -1,4 +1,5 @@
 import numpy as np
+from commons import load_mass
 
 def match(poscar1, poscar2):
     if np.linalg.norm(np.array(poscar1.lc)-np.array(poscar2.lc)) > 1e-6 :
@@ -38,20 +39,16 @@ def displacement(poscar1, poscar2):
 
 def general_q(poscar1, poscar2):
     # calculate the generalized coordinate of poscar2 compared to poscar1
-    poscar1.load_dmass()
 
-    tot=0.0
-    count=0
-    it=0
-    disp=np.array(poscar2.ap)-np.array(poscar1.ap)
-    disp=(disp+0.5)%1-0.5
-    disp=disp@np.arrayposcar1.lc)
+    disp=displacement(poscar1,poscar2)
 
-    mass=[]
+    mass=load_mass()
+
+    mass_list=[]
     for it in range(poscar1.Ntype) :
         for ia in range(poscar1.Naint[it]) :
-            mass.append(poscar1.dmass[poscar1.atomtype[it]])
-    mass=np.sqrt(mass)
+            mass_list.append(mass[poscar1.atomtype[it]])
+    mass_list=np.sqrt(mass_list)
 
-    tot=np.dot( np.linalg.norm(M, axis=1),  mass )
-    return tot 
+    Q=np.dot( np.linalg.norm(disp, axis=1),  mass_list )
+    return Q 

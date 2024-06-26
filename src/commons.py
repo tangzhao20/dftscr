@@ -82,3 +82,20 @@ def load_atom_dic() :
             continue
         atomdir[word[2]]=int(word[0])
     return atomdir
+
+def load_mass() :
+    # return a dictionary of atom name -> atom mass
+    this_dir, this_filename = os.path.split(__file__)
+    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(DATA_PATH,"r")
+    line=f0.readlines()
+    f0.close()
+
+    mass={}
+    for l in line:
+        word=l.split()
+        if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+            continue
+        mass[word[2]]=float(word[3])
+    return mass
+
