@@ -6,9 +6,8 @@
 
 import sys
 import os
-from commons import load_constant, load_palette
+from commons import load_constant, load_palette, load_atom_color
 from classes import POSCAR
-from v3math import v3pvm
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy
@@ -272,39 +271,32 @@ if lbohr :
 else : 
     funit=1.0
 if latom :
+    color_dict=load_atom_color()
     poscar1=POSCAR()
     poscar1.fileread_parsec(filename="sample.parsec_st.dat")
-    poscar1.load_atomcolor()
-    atom=[]
-    color=[]
-    ap=[]
-    ia=0
-    for itype in range(poscar1.Ntype) :
-        for iatom in range(poscar1.Naint[itype]) :
-            ap0=poscar1.ap[ia]
-            for ix1 in [-1,0] :
-                for ix2 in [-1,0] :
-                    ap.append(v3pvm([ap0[0]+ix1,ap0[1]+ix2,ap0[2]],poscar1.lc))
-                    atom.append(poscar1.atomtype[itype])
-            ia+=1
+    # poscar1 is modified here. If a feature needs to keep poscar1, use copy.
+    poscar1.supercell([2,2,1])
+    poscar1.move([-0.5,-0.5,0],lbox=False)
+    apc=poscar1.cartesian()
+    atom=poscar1.atom_list()
     
     zmax=-1e6
-    for ia in range(len(ap)) :
-        zmax=max(zmax,ap[ia][2])
+    for ia in range(len(apc)) :
+        zmax=max(zmax,apc[ia][2])
 
-    atomx=[]
-    atomy=[]
-    atomcolor=[]
-    edgecolor=[]
-    for ia in range(len(ap)) :
-        if ap[ia][2] > zmax-1.0 :
-            atomx.append(ap[ia][0]/funit)
-            atomy.append(ap[ia][1]/funit)
-            atomcolor.append(palette[poscar1.atomcolor[atom[ia]]])
-            if poscar1.atomcolor[atom[ia]].startswith("dark") or poscar1.atomcolor[atom[ia]]=="black" :
-                edgecolor.append(palette["white"])
+    atom_x=[]
+    atom_y=[]
+    atom_color=[]
+    edge_color=[]
+    for ia in range(len(apc)) :
+        if apc[ia][2] > zmax-1.0 :
+            atom_x.append(apc[ia][0]/funit)
+            atom_y.append(apc[ia][1]/funit)
+            atom_color.append(palette[color_dict[atom[ia]]])
+            if color_dict[atom[ia]].startswith("dark") or color_dict[atom[ia]]=="black" :
+                edge_color.append(palette["white"])
             else :
-                edgecolor.append(palette["black"])
+                edge_color.append(palette["black"])
 
 # ==================== creating the plot ====================
 mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
@@ -321,7 +313,7 @@ for ic in range(len(im_extent)) :
 im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r", origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom :
-    ax0.scatter(atomx,atomy,c=atomcolor,s=12,edgecolors=edgecolor,linewidths=1,zorder=3)
+    ax0.scatter(atom_x,atom_y,c=atom_color,s=12,edgecolors=edge_color,linewidths=1,zorder=3)
 ax0.set_xlim([x_range[0]/funit,x_range[1]/funit])
 ax0.set_ylim([y_range[0]/funit,y_range[1]/funit])
 if lbohr :

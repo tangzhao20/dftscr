@@ -1,5 +1,5 @@
 import numpy as np
-from commons import load_mass
+from commons import load_atom_mass
 
 def match(poscar1, poscar2):
     if np.linalg.norm(np.array(poscar1.lc)-np.array(poscar2.lc)) > 1e-6 :
@@ -42,7 +42,7 @@ def general_q(poscar1, poscar2):
 
     disp=displacement(poscar1,poscar2)
 
-    mass=load_mass()
+    mass=load_atom_mass()
 
     mass_list=[]
     for it in range(poscar1.Ntype) :

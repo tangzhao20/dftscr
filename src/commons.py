@@ -68,23 +68,24 @@ def load_constant(const_name) :
             const=float(word[1])
     return const
 
-def load_atom_dic() :
-    # return a dictionary of atom name -> atom number
+def load_atom_index() :
+    # return a dictionary of atom_name -> atom_index
     this_dir, this_filename = os.path.split(__file__)
     DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
     f0=open(DATA_PATH,"r")
     line=f0.readlines()
     f0.close()
-    atomdir={}
+
+    index={}
     for l in line :
         word=l.split()
         if len(word)==0 or word[0][0] in {"#", "!"} :
             continue
-        atomdir[word[2]]=int(word[0])
-    return atomdir
+        index[word[2]]=int(word[0])
+    return index
 
-def load_mass() :
-    # return a dictionary of atom name -> atom mass
+def load_atom_mass() :
+    # return a dictionary of atom_name -> atom_mass
     this_dir, this_filename = os.path.split(__file__)
     DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
     f0=open(DATA_PATH,"r")
@@ -94,8 +95,24 @@ def load_mass() :
     mass={}
     for l in line:
         word=l.split()
-        if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+        if len(word)==0 or word[0][0] in {"#", "!"} :
             continue
         mass[word[2]]=float(word[3])
     return mass
+
+def load_atom_color():
+    # return a dictionary of atom_name -> atom_color
+    this_dir, this_filename = os.path.split(__file__)
+    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(DATA_PATH,"r")
+    line=f0.readlines()
+    f0.close()
+
+    color={}
+    for l in line:
+        word=l.split()
+        if len(word)==0 or word[0][0] in {"#", "!"} :
+            continue
+        color[word[2]]=word[4]
+    return color
 

@@ -3,7 +3,7 @@
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
 from classes import POSCAR
-from commons import load_constant, load_atom_dic
+from commons import load_constant, load_atom_index
 import sys
 import os
 import math
@@ -112,7 +112,7 @@ for i in range(poscar2.Ntype) :
     zion2.append(int(float(line[3].split()[5])+0.5))
 
 # Calculate the maximum of Nb for in advance.
-atomdir=load_atom_dic()
+atomdir=load_atom_index()
 z_full_list=[2,10,18,36,54,86,118]
 Nb1_max=0
 for i in range(poscar1.Ntype) :

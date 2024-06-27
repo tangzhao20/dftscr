@@ -3,7 +3,7 @@ import os
 import numpy as np
 import math
 import xml.etree.ElementTree as ET
-from commons import load_constant, load_mass
+from commons import load_constant, load_atom_mass
 
 class POSCAR:
     # title
@@ -421,7 +421,7 @@ class POSCAR:
         f1.close()
 
     def filewrite_qe(self, filename="qe_st.dat"):
-        mass=load_mass()
+        mass=load_atom_mass()
 
         kgrid=[]
         for i in range(3) :
@@ -606,11 +606,13 @@ class POSCAR:
         ap[ (ap<tol) | (ap>1.0-tol) ]=0.0
         self.ap=ap.tolist()
 
-    def move(self, disp, lcart=False) :
+    def move(self, disp, lcart=False, lbox=True) :
         # move atoms by a set of vectors
-        # if lcart=True, the vector is defined in a cartesian coordinate system using angstrom.
-        # if lcart=False, the vector is defined in the lattice coordinate
         # disp[Na][3] or disp[3]
+        # if lcart=True, the vector is defined in a cartesian coordinate system using angstrom
+        # if lcart=False, the vector is defined in the lattice coordinate
+        # if lbox=True, the atoms will be moved into the box
+
         disp=np.array(disp)
         shape=disp.shape
         if not (shape==(3,) or shape==(self.Natom,3)) :
@@ -621,7 +623,8 @@ class POSCAR:
             rlc=self.rlc()
             disp=np.array(disp)@np.array(rlc)
         self.ap=(np.array(self.ap)+disp).tolist()
-        self.movetobox()
+        if lbox :
+            self.movetobox()
 
     def rotate(self, theta) :
         # rotate the structure around the z-axis (in degree)
@@ -749,17 +752,10 @@ class POSCAR:
             shift=[-0.5,-0.5,-0.5]
         return ((np.array(self.ap)+np.array(shift))@np.array(self.lc)*factor).tolist()
 
-    def load_atomcolor(self):
-        if self.atomcolor :
-            return
-        this_dir, this_filename = os.path.split(__file__)
-        DATA_PATH = os.path.join(this_dir, "..", "..", "data", "atom.dat")
-        f0=open(DATA_PATH,"r")
-        line=f0.readlines()
-        f0.close()
-
-        for l in line:
-            word=l.split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
-                continue
-            self.atomcolor[word[2]]=word[4]
+    def atom_list(self) :
+        atom=[]
+        for itype in range(self.Ntype) :
+            for iaint in range(self.Naint[itype]) :
+                atom.append(self.atomtype[itype])
+        return atom
+            

@@ -9,6 +9,7 @@ import yaml
 import matplotlib.pyplot as plt
 from classes import POSCAR
 from pos2 import displacement
+from commons import load_constant
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
@@ -53,5 +54,8 @@ for ib in range(Nb) :
 freq_out=freq_out/summ
                 
 print("average frequency: "+str(freq_out)+" THz")
-freq_out=freq_out*0.0001519828500716
+planck=load_constant("planck")
+electron=load_constant("electron")
+hartree=load_constant("rydberg")*2
+freq_out=freq_out*1e12*planck/electron/hartree
 print(" = "+str(freq_out)+" a.u.")
