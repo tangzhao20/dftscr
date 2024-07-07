@@ -10,12 +10,11 @@ class POSCAR:
     # lc[3][3]
     # Natom
     # Ntype
-    # f_seldyn
     # atomtype[Ntype]
     # Naint[Ntype]
     # ap[Natom][3]
+    # f_seldyn
     # seldyn[Natom][3] (if f_seldyn)
-    # atomcolor{}
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
 
     def __init__(self) :
@@ -27,7 +26,6 @@ class POSCAR:
         self.atomtype=[]
         self.Naint=[]
         self.ap=[]
-        self.atomcolor={}
         self.Ndim=3 
 
     def __str__(self) :
@@ -589,7 +587,7 @@ class POSCAR:
         apc=self.cartesian()
         for ia in range(self.Natom) :
             # write only 10 digits after the decimal point to eliminate small residuals
-            f2.write(f"  {self.atomtype[it1]:2s}{apc[ia][0]:16.10f}{apc[ia][1]:16.10f}{apc[ia][2]:16.10f}\n")
+            f2.write(f"  {self.atomtype[it1]:2s}{apc[ia][0]:18.12f}{apc[ia][1]:18.12f}{apc[ia][2]:18.12f}\n")
             it2=it2+1
             if it2==self.Naint[it1] :
                 it1=it1+1

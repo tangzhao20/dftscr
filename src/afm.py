@@ -252,8 +252,9 @@ else : # Calculate the z_move, make the bottom at 10 bohr from boundary
         for ia in range(poscar2.Natom) :
             apc2[ia][2]-=z_move
 
+
 # if FDET, we do a calculation for a sample potential file
-if lfdet :
+if lfdet:
     filename_parsec="parsec_st_spot.dat"
     f2=open(filename_parsec,"w")
     f2.write("#---------output from afm.py----------\n")
@@ -336,7 +337,7 @@ for iz in range(nz) :
         else :
             f2.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
         f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
-        
+
         f2.write("#------------- begin tip -------------\n")
         k=0
         for i in range(poscar1.Ntype) :
@@ -348,7 +349,7 @@ for iz in range(nz) :
                 k=k+1
             f2.write("end Atom_Coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
-        
+
         f2.write("#------------ begin sample -----------\n")
         if lfdet :
             f2.write("Add_Point_Charges: .TRUE.\n")
@@ -373,13 +374,8 @@ for iz in range(nz) :
             else :
                 f2.write("end Atom_Coord\n\n")
         f2.write("#------------- end sample ------------\n\n")
-        
-        f2.close()
 
-        # convert the structure to vasp format
-        if lvasp :
-            os.system("posconvert.py parsec vasp "+filename_parsec)
-            os.system("mv POSCAR.new "+str(iz+1)+"_"+str(ip+1)+".vasp")
+        f2.close()
 
         # write the manual_*.dat file
         f4=open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat","w")
@@ -391,4 +387,55 @@ for iz in range(nz) :
                     f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
             f4.write("\n")
         f4.close()
- 
+
+# convert the structure to vasp format
+if lvasp:
+    filename_parsec="parsec_st_afm.dat"
+    f5=open(filename_parsec,"w")
+    f5.write("#---------output from afm.py----------\n")
+    f5.write("States_Num "+str(Nb1_max+Nb2)+"\n\n")
+    if poscar2.Ndim==0:
+        pass
+    if poscar2.Ndim==2 :
+        f5.write("Boundary_Conditions slab\n")
+        f5.write("begin Cell_Shape\n")
+        for ix1 in range(2) :
+            for ix2 in range(3) :
+                f5.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
+            f5.write("\n")
+        f5.write("end Cell_Shape\n\n")
+
+    f5.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
+    f5.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
+    f5.write("Coordinate_Unit Cartesian_Bohr\n\n")
+
+    f5.write("#------------- begin tip -------------\n")
+    k=0
+    for i in range(poscar1.Ntype) :
+        f5.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
+        f5.write("Local_Component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
+        f5.write("begin Atom_Coord\n")
+        for ia in range(poscar1.Naint[i]) :
+            f5.write(f"{apc1[k][0]+sum(x_range)/2:18.12f}{apc1[k][1]+sum(y_range)/2:18.12f}{apc1[k][2]+sum(z_range)/2:18.12f}\n")
+            k=k+1
+        f5.write("end Atom_Coord\n\n")
+    f5.write("#-------------- end tip --------------\n\n")
+
+    f5.write("#------------ begin sample -----------\n")
+    k=0
+    for i in range(poscar2.Ntype) :
+        f5.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
+        f5.write("Local_Component: s\n")
+        f5.write("begin Atom_Coord\n")
+        for ia in range(poscar2.Naint[i]) :
+            f5.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
+            k=k+1
+        f5.write("end Atom_Coord\n\n")
+    f5.write("#------------- end sample ------------\n\n")
+
+    f5.close()
+
+    os.system("posconvert.py parsec vasp parsec_st_afm.dat")
+    os.system("mv POSCAR.new afm.vasp")
+    os.system("rm parsec_st_afm.dat")
+
