@@ -23,9 +23,8 @@ if [[ "$1" == "seq" || "$1" == "sbatch" || "$1" == "check" ]]; then
 
     z_min=$(awk -v flag="z_range" '$1==flag { print $2 }' afm.in.tmp)
     z_max=$(awk -v flag="z_range" '$1==flag { print $3 }' afm.in.tmp)
-    z_spacing="0.3"
     z_spacing=$(awk -v flag="z_spacing" '$1==flag { print $2; found=1; exit } END { if (!found) print 0.3 } ' afm.in.tmp)
-    Nz=$(echo "($z_max - $z_min) / $z_spacing + 0.000001" | bc | cut -d '.' -f1)
+    Nz=$(echo "($z_max - $z_min) / $z_spacing + 1.000001" | bc | cut -d '.' -f1)
 
     rm afm.in.tmp
 fi

@@ -45,6 +45,7 @@ PARSEC input: parsec.in
 .xyz input: \*.xyz  
 
 Optional input: posconvert.in  
+If the posconvert.in file exist, this code modify to the structure before output. The supported opreation includes move, rotate, flip, vacuum, supercell, add atom, or delete atom. An example of [posconvert.in](data/inputs/posconvert.in) can be find in [data/inputs](data/inputs) directory.
 
 ---
 
@@ -128,20 +129,21 @@ The Python code can be used to prepare the structure files by
 ```
 python afm.py (vasp)
 ```
-Input: afm.in, tip.xyz, sample.parsec\_st.dat  
-Output : parsec\_st\_\*\_\*.dat, manual\_\*\_\*.dat, steps.dat  
-The structure files manual\_\*\_\*.dat will be moved into the seq\_\*\_\* directories in the Bash script.  
-Add the `vasp` at the end to write the structures (tip + sample) in VASP format.
+Input: afm.in, tip.xyz, sample.parsec\_st.dat, (\*\_POTRE.DAT)  
+Output : parsec\_st\_\*\_\*.dat, (parsec\_st\_spot.dat,) manual\_\*\_\*.dat, steps.dat  
+An example of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/inputs) directory. If fdet is set in afm.in, parsec\_st\_spot.dat will be generated, and the pseudopotential files (\*\_POTRE.DAT) will be read to calculate Nb. Add `vasp` at the end to write an example structure (tip + sample) in VASP format.
 
 The Bash script can be used to create directories and prepare files by
 ```
-afm.sh (sbatch) 
+afm.sh seq 
 ```
-Input: afm.in, job.sh, parsec.in.head, parsec\_st\_\*\_\*.dat, manual\_\*\_\*.dat, steps.dat  
-Output: seq\_\*\_\*, seq\_\*\_\*/parsec.in, seq\_\*\_\*/job.sh, sbatch.log  
-Add the `sbatch` option to submit the jobs
+Input: afm.in, job.sh, parsec.in.head, parsec\_st\_\*\_\*.dat, (parsec\_st\_spot.dat,) manual\_\*\_\*.dat, steps.dat  
+Output: seq\_\*\_\*, (spot,) \*/parsec.in, \*/job.sh, sbatch.log  
 
-Examples of [afm.in](data/inputs/afm.in) can be find in [data/inputs](data/inputs) directory.
+If the fdet option is set, enter the spot directory and submit the job manually before iteratively submitting all other jobs. If fdet is not set, use the following command to submit the jobs:
+```
+afm.sh sbatch
+```
 
 After all the calculations are done, use the python script [afmplot.py](src/afmplot.py) to make the plots.  
 ```
@@ -151,17 +153,6 @@ Input: afm.in, steps.dat, (toten.dat or seq\_\*\_\*/parsec.out)
 Output: afm\_\*.png, (toten.dat)  
 In the first round, this code read the total energies from seq\_\*\_\*/parsec.out files and write to toten.dat. After that, the toten.dat will be read.  
 `iz` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `iz` should be set to 2 as default. Add the `atom` option to display the atom positions. Only the top layer within 1 A are plotted. Add the `tilt` option to use the tilt correction. The tilt correction method is on development for now. Add the `bohr` option to use the Bohr as the length unit.  
-
----
-
-## [posvacuum.py](src/posvacuum.py)
-
-This script adds the vacuum layer to the structure.
-```
-python posvacuum.py z_vac
-```
-Input: POSCAR  
-Output: POSCAR.new
 
 ---
 
