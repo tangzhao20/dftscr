@@ -10,7 +10,7 @@
 import os
 import sys
 from classes import EIGENVAL
-from commons import load_packagename, load_palette
+from load_data import load_packagename, load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import math
 import xml.etree.ElementTree as ET
-from commons import load_constant, load_atom_mass
+from load_data import load_constant, load_atom_mass
 
 class POSCAR:
     # title

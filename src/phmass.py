@@ -9,7 +9,7 @@ import yaml
 import matplotlib.pyplot as plt
 from classes import POSCAR
 from pos2 import displacement
-from commons import load_constant
+from load_data import load_constant
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)

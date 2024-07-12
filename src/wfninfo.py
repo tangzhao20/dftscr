@@ -7,7 +7,7 @@
 
 # outputs (wfninfo.out) are shown on the screen
 
-from commons import load_constant
+from load_data import load_constant
 import sys
 import os
 import numpy as np

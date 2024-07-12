@@ -3,7 +3,7 @@
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
 from classes import POSCAR
-from commons import load_constant, load_atom_index
+from load_data import load_constant, load_atom_index
 import sys
 import os
 import math

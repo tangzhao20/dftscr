@@ -8,7 +8,7 @@
 import sys
 import os
 from classes import KPOINTS_band, POSCAR
-from commons import load_packagename
+from load_data import load_packagename
 
 packagename=load_packagename()
 

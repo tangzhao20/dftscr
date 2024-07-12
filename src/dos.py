@@ -13,7 +13,7 @@ import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from classes import DOSCAR
-from commons import load_packagename, load_palette
+from load_data import load_packagename, load_palette
 
 fvertical=False
 filename_out="dos.png"

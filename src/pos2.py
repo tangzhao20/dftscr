@@ -1,5 +1,5 @@
 import numpy as np
-from commons import load_atom_mass
+from load_data import load_atom_mass
 
 def match(poscar1, poscar2):
     if np.linalg.norm(np.array(poscar1.lc)-np.array(poscar2.lc)) > 1e-6 :

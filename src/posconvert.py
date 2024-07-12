@@ -7,7 +7,7 @@
 # Optional input: posconvert.in
 
 from classes import POSCAR
-from commons import load_packagename
+from load_data import load_packagename
 import sys
 import os
 

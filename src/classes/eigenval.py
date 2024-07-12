@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import xml.etree.ElementTree as ET
-from commons import load_constant
+from load_data import load_constant
 
 class EIGENVAL : 
     # Nk, Nb, Ns

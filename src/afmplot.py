@@ -6,7 +6,7 @@
 
 import sys
 import os
-from commons import load_constant, load_palette, load_atom_color
+from load_data import load_constant, load_palette, load_atom_color
 from classes import POSCAR
 import matplotlib as mpl
 import matplotlib.pyplot as plt

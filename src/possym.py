@@ -6,7 +6,7 @@ import sys
 import os
 from classes import POSCAR
 
-from commons import load_symops
+from load_data import load_symops
 from v3math import v3matchpp, v3dpp
 
 # The structure is read from parsec format
