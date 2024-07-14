@@ -1,4 +1,4 @@
-Colors in [palette.dat](palette.dat) are selected from <https://github.com/enkia/tokyo-night-vscode-theme>.
+Colors in [palette.dat](palette.dat) are selected from [Tokyo Night VS Code theme](https://github.com/enkia/tokyo-night-vscode-theme) v1.0.9.
 
 Atomic mass in [atomicmass.dat](atomicmass.dat) are from <https://ptable.com>, updated in 11/2023.
 
