@@ -3,16 +3,16 @@ orange ff9e64
 gray c6c6c9 # 0.25*black+0.75*white
 white ffffff
 black 1a1b26
-teal 73daca
+teal 7dcfff
 purple bb9af7
-darkgreen 485e30
-beige f1dcbb
-blue 7dcfff
+darkgreen 385f0d
+beige ffcfb2 # 0.5*orange+0.5*white
+blue 7aa2f7
 red f7768e
 green 9ece6a
-pink fcc5cf
+pink fbbbc7 # 0.5*red+0.5*white
 yellow e0af68
-darkgray 8689ac
+darkgray 53545c # 0.75*black+0.25*white
 darkorange 965027
 darkred 8c4351
 darkpurple 5a3e8e
