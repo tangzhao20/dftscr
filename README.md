@@ -60,7 +60,7 @@ python posconvert.py package1 package2 (filename1)
 
 If the optional input file posconvert.in exists, this code modifies the structure before output. The supported operations include move, rotate, flip, vacuum, supercell, add atom, or delete atom. An example of [posconvert.in](data/inputs/posconvert.in) can be found in [data/inputs](data/inputs) directory.
 
-## *k*-point path conversion: 
+## *k*-point path conversion  
 **Scripts:** [kconvert.py](src/kconvert.py)
 
 To convert the format of the *k*-point path:  
@@ -71,7 +71,7 @@ python kconvert.py package1 package2 (N)
 
 **VASP input:** KPOINTS  
 
-Examples of the kpath.in file can be found in the [data/kpath](data/kpath) directory.
+Examples of the kpath.in file can be found in the [data/kpaths](data/kpaths) directory.
 
 A common use of this code is to create the *k*-point path for QE band structure calculations:  
 ```bash
