@@ -471,11 +471,8 @@ class POSCAR:
     def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=-1):
         bohr=load_constant("bohr")
 
-        #print(" lcartesian = ",lcartesian)
-        #print(" lbohr = ",lbohr)
         if Ndim>=0 :
             self.Ndim=Ndim
-        #print(" Ndim = ",self.Ndim)
         if self.Ndim<3 :
             lcartesian=True
         f2=open(filename,"w")
@@ -486,62 +483,62 @@ class POSCAR:
         if self.Ndim==0 :
             radius=max(self.lc[0][0],self.lc[1][1],self.lc[2][2])*0.5/funit
             if lbohr :
-                f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+                f2.write(f"boundary_sphere_radius {radius:.12g}\n\n")
             else :
-                f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
+                f2.write(f"boundary_sphere_radius {radius:.12g} ang\n\n")
         elif self.Ndim==2 :
-            f2.write("Boundary_Conditions slab\n")
+            f2.write("boundary_conditions slab\n")
             radius=self.lc[2][2]*0.5/funit
             if lbohr :
-                f2.write(f"Boundary_Sphere_Radius {radius:.12g}\n\n")
+                f2.write(f"boundary_sphere_radius {radius:.12g}\n\n")
             else :
-                f2.write(f"Boundary_Sphere_Radius {radius:.12g} ang\n\n")
+                f2.write(f"boundary_sphere_radius {radius:.12g} ang\n\n")
             Nx=2
         else : # bulk
-            f2.write("Boundary_Conditions bulk\n")
+            f2.write("boundary_conditions bulk\n")
             Nx=3
 
         if self.Ndim>0 : 
             if lbohr==False :
-                f2.write("Lattice_Vector_Scale 1.0 ang\n")
-            f2.write("begin Cell_Shape\n")
+                f2.write("lattice_vector_scale 1.0 ang\n")
+            f2.write("begin cell_shape\n")
             for ix1 in range(Nx) :
                 for ix2 in range(3) :
                     f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
                 f2.write("\n")
-            f2.write("end Cell_Shape\n\n")
+            f2.write("end cell_shape\n\n")
 
-            f2.write("Kpoint_Method mp\n\n")
-            f2.write("begin Monkhorst_Pack_Grid\n")
+            f2.write("kpoint_method mp\n\n")
+            f2.write("begin monkhorst_pack_grid\n")
             for ix in range(Nx) :
                 kgrid=math.floor(30.0/(self.lc[ix][0]**2+self.lc[ix][1]**2+self.lc[ix][2]**2)**0.5)+1
                 f2.write(f"  {kgrid:d}")
-            f2.write("\nend Monkhorst_Pack_Grid\n\n")
-            f2.write("begin Monkhorst_Pack_Shift\n")
+            f2.write("\nend monkhorst_pack_grid\n\n")
+            f2.write("begin monkhorst_pack_shift\n")
             f2.write("0.0  0.0  0.0\n")
-            f2.write("end Monkhorst_Pack_Shift\n\n")
+            f2.write("end monkhorst_pack_shift\n\n")
 
-        f2.write("Atom_Types_Num "+str(len(self.atomtype))+"\n")
+        f2.write("atom_types_num "+str(len(self.atomtype))+"\n")
         if lcartesian :
             if lbohr :
-                f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+                f2.write("coordinate_unit cartesian_bohr\n\n")
             else :
-                f2.write("Coordinate_Unit Cartesian_Ang\n\n")
+                f2.write("coordinate_unit cartesian_ang\n\n")
             apc=self.cartesian(factor=1.0/funit)
         else :
-            f2.write("Coordinate_Unit Lattice_Vectors\n\n")
+            f2.write("coordinate_unit lattice_vectors\n\n")
         k=0
         for i in range(self.Ntype) :
-            f2.write("Atom_Type: "+self.atomtype[i]+"\n")
+            f2.write("atom_type "+self.atomtype[i]+"\n")
             #f2.write("Pseudopotential_Format: \n")
             #f2.write("Core_Cutoff_Radius: \n")
-            f2.write("Local_Component: s\n") # to be modified
+            f2.write("local_component s\n") # to be modified
             #f2.write("Potential_Num: \n\n")
             #f2.write("begin Electron_Per_Orbital\n")
             #f2.write("# S P D F\n \n")
             #f2.write("end Electron_Per_Orbital\n\n")
 
-            f2.write("begin Atom_Coord\n")
+            f2.write("begin atom_coord\n")
             if lcartesian :
                 for ia in range(self.Naint[i]) :
                     f2.write(f"{apc[k][0]:18.12f}{apc[k][1]:18.12f}{apc[k][2]:18.12f}\n")
@@ -550,7 +547,7 @@ class POSCAR:
                 for ia in range(self.Naint[i]) :
                     f2.write(f"{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
                     k=k+1
-            f2.write("end Atom_Coord\n\n")
+            f2.write("end atom_coord\n\n")
 
         f2.close()
 

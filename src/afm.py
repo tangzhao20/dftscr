@@ -22,6 +22,7 @@ z_spacing=0.3
 z_range=[5.7,6.3]
 boundary=-1e0
 lfdet=False
+lspin=False
 
 f1=open("afm.in","r")
 line=f1.readlines()
@@ -53,6 +54,10 @@ for l in line :
         lfdet=True
         if len(word)>1 and word[1].lower() in ["false",".false."] :
             lfdet=False
+    elif word[0]=="spin" :
+        lspin=True
+        if len(word)>1 and word[1].lower() in ["false",".false.","1","0"] :
+            lspin=False
     elif word[0] in ["k_spring"] :
         pass
     else :
@@ -179,8 +184,6 @@ for ia in range(poscar2.Natom) :
     apc2[ia][2]=apc2[ia][2]-zmax
 
 #================================================================
-# Write the manual.*.dat, which is splitted by the `parallel` parameter.
-
 # calculate the step numbers. Need to minus 1 in the parsec.in file 
 steplist=[(nx*ny)//parallel]*parallel
 for ip in range((nx*ny)%parallel) :
@@ -258,42 +261,44 @@ if lfdet:
     filename_parsec="parsec_st_spot.dat"
     f2=open(filename_parsec,"w")
     f2.write("#---------output from afm.py----------\n")
-    f2.write("States_Num "+str(Nb2)+"\n\n")
+    if lspin :
+        f2.write("spin_polarization .true.\n")
+    f2.write("states_num "+str(Nb2)+"\n\n")
     if poscar2.Ndim==0:
         pass
     if poscar2.Ndim==2 :
-        f2.write("Boundary_Conditions slab\n")
-        f2.write("begin Cell_Shape\n")
+        f2.write("boundary_conditions slab\n")
+        f2.write("begin cell_shape\n")
         for ix1 in range(2) :
             for ix2 in range(3) :
                 f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
             f2.write("\n")
-        f2.write("end Cell_Shape\n\n")
+        f2.write("end cell_shape\n\n")
 
-        f2.write("Kpoint_Method mp\n\n")
-        f2.write("begin Monkhorst_Pack_Grid\n")
+        f2.write("kpoint_method mp\n\n")
+        f2.write("begin monkhorst_pack_grid\n")
         for ix in range(2) :
             kgrid=math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
             f2.write(f"  {kgrid:d}")
-        f2.write("\nend Monkhorst_Pack_Grid\n\n")
-        f2.write("begin Monkhorst_Pack_Shift\n")
+        f2.write("\nend monkhorst_pack_grid\n\n")
+        f2.write("begin monkhorst_pack_shift\n")
         f2.write("0.0  0.0  0.0\n")
-        f2.write("end Monkhorst_Pack_Shift\n\n")
+        f2.write("end monkhorst_pack_shift\n\n")
 
-    f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
-    f2.write("Atom_Types_Num "+str(poscar2.Ntype)+"\n")
-    f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+    f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
+    f2.write("atom_types_num "+str(poscar2.Ntype)+"\n")
+    f2.write("coordinate_unit cartesian_bohr\n\n")
 
     f2.write("#------------ begin sample -----------\n")
     k=0
     for i in range(poscar2.Ntype) :
-        f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-        f2.write("Local_Component: s\n")
-        f2.write("begin Atom_Coord\n")
+        f2.write("atom_type "+poscar2.atomtype[i]+"\n")
+        f2.write("local_component s\n")
+        f2.write("begin atom_coord\n")
         for ia in range(poscar2.Naint[i]) :
             f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
             k=k+1
-        f2.write("end Atom_Coord\n\n")
+        f2.write("end atom_coord\n\n")
     f2.write("#------------- end sample ------------\n\n")
 
     f2.close()
@@ -305,74 +310,77 @@ for iz in range(nz) :
         # Write the structure to parsec_st_iz_ip.dat file
         filename_parsec="parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat"
         f2=open(filename_parsec,"w")
-        f2.write("#---------output from afm.py----------\n")
+        f2.write("#---------output from afm.py----------\n\n")
+        f2.write("minimization manual\n\n")
+        if lspin and not lfdet :
+            f2.write("spin_polarization .true.\n")
         if lfdet :
-            f2.write("States_Num "+str(Nb1_max)+"\n\n")
+            f2.write("states_num "+str(Nb1_max)+"\n\n")
         else :
-            f2.write("States_Num "+str(Nb1_max+Nb2)+"\n\n")
+            f2.write("states_num "+str(Nb1_max+Nb2)+"\n\n")
         if poscar2.Ndim==0:
             pass
         if poscar2.Ndim==2 :
-            f2.write("Boundary_Conditions slab\n")
-            f2.write("begin Cell_Shape\n")
+            f2.write("boundary_conditions slab\n")
+            f2.write("begin cell_shape\n")
             for ix1 in range(2) :
                 for ix2 in range(3) :
                     f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
                 f2.write("\n")
-            f2.write("end Cell_Shape\n\n")
+            f2.write("end cell_shape\n\n")
 
-            f2.write("Kpoint_Method mp\n\n")
-            f2.write("begin Monkhorst_Pack_Grid\n")
+            f2.write("kpoint_method mp\n\n")
+            f2.write("begin monkhorst_pack_grid\n")
             for ix in range(2) :
                 kgrid=math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
                 f2.write(f"  {kgrid:d}")
-            f2.write("\nend Monkhorst_Pack_Grid\n\n")
-            f2.write("begin Monkhorst_Pack_Shift\n")
+            f2.write("\nend monkhorst_pack_grid\n\n")
+            f2.write("begin monkhorst_pack_shift\n")
             f2.write("0.0  0.0  0.0\n")
-            f2.write("end Monkhorst_Pack_Shift\n\n")
+            f2.write("end monkhorst_pack_shift\n\n")
 
-        f2.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
+        f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
         if lfdet :
-            f2.write("Atom_Types_Num "+str(poscar1.Ntype)+"\n")
+            f2.write("atom_types_num "+str(poscar1.Ntype)+"\n")
         else :
-            f2.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
-        f2.write("Coordinate_Unit Cartesian_Bohr\n\n")
+            f2.write("atom_types_num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
+        f2.write("coordinate_unit cartesian_bohr\n\n")
 
         f2.write("#------------- begin tip -------------\n")
         k=0
         for i in range(poscar1.Ntype) :
-            f2.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
-            f2.write("Local_Component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
-            f2.write("begin Atom_Coord\n")
+            f2.write("atom_type "+poscar1.atomtype[i]+"\n")
+            f2.write("local_component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
+            f2.write("begin atom_coord\n")
             for ia in range(poscar1.Naint[i]) :
                 f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}{apc1[k][2]+zlist[iz]:18.12f}\n")
                 k=k+1
-            f2.write("end Atom_Coord\n\n")
+            f2.write("end atom_coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
 
         f2.write("#------------ begin sample -----------\n")
         if lfdet :
-            f2.write("Add_Point_Charges: .TRUE.\n")
-            f2.write("Point_Typ_Num: "+str(poscar2.Ntype)+"\n\n")
+            f2.write("add_point_charges .TRUE.\n")
+            f2.write("point_typ_num "+str(poscar2.Ntype)+"\n\n")
 
         k=0
         for i in range(poscar2.Ntype) :
             if lfdet:
-                f2.write("Pt_Chg: "+str(zion2[i])+"\n")
-                f2.write("begin Point_Coord\n")
+                f2.write("pt_chg: "+str(zion2[i])+"\n")
+                f2.write("begin point_coord\n")
             else:
-                f2.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-                f2.write("Local_Component: s\n")
-                f2.write("begin Atom_Coord\n")
+                f2.write("atom_type: "+poscar2.atomtype[i]+"\n")
+                f2.write("local_component: s\n")
+                f2.write("begin atom_coord\n")
 
             for ia in range(poscar2.Naint[i]) :
                 f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
                 k=k+1
 
             if lfdet:
-                f2.write("end Point_Coord\n\n")
+                f2.write("end point_coord\n\n")
             else :
-                f2.write("end Atom_Coord\n\n")
+                f2.write("end atom_coord\n\n")
         f2.write("#------------- end sample ------------\n\n")
 
         f2.close()
@@ -393,44 +401,44 @@ if lvasp:
     filename_parsec="parsec_st_afm.dat"
     f5=open(filename_parsec,"w")
     f5.write("#---------output from afm.py----------\n")
-    f5.write("States_Num "+str(Nb1_max+Nb2)+"\n\n")
+    f5.write("states_num "+str(Nb1_max+Nb2)+"\n\n")
     if poscar2.Ndim==0:
         pass
     if poscar2.Ndim==2 :
-        f5.write("Boundary_Conditions slab\n")
-        f5.write("begin Cell_Shape\n")
+        f5.write("boundary_conditions slab\n")
+        f5.write("begin cell_shape\n")
         for ix1 in range(2) :
             for ix2 in range(3) :
                 f5.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
             f5.write("\n")
-        f5.write("end Cell_Shape\n\n")
+        f5.write("end cell_shape\n\n")
 
-    f5.write(f"Boundary_Sphere_Radius {boundary:.12g}\n\n")
-    f5.write("Atom_Types_Num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
-    f5.write("Coordinate_Unit Cartesian_Bohr\n\n")
+    f5.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
+    f5.write("atom_types_num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
+    f5.write("coordinate_unit cartesian_bohr\n\n")
 
     f5.write("#------------- begin tip -------------\n")
     k=0
     for i in range(poscar1.Ntype) :
-        f5.write("Atom_Type: "+poscar1.atomtype[i]+"\n")
-        f5.write("Local_Component: s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
-        f5.write("begin Atom_Coord\n")
+        f5.write("atom_type "+poscar1.atomtype[i]+"\n")
+        f5.write("local_component s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
+        f5.write("begin atom_coord\n")
         for ia in range(poscar1.Naint[i]) :
             f5.write(f"{apc1[k][0]+sum(x_range)/2:18.12f}{apc1[k][1]+sum(y_range)/2:18.12f}{apc1[k][2]+sum(z_range)/2:18.12f}\n")
             k=k+1
-        f5.write("end Atom_Coord\n\n")
+        f5.write("end atom_coord\n\n")
     f5.write("#-------------- end tip --------------\n\n")
 
     f5.write("#------------ begin sample -----------\n")
     k=0
     for i in range(poscar2.Ntype) :
-        f5.write("Atom_Type: "+poscar2.atomtype[i]+"\n")
-        f5.write("Local_Component: s\n")
-        f5.write("begin Atom_Coord\n")
+        f5.write("atom_type "+poscar2.atomtype[i]+"\n")
+        f5.write("local_component s\n")
+        f5.write("begin atom_coord\n")
         for ia in range(poscar2.Naint[i]) :
             f5.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
             k=k+1
-        f5.write("end Atom_Coord\n\n")
+        f5.write("end atom_coord\n\n")
     f5.write("#------------- end sample ------------\n\n")
 
     f5.close()

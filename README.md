@@ -147,7 +147,7 @@ python afm.py (vasp)
 
 **Outputs:** parsec\_st\_\*\_\*.dat, (parsec\_st\_spot.dat,) manual\_\*\_\*.dat, steps.dat  
 
-An example of [afm.in](data/inputs/afm.in) can be found in the [data/inputs](data/inputs) directory. If `fdet` is set in afm.in, parsec\_st\_spot.dat will be generated, and the pseudopotential files \*\_POTRE.DAT will be read to calculate Nb. Add `vasp` at the end to write an example structure (tip + sample) in VASP format.
+An example of [afm.in](data/inputs/afm.in) can be found in the [data/inputs](data/inputs) directory. If `fdet` is set in afm.in, parsec\_st\_spot.dat will be generated, and the pseudopotential files \*\_POTRE.DAT will be read to calculate Nb. Add `spin` in afm.in to enable spin polarization in the simulations. Add `vasp` at the command line to write an example structure (tip + sample) in VASP format.  
 
 The Bash script can be used to create directories and prepare files by
 ```bash
