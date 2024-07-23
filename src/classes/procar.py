@@ -2,24 +2,24 @@ import sys
 import numpy as np
 import re
 
-class PROCAR :
+class Procar:
     # Nk
     # Nb
     # Na
     # Nlm
     # proj[k][b][a][orb]
-    # orbname[orb]
+    # orb_name[orb]
  
-    def __init__(self) :
+    def __init__(self):
         self.Nk=0
         self.Nb=0
         self.Na=0
         self.Nlm=0
         self.proj=[]
         self.orb=[]
-        self.orbname=[]
+        self.orb_name=[]
 
-    def fileread_vasp(self, filename="PROCAR") :
+    def read_vasp(self, filename="PROCAR"):
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -36,9 +36,9 @@ class PROCAR :
             
         self.proj=[]
         a=-1
-        for il in range(len(line)) :
+        for il in range(len(line)):
             word=line[il].split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!":
                 continue
             if word[0]=="k-point" :
                 k=int(word[1])
@@ -66,9 +66,9 @@ class PROCAR :
                         self.proj.append(proj0)
 
         if self.Nlm==9 :
-            self.orbname=["s","py","pz","px","dxy","dyz","dz2","dxz","x2-y2"]
+            self.orb_name=["s","py","pz","px","dxy","dyz","dz2","dxz","x2-y2"]
         elif self.Nlm==16 :
-            self.orbname=["s","py","pz","px","dxy","dyz","dz2","dxz","x2-y2","fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
+            self.orb_name=["s","py","pz","px","dxy","dyz","dz2","dxz","x2-y2","fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
         else :
             print("Nlm="+str(self.Nlm)+" is not support yet")
             sys.exit()
@@ -79,7 +79,7 @@ class PROCAR :
         del line
         del word
 
-    def fileread_qe(self, filename="projwfc.out") :
+    def read_qe(self, filename="projwfc.out"):
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -134,84 +134,84 @@ class PROCAR :
                     # proj[k][b][a][orb]
                     self.proj[ik][ib][atommap[int(number[ii+1])-1]][lmmap[int(number[ii+1])-1]]=float(number[ii])
         if self.Nlm==4 :
-            self.orbname=["s","pz","px","py"]
+            self.orb_name=["s","pz","px","py"]
         elif self.Nlm==9 :
-            self.orbname=["s","pz","px","py","dz2","dxz","dyz","x2-y2","dxy"]
+            self.orb_name=["s","pz","px","py","dz2","dxz","dyz","x2-y2","dxy"]
         elif self.Nlm==16 :
-            self.orbname=["s","pz","px","py","dz2","dxz","dyz","x2-y2","dxy","fz3","fxz2","fyz2","fzx2","fxyz","fx3","fy3x2"]
+            self.orb_name=["s","pz","px","py","dz2","dxz","dyz","x2-y2","dxy","fz3","fxz2","fyz2","fzx2","fxyz","fx3","fy3x2"]
         else :
             print("Nlm="+str(self.Nlm)+" is not support yet")
             sys.exit()
                 
-    def plot(self,atomflag,orbflag,fac) :
-        plotproj=[]
+    def plot(self,atom_flag,orb_flag,fac):
+        plot_proj=[]
         for b in range(self.Nb) :
-            plotproj0=[]
+            plot_proj0=[]
             for k in range(self.Nk) :
-                plotproj1=0.0
+                plot_proj1=0.0
                 for a in range(self.Na) :
                     for i in range(self.Nlm) :
-                        if atomflag[a] and orbflag[i]==1 :
-                            plotproj1+=self.proj[k][b][a][i]
-                plotproj0.append(plotproj1*fac)
-            plotproj.append(plotproj0)
-        return plotproj
+                        if atom_flag[a] and orb_flag[i]==1 :
+                            plot_proj1+=self.proj[k][b][a][i]
+                plot_proj0.append(plot_proj1*fac)
+            plot_proj.append(plot_proj0)
+        return plot_proj
 
-    def readorblist(self, orblist) :
-        orblist0=orblist.split("+")
-        orblist1=[]
-        orbflag=[0]*self.Nlm
-        for j in orblist0 :
-            if j in self.orbname:
-                orblist1.append(j)
+    def read_orb_list(self, orb_list):
+        orb_list0=orb_list.split("+")
+        orb_list1=[]
+        orb_flag=[0]*self.Nlm
+        for j in orb_list0 :
+            if j in self.orb_name:
+                orb_list1.append(j)
             elif j=="p" :
-                orblist1+=["px","py","pz"]
+                orb_list1+=["px","py","pz"]
             elif j=="d" :
-                orblist1+=["dxy","dyz","dz2","dxz","x2-y2"]
+                orb_list1+=["dxy","dyz","dz2","dxz","x2-y2"]
             elif j=="f" :
-                orblist1+=["fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
+                orb_list1+=["fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
             elif j=="dx2-y2" :
-                orblist1.append("x2-y2")
+                orb_list1.append("x2-y2")
             elif j=="all" :
-                orblist1+=self.orbname
+                orb_list1+=self.orb_name
             else :
                 print("projector "+j+" does not exist")
 
-        for j in orblist1:
-            if j in self.orbname:
-                orbflag[self.orbname.index(j)]=1
+        for j in orb_list1:
+            if j in self.orb_name:
+                orb_flag[self.orb_name.index(j)]=1
             else :
                 print("projector "+j+" does not exist")
 
-        return orbflag
+        return orb_flag
 
-    def readatomlist(self, atomlist, poscar1) :
-        atomflag=[]
-        if atomlist=="all" :
+    def read_atom_list(self, atom_list, poscar1):
+        atom_flag=[]
+        if atom_list=="all" :
             for a in range(self.Na) :
-                atomflag.append(1)
+                atom_flag.append(1)
         else :
             for a in range(self.Na) :
-                atomflag.append(0)
-            atomlist0=atomlist.split(",")
-            for i in range(len(atomlist0)) :
-                Fatomvalid=False
+                atom_flag.append(0)
+            atom_list0=atom_list.split(",")
+            for i in range(len(atom_list0)) :
+                Fatom_valid=False
                 Iatom0=0
                 Iatom1=0
                 for j in range(len(poscar1.atomtype)) :
                     Iatom1=Iatom1+poscar1.Naint[j]
-                    if atomlist0[i]==poscar1.atomtype[j] :
+                    if atom_list0[i]==poscar1.atomtype[j] :
                         for a in range(Iatom0,Iatom1) :
-                            atomflag[a]=1
-                        Fatomvalid=True
+                            atom_flag[a]=1
+                        Fatom_valid=True
                     Iatom0=Iatom1
-                if Fatomvalid==False :
-                    atomlist1=atomlist0[i].split("-")
-                    if len(atomlist1)==1 :
-                        atomflag[int(atomlist1[0])-1]=1
-                        Fatomvalid=True
+                if Fatom_valid==False :
+                    atom_list1=atom_list0[i].split("-")
+                    if len(atom_list1)==1 :
+                        atom_flag[int(atom_list1[0])-1]=1
+                        Fatom_valid=True
                     else :
-                        for j in range(int(atomlist1[0])-1,int(atomlist1[1])) :
-                            atomflag[j]=1
-                        Fatomvalid=True
-        return atomflag
+                        for j in range(int(atom_list1[0])-1,int(atom_list1[1])) :
+                            atom_flag[j]=1
+                        Fatom_valid=True
+        return atom_flag

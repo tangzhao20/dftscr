@@ -5,7 +5,7 @@ import math
 import xml.etree.ElementTree as ET
 from load_data import load_constant, load_atom_mass
 
-class POSCAR:
+class Poscar:
     # title
     # lc[3][3]
     # Natom
@@ -17,7 +17,7 @@ class POSCAR:
     # seldyn[Natom][3] (if f_seldyn)
     # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
 
-    def __init__(self) :
+    def __init__(self):
         self.title="SYSTEM"
         self.lc=[]
         self.Natom=0
@@ -28,7 +28,7 @@ class POSCAR:
         self.ap=[]
         self.Ndim=3 
 
-    def __str__(self) :
+    def __str__(self):
         str_out = "POSCAR:\n"
         str_out += " Ndim = " + str(self.Ndim) + "\n"
         str_out += " Natom = " + str(self.Natom) + "\n"
@@ -39,7 +39,7 @@ class POSCAR:
 
 #########################################################################
 
-    def fileread_vasp(self, filename="") :
+    def read_vasp(self, filename=""):
 
         if filename=="" :
             filename="POSCAR"
@@ -83,7 +83,7 @@ class POSCAR:
         del line
         del word
 
-    def fileread_qe(self, filename="") :
+    def read_qe(self, filename=""):
 
         # find a scf.in/nscf.in/relax.in file
         if filename=="" :
@@ -95,7 +95,7 @@ class POSCAR:
             elif "relax.in" in files:
                 filename="relax.in"
             else :
-                print("Error: In fileread_qe, use input files scf.in, nscf.in, or relax.in, or specify the input file name.")
+                print("Error: In read_qe, use input files scf.in, nscf.in, or relax.in, or specify the input file name.")
                 sys.exit()
 
         bohr=load_constant("bohr")
@@ -147,7 +147,7 @@ class POSCAR:
         
         self.movetobox()
 
-    def fileread_xml(self, filename=""):
+    def read_xml(self, filename=""):
 
         if filename=="" :
             # find a .xml file
@@ -187,7 +187,7 @@ class POSCAR:
         self.Natom=len(self.ap)
         self.Ntype=len(self.atomtype)
 
-    def fileread_prt(self, filename=""):
+    def read_prt(self, filename=""):
 
         if filename=="" :
             filename="input"
@@ -240,7 +240,7 @@ class POSCAR:
 
         self.movetobox()
 
-    def fileread_parsec(self, filename="") :
+    def read_parsec(self, filename=""):
 
         if filename=="" :
             filename="parsec.in"
@@ -336,7 +336,7 @@ class POSCAR:
             for ix in range(3) :
                 self.ap[ia][ix]+=shift[ix]
 
-    def fileread_xyz(self,filename="") :
+    def read_xyz(self, filename=""):
 
         if filename=="" :
             # find a .xyz file
@@ -389,7 +389,7 @@ class POSCAR:
 
 ########################################################################
 
-    def filewrite_vasp(self, filename="POSCAR.new"):
+    def write_vasp(self, filename="POSCAR.new"):
         f1=open(filename,"w")
         f1.write(self.title+'\n')
         f1.write('1.0\n')
@@ -418,7 +418,7 @@ class POSCAR:
             f1.write('\n')
         f1.close()
 
-    def filewrite_qe(self, filename="qe_st.dat"):
+    def write_qe(self, filename="qe_st.dat"):
         mass=load_atom_mass()
 
         kgrid=[]
@@ -448,7 +448,7 @@ class POSCAR:
         f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}  {kgrid[2]:d} 0 0 0\n")
         f2.close()
 
-    def filewrite_prt(self, filename="prt_st.dat"):
+    def write_prt(self, filename="prt_st.dat"):
         bohr=load_constant("bohr")
 
         volume=self.volume()*bohr**(-3)
@@ -468,7 +468,7 @@ class POSCAR:
         f2.write("end coordinates\n\n")
         f2.close()
 
-    def filewrite_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=-1):
+    def write_parsec(self, filename="parsec_st.dat", lcartesian=False, lbohr=False, Ndim=-1):
         bohr=load_constant("bohr")
 
         if Ndim>=0 :
@@ -551,7 +551,7 @@ class POSCAR:
 
         f2.close()
 
-    def filewrite_wannier90(self, filename="wannier90_st.dat"):
+    def write_wannier90(self, filename="wannier90_st.dat"):
         f2=open(filename,"w")
         f2.write("Begin Unit_Cell_Cart\n")
         for i in range(3) :
@@ -576,7 +576,7 @@ class POSCAR:
         f2.write("End Atoms_Frac\n\n")
         f2.close()
 
-    def filewrite_xyz(self, filename="structure.xyz") :
+    def write_xyz(self, filename="structure.xyz"):
         f2=open(filename,"w")
         f2.write(str(self.Natom)+"\n\n")
         it1=0

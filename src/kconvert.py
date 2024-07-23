@@ -7,10 +7,10 @@
 
 import sys
 import os
-from classes import KPOINTS_band, POSCAR
-from load_data import load_packagename
+from classes import KpointsBand, Poscar
+from load_data import load_package_name
 
-packagename=load_packagename()
+package_name=load_package_name()
 
 Nk=0 # Total Nk
 Nk_line=0 # same Nk on each line
@@ -34,32 +34,32 @@ if Nk!=0 and Nk_line!=0 :
 package1=sys.argv[1]
 package2=sys.argv[2]
 
-kpoints1=KPOINTS_band()
-if package1 in packagename["vasp"] :
-    kpoints1.fileread_vasp()
-elif package1 in packagename["kpathin"] :
-    kpoints1.fileread_kpathin(Nk_line=Nk_line)
+kpoints1=KpointsBand()
+if package1 in package_name["vasp"] :
+    kpoints1.read_vasp()
+elif package1 in package_name["kpathin"] :
+    kpoints1.read_kpathin(Nk_line=Nk_line)
 else :
     print("Package "+package1+" input is not supported yet.")
     print("python3 kconvert.py package1 package2 (Nk or Nk_line)")
     sys.exit()
 
-if package2 in packagename["kpathin"] :
-    kpoints1.filewrite_kpathin()
-elif package2 in packagename["qe"] :
+if package2 in package_name["kpathin"] :
+    kpoints1.write_kpathin()
+elif package2 in package_name["qe"] :
     if Nk!=0 :
-        poscar1=POSCAR()
-        poscar1.fileread_qe()
+        poscar1=Poscar()
+        poscar1.read_qe()
         rlc=poscar1.rlc()
-        kpoints1.filewrite_qe(Nk=Nk,rlc=rlc)
+        kpoints1.write_qe(Nk=Nk,rlc=rlc)
     else :
-        kpoints1.filewrite_qe()
-elif package2 in packagename["vasp"] :
-    kpoints1.filewrite_vasp()
-elif package2 in packagename["wannier90"] :
-    kpoints1.filewrite_wannier90()
-elif package2 in packagename["parsec"] :
-    kpoints1.filewrite_parsec()
+        kpoints1.write_qe()
+elif package2 in package_name["vasp"] :
+    kpoints1.write_vasp()
+elif package2 in package_name["wannier90"] :
+    kpoints1.write_wannier90()
+elif package2 in package_name["parsec"] :
+    kpoints1.write_parsec()
 else :
     print("Package "+package2+" input is not supported yet.")
     print("python3 kconvert.py package1 package2 (N)")

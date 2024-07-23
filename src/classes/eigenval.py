@@ -4,7 +4,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from load_data import load_constant
 
-class EIGENVAL : 
+class Eigenval: 
     # Nk, Nb, Ns
     # eig[k][b][s]
     # occ[k][b][s]
@@ -13,7 +13,7 @@ class EIGENVAL :
     # kp[k][3]
     # wt[k]
 
-    def __init__(self) :
+    def __init__(self):
         self.wt=[]
         self.kp=[]
         self.eig=[]
@@ -22,7 +22,7 @@ class EIGENVAL :
         self.Nb=0
         self.Ns=1
 
-    def __str__(self) :
+    def __str__(self):
         str_out = "EIGENVAL:\n"
         str_out += " Nk = " + str(self.Nk) + "\n"
         str_out += " Nb = " + str(self.Nb) + "\n"
@@ -40,7 +40,7 @@ class EIGENVAL :
 
 #########################################################################
 
-    def fileread_vasp(self, filename="EIGENVAL", is_hse=False) :
+    def read_vasp(self, filename="EIGENVAL", is_hse=False):
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -80,7 +80,7 @@ class EIGENVAL :
                     
         del line
 
-    def fileread_qexml(self, filename="") :
+    def read_qexml(self, filename=""):
 
         if filename=="" :
             # find a .xml file
@@ -137,7 +137,7 @@ class EIGENVAL :
         if self.is_semic==True :
             self.gap()
 
-    def fileread_wan(self, Nb_pad=0) :
+    def read_wan(self, Nb_pad=0):
         # only support Ns=1 and semiconductor
         files = os.listdir()
 
@@ -185,7 +185,7 @@ class EIGENVAL :
         self.Nb=len(self.eig[0])
         self.Ns=1
 
-    def fileread_parsec(self) :
+    def read_parsec(self):
         bohr=load_constant("bohr")
         pi=load_constant("pi")
         rydberg=load_constant("rydberg")
@@ -193,7 +193,7 @@ class EIGENVAL :
         if os.path.isfile("bands.dat") :
             filename="bands.dat"
         elif os.path.isfile("eigen.dat"):
-            self.fileread_parsec_eigen()
+            self.read_parsec_eigen()
             return
         else :
             print("Error: Reading parsec eigenval needs bands.dat or eigen.dat")
@@ -248,7 +248,7 @@ class EIGENVAL :
             for ib in range(self.Nb) :
                 self.eig[ik][ib][0]*=rydberg
 
-    def fileread_parsec_eigen(self) :
+    def read_parsec_eigen(self):
         # Read the eigenvalues from eigen.dat.
         # kp is missing in this file, so we assume the first k is gamma and read only this point.
         rydberg=load_constant("rydberg")
@@ -297,13 +297,13 @@ class EIGENVAL :
 
 #########################################################################
     
-    def eigshift(self,ezero) :
+    def eigshift(self, ezero):
         for k in range(self.Nk) :
             for b in range(self.Nb) :
                 for s in range(self.Ns) :
                     self.eig[k][b][s]=self.eig[k][b][s]-ezero
 
-    def bandkpout(self,kp,rlc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]) :
+    def bandkpout(self, kp, rlc=[[1.0,0.0,0.0],[0.0,1.0,0.0],[0.0,0.0,1.0]]):
         # transfer the fractional to cartesian in k space
         # if kp is already in cartisian, simply set rlc=I
         kpc=np.array(self.kp)@(np.array(rlc).T)
@@ -319,11 +319,11 @@ class EIGENVAL :
             kplabelold=kplabel
         return(kpout)
 
-    def kc2kd(self,lc) :
+    def kc2kd(self,lc):
         #convert kc from Cartesian to direct
         self.kp=(np.array(self.kp)@(np.array(lc).T)).tolist()
 
-    def eigtrans(self) :
+    def eigtrans(self):
         eigout=[]
         for s in range(self.Ns) :
             eigout1=[]
@@ -335,7 +335,7 @@ class EIGENVAL :
             eigout.append(eigout1)
         return(eigout)
 
-    def writegap(self, kp) :
+    def writegap(self, kp):
         f0=open("gap.txt","w")
         if self.is_semic==True :
             if self.vbm_k!=self.cbm_k :
@@ -352,14 +352,14 @@ class EIGENVAL :
             f0.write("Eg = 0, no band gap\n")
         f0.close()
 
-    def semic(self) :
+    def semic(self):
         self.is_semic=True
         for k in range(self.Nk) :
             for b in range(self.Nb) :
                 for s in range(self.Ns) :
                     if self.occ[k][b][s]<0.999 and self.occ[k][b][s]>0.001 :
                         self.is_semic=False
-    def gap(self) :
+    def gap(self):
         self.Nvb=[]
         for s in range(self.Ns) :
             self.Nvb.append(0)

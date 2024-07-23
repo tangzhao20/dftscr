@@ -7,7 +7,7 @@
 import sys
 import os
 from load_data import load_constant, load_palette, load_atom_color
-from classes import POSCAR
+from classes import Poscar
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy
@@ -272,8 +272,8 @@ else :
     funit=1.0
 if latom :
     color_dict=load_atom_color()
-    poscar1=POSCAR()
-    poscar1.fileread_parsec(filename="sample.parsec_st.dat")
+    poscar1=Poscar()
+    poscar1.read_parsec(filename="sample.parsec_st.dat")
     # poscar1 is modified here. If a feature needs to keep poscar1, use copy.
     poscar1.supercell([2,2,1])
     poscar1.move([-0.5,-0.5,0],lbox=False)

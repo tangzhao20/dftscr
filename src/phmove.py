@@ -9,16 +9,16 @@
 import sys
 import numpy as np
 import yaml
-from classes import POSCAR
+from classes import Poscar
 
-if len(sys.argv)==1 :
+if len(sys.argv)==1:
     print("No index of phonon mode. set to 1.")
     ib=1
-else :
+else:
     ib=int(sys.argv[1])
 
-poscar0=POSCAR()
-poscar0.fileread_vasp()
+poscar0=Poscar()
+poscar0.read_vasp()
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
@@ -45,4 +45,4 @@ disp=ph_eigvec/np.sum(np.linalg.norm(ph_eigvec,axis=1))*0.4 # scale: 0.4 A
 
 poscar0.move(disp=disp,lcart=True)
 
-poscar0.filewrite_vasp("POSCAR."+str(ib))
+poscar0.write_vasp("POSCAR."+str(ib))

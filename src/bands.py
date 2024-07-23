@@ -10,7 +10,7 @@
 import os
 import sys
 from classes import *
-from load_data import load_packagename, load_palette
+from load_data import load_package_name, load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -21,30 +21,29 @@ if len(sys.argv)<=1 :
     sys.exit()
 package=sys.argv[1]
 
-packagename=load_packagename()
+package_name=load_package_name()
 
+poscar1=Poscar()
+eigenval1=Eigenval()
+kpoints1=KpointsBand()
 
-poscar1=POSCAR()
-eigenval1=EIGENVAL()
-kpoints1=KPOINTS_band()
-
-if package in packagename["vasp"]+packagename["vaspproj"] : 
+if package in package_name["vasp"]+package_name["vaspproj"] : 
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
     # TODO: test VASP
 
-    poscar1.fileread_vasp()
+    poscar1.read_vasp()
     rlc=poscar1.rlc()
     
-    eigenval1.fileread_vasp()
+    eigenval1.read_vasp()
 
-    kpoints1.fileread_vasp()
+    kpoints1.read_vasp()
     
     if eigenval1.is_semic==True :
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
-        doscar1=DOSCAR()
-        doscar1.fileread_vasp()
+        doscar1=Doscar()
+        doscar1.read_vasp()
         eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
@@ -53,23 +52,23 @@ if package in packagename["vasp"]+packagename["vaspproj"] :
     xticks=kpoints1.xticks_out(rlc)
     xlabels=kpoints1.xlabels_out()
 
-elif package in packagename["qe"]+packagename["qeproj"] :
+elif package in package_name["qe"]+package_name["qeproj"] :
     # Input: *.xml, kpath.in
     # No need to run bands.x
 
-    poscar1.fileread_xml()
+    poscar1.read_xml()
     rlc=poscar1.rlc()
     
-    eigenval1.fileread_qexml()
+    eigenval1.read_qexml()
     
-    kpoints1.fileread_kpathin()
+    kpoints1.read_kpathin()
     
     if eigenval1.is_semic==True :
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
     else :
-        doscar1=DOSCAR()
-        doscar1.fileread_xml()
+        doscar1=Doscar()
+        doscar1.read_xml()
         eigenval1.eigshift(doscar1.ef)
     
     x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
@@ -78,11 +77,11 @@ elif package in packagename["qe"]+packagename["qeproj"] :
     xticks=kpoints1.xticks_out(rlc)
     xlabels=kpoints1.xlabels_out()
 
-elif package in packagename["wannier90"] :
+elif package in package_name["wannier90"] :
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
     # Only semiconductors are supported
 
-    poscar1.fileread_qe("nscf.in")
+    poscar1.read_qe("nscf.in")
     rlc=poscar1.rlc()
 
     pad=0
@@ -92,9 +91,9 @@ elif package in packagename["wannier90"] :
             sys.argv.remove(w)
             break
 
-    eigenval1.fileread_wan(Nb_pad=pad)
+    eigenval1.read_wan(Nb_pad=pad)
 
-    kpoints1.fileread_kpathin()
+    kpoints1.read_kpathin()
 
     # find a ../bands/*.xml file
     files = os.listdir("../bands")
@@ -105,8 +104,8 @@ elif package in packagename["wannier90"] :
             break
 
     if fsecond :
-        eigenval2=EIGENVAL()
-        eigenval2.fileread_qexml("../bands/"+filename)
+        eigenval2=Eigenval()
+        eigenval2.read_qexml("../bands/"+filename)
 
         eigenval2.gap()
         eigenval2.eigshift(eigenval2.vbm)
@@ -141,16 +140,16 @@ elif package in packagename["wannier90"] :
         energy2=eigenval2.eigtrans()
 
 
-elif package in packagename["parsec"] :
+elif package in package_name["parsec"] :
     # Input: bands.dat, parsec.in, kpath.in
 
-    poscar1.fileread_parsec()
+    poscar1.read_parsec()
     rlc=poscar1.rlc()
 
-    eigenval1.fileread_parsec()
+    eigenval1.read_parsec()
     eigenval1.kc2kd(poscar1.lc)
     
-    kpoints1.fileread_kpathin()
+    kpoints1.read_kpathin()
     
     x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
     energy=eigenval1.eigtrans()
@@ -191,26 +190,26 @@ if fsecond :
         ix2r.append(ix2l[-1]+Nx2[-1])
 
 lproj=False
-if package in packagename["vaspproj"]+packagename["qeproj"] :
+if package in package_name["vaspproj"]+package_name["qeproj"] :
     lproj=True
     if eigenval1.Ns==2 :
         print("Spin polarized projected band structure not supported yet.\n")
         sys.exit()
 
-    procar1=PROCAR()
-    if package in packagename["vaspproj"] :
+    procar1=Procar()
+    if package in package_name["vaspproj"] :
         # Input: PROCAR
-        procar1.fileread_vasp()
-    elif package in packagename["qeproj"] :
+        procar1.read_vasp()
+    elif package in package_name["qeproj"] :
         # Input: projwfc.out
-        procar1.fileread_qe()
+        procar1.read_qe()
     
-    atomlist=sys.argv[2]
+    atom_list=sys.argv[2]
     del sys.argv[2]
-    atomflag=procar1.readatomlist(atomlist,poscar1)
-    orblist=sys.argv[2]
+    atom_flag=procar1.read_atom_list(atom_list,poscar1)
+    orb_list=sys.argv[2]
     del sys.argv[2]
-    orbflag=procar1.readorblist(orblist)
+    orb_flag=procar1.read_orb_list(orb_list)
 
 if len(sys.argv)>=4 :
     ymax=float(sys.argv[3])
@@ -273,20 +272,20 @@ f3.close()
 # projection plot
 
 if lproj:
-    dotsize=50.0
-    projplotsize=procar1.plot(atomflag,orbflag,dotsize)
+    dot_size=50.0
+    proj_plot_size=procar1.plot(atom_flag,orb_flag,dot_size)
     for ip in range(len(xticks)):
         for ib in range(eigenval1.Nb):
-            ax[ip].scatter(x[ip],energy[0][ib][ixl[ip]:ixr[ip]],s=projplotsize[ib][ixl[ip]:ixr[ip]],c=palette["orange"],zorder=2)
-    outputname="proj_"+atomlist+"_"+orblist+".png"
+            ax[ip].scatter(x[ip],energy[0][ib][ixl[ip]:ixr[ip]],s=proj_plot_size[ib][ixl[ip]:ixr[ip]],c=palette["orange"],zorder=2)
+    outputname="proj_"+atom_list+"_"+orb_list+".png"
     
-    f2=open("proj_"+atomlist+"_"+orblist+".dat","w")
+    f2=open("proj_"+atom_list+"_"+orb_list+".dat","w")
     f2.write("#k-point energy(eV) pointsize\n")
     for ib in range(eigenval1.Nb):
         for ip in range(len(x)):
             ik0=0
             for ik in range(len(x[ip])):
-                f2.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(projplotsize[ib][ik0])+"\n")
+                f2.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(proj_plot_size[ib][ik0])+"\n")
                 ik0+=1
         f2.write("\n")
     f2.close()

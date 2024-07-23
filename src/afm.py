@@ -2,7 +2,7 @@
 
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
-from classes import POSCAR
+from classes import Poscar
 from load_data import load_constant, load_atom_index
 import sys
 import os
@@ -90,10 +90,10 @@ z_range[1]=zlist[-1]
 
 #================================================================
 # Read the structure from tip.xyz and sample.parsec_st.dat
-poscar1=POSCAR()
-poscar1.fileread_xyz("tip.xyz")
-poscar2=POSCAR()
-poscar2.fileread_parsec("sample.parsec_st.dat")
+poscar1=Poscar()
+poscar1.read_xyz("tip.xyz")
+poscar2=Poscar()
+poscar2.read_parsec("sample.parsec_st.dat")
 
 if poscar2.Ndim!=0 and poscar2.Ndim!=2 :
     print("Error: Only Ndim = 0 or 2 are supported.")

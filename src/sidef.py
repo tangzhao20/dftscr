@@ -8,11 +8,11 @@
 import sys
 import numpy as np
 from copy import deepcopy
-from classes import POSCAR
+from classes import Poscar
 
 filename=sys.argv[1]
-poscar1=POSCAR()
-poscar1.fileread_vasp(filename)
+poscar1=Poscar()
+poscar1.read_vasp(filename)
 poscar1.Ndim=0
 
 if poscar1.atomtype[0]!="Si" :
@@ -28,7 +28,7 @@ def info_defect(i) :
     poscar_new=deepcopy(poscar1)
     poscar_new.delete_atom(i)
     output_name="parsec_st_si"+str(poscar1.Naint[0])+"_"+str(i+1)+".dat"
-    poscar_new.filewrite_parsec(filename=output_name)
+    poscar_new.write_parsec(filename=output_name)
     print(f"{i+1:5d} {apc[i][0]:9.4f} {apc[i][1]:9.4f} {apc[i][2]:9.4f} {d:9.4f}")
 
 tol=1e-4

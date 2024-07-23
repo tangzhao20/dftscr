@@ -9,8 +9,8 @@
 
 import os
 import sys
-from classes import EIGENVAL
-from load_data import load_packagename, load_palette
+from classes import Eigenval
+from load_data import load_package_name, load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -21,21 +21,21 @@ if len(sys.argv)<=1 :
     sys.exit()
 package=sys.argv[1]
 
-packagename=load_packagename()
+package_name=load_package_name()
 
-eigenval1=EIGENVAL()
-if package in packagename["vasp"] : 
+eigenval1=Eigenval()
+if package in package_name["vasp"] : 
     # Input: EIGENVAL
     # TODO: test VASP
-    eigenval1.fileread_vasp()
+    eigenval1.read_vasp()
     
-elif package in packagename["qe"] :
+elif package in package_name["qe"] :
     # Input: *.xml
-    eigenval1.fileread_qexml()
+    eigenval1.read_qexml()
 
-elif package in packagename["parsec"] :
+elif package in package_name["parsec"] :
     # Input: bands.dat
-    eigenval1.fileread_parsec()
+    eigenval1.read_parsec()
 
 else:
     print("Package \""+package+"\" is not supported yet.")

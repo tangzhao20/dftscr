@@ -4,14 +4,14 @@ import re
 import numpy as np
 import xml.etree.ElementTree as ET
 
-class DOSCAR :
+class Doscar:
     # ef : float
     # Ns : integer
     # Nedos : integer
     # energy[Nedos]
     # dos[Ns][Nedos]
 
-    def __init__(self) :
+    def __init__(self):
         self.ef=0.0
         self.Ns=0
         self.Nedos=0
@@ -19,7 +19,7 @@ class DOSCAR :
         self.dos=[[]]
         self.Lpdos=False
 
-    def __str__(self) :
+    def __str__(self):
         str_out = "DOSCAR:\n"
         str_out += " Ns = " + str(self.Ns) + "\n"
         str_out += " Nedos = " + str(self.Nedos) + "\n"
@@ -27,7 +27,7 @@ class DOSCAR :
 
 #######################################################################
 
-    def fileread_vasp(self, filename="DOSCAR") :
+    def read_vasp(self, filename="DOSCAR"):
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -50,7 +50,7 @@ class DOSCAR :
             if self.Ns==2 :
                 self.dos[1][il]=float(word[2])
 
-    def fileread_xml(self, filename="") :
+    def read_xml(self, filename=""):
         # read dos from .xml file
         Ha=load_constant("rydberg")*2.0
 
@@ -68,7 +68,7 @@ class DOSCAR :
         else :
             self.ef=float(tree.getroot().find("output").find("band_structure").find("highestOccupiedLevel").text)*Ha
 
-    def fileread_qe(self, filename="pwscf.dos") :
+    def read_qe(self, filename="pwscf.dos"):
         f0=open(filename,"r")
         line=f0.readlines()
         f0.close()
@@ -90,14 +90,14 @@ class DOSCAR :
             if self.Ns==2 :
                 self.dos[1].append(float(word[2]))
 
-    def readpdos_qe(self) :
+    def readpdos_qe(self):
         # pdos[Ns][Nepdos][Na][Nlm]
         # x_pdos[Nepdos]
         # atomtype[Ntype]
         # Naint[Ntype]
-        # orbname[Nlm]
+        # orb_name[Nlm]
 
-        if self.Ns==2 :
+        if self.Ns == 2:
             print("QE pdos has not been supported for spin polarized system yet.")
             sys.exit()
 
@@ -138,7 +138,7 @@ class DOSCAR :
         self.pdos=np.arange(self.Ns*self.Nepdos*self.Na*self.Nlm)
         self.pdos=np.reshape(self.pdos,(self.Ns,self.Nepdos,self.Na,self.Nlm)).tolist()
 
-        for f in filelist :
+        for f in filelist:
             # f=[filename, iatom, atomtype, iorbit]
             f0=open(f[0],"r")
             line=f0.readlines()
@@ -166,84 +166,84 @@ class DOSCAR :
                     self.Naint[-1]+=1
 
         # Only s and p orbitals are supported now
-        self.orbname=["s","pz","px","py"]
+        self.orb_name=["s","pz","px","py"]
         self.Lpdos=True
                 
 #######################################################################
 
-    def energyshift(self,ezero) :
-        for ie in range(self.Nedos) :
+    def energyshift(self, ezero):
+        for ie in range(self.Nedos):
             self.energy[ie]=self.energy[ie]-ezero
         if self.Lpdos :
-            for ie in range(self.Nepdos) :
+            for ie in range(self.Nepdos):
                 self.energy_pdos[ie]=self.energy_pdos[ie]-ezero
             
-    def plotpdos(self,atomflag,orbflag) :
-        pdosout=[]
-        for ie in range(self.Nepdos) :
-            pdosout0=0.0
-            for ia in range(self.Na) :
+    def plot_pdos(self, atom_flag, orb_flag):
+        pdos_out=[]
+        for ie in range(self.Nepdos):
+            pdos_out0=0.0
+            for ia in range(self.Na):
                 for im in range(self.Nlm) :
-                    if atomflag[ia] and orbflag[im]==1 :
-                        pdosout0+=self.pdos[0][ie][ia][im]
-            pdosout.append(pdosout0)
-        return pdosout
+                    if atom_flag[ia] and orb_flag[im]==1 :
+                        pdos_out0+=self.pdos[0][ie][ia][im]
+            pdos_out.append(pdos_out0)
+        return pdos_out
 
-    def readorblist(self, orblist) :
-        orblist0=orblist.split("+")
-        orblist1=[]
-        orbflag=[0]*self.Nlm
-        for j in orblist0 :
-            if j in self.orbname:
-                orblist1.append(j)
+    def read_orb_list(self, orb_list):
+        orb_list0=orb_list.split("+")
+        orb_list1=[]
+        orb_flag=[0]*self.Nlm
+        for j in orb_list0 :
+            if j in self.orb_name:
+                orb_list1.append(j)
             elif j=="p" :
-                orblist1+=["px","py","pz"]
+                orb_list1+=["px","py","pz"]
             elif j=="d" :
-                orblist1+=["dxy","dyz","dz2","dxz","x2-y2"]
+                orb_list1+=["dxy","dyz","dz2","dxz","x2-y2"]
             elif j=="f" :
-                orblist1+=["fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
+                orb_list1+=["fy3x2","fxyz","fyz2","fz3","fxz2","fzx2","fx3"]
             elif j=="dx2-y2" :
-                orblist1.append("x2-y2")
+                orb_list1.append("x2-y2")
             elif j=="all" :
-                orblist1+=self.orbname
+                orb_list1+=self.orb_name
             else :
                 print("projector "+j+" does not exist")
 
-        for j in orblist1:
-            if j in self.orbname:
-                orbflag[self.orbname.index(j)]=1
+        for j in orb_list1:
+            if j in self.orb_name:
+                orb_flag[self.orb_name.index(j)]=1
             else :
                 print("projector "+j+" does not exist")
 
-        return orbflag
+        return orb_flag
 
-    def readatomlist(self, atomlist) :
-        atomflag=[]
-        if atomlist=="all" :
-            for a in range(self.Na) :
-                atomflag.append(1)
+    def read_atom_list(self, atom_list):
+        atom_flag=[]
+        if atom_list=="all" :
+            for a in range(self.Na):
+                atom_flag.append(1)
         else :
-            for a in range(self.Na) :
-                atomflag.append(0)
-            atomlist0=atomlist.split(",")
-            for i in range(len(atomlist0)) :
-                Fatomvalid=False
+            for a in range(self.Na):
+                atom_flag.append(0)
+            atom_list0=atom_list.split(",")
+            for i in range(len(atom_list0)):
+                Fatom_valid=False
                 Iatom0=0
                 Iatom1=0
-                for j in range(len(self.atomtype)) :
+                for j in range(len(self.atomtype)):
                     Iatom1=Iatom1+self.Naint[j]
-                    if atomlist0[i]==self.atomtype[j] :
-                        for a in range(Iatom0,Iatom1) :
-                            atomflag[a]=1
-                        Fatomvalid=True
+                    if atom_list0[i] == self.atomtype[j]:
+                        for a in range(Iatom0,Iatom1):
+                            atom_flag[a]=1
+                        Fatom_valid=True
                     Iatom0=Iatom1
-                if Fatomvalid==False :
-                    atomlist1=atomlist0[i].split("-")
-                    if len(atomlist1)==1 :
-                        atomflag[int(atomlist1[0])-1]=1
-                        Fatomvalid=True
+                if not Fatom_valid:
+                    atom_list1=atom_list0[i].split("-")
+                    if len(atom_list1)==1 :
+                        atom_flag[int(atom_list1[0])-1]=1
+                        Fatom_valid=True
                     else :
-                        for j in range(int(atomlist1[0])-1,int(atomlist1[1])) :
-                            atomflag[j]=1
-                        Fatomvalid=True
-        return atomflag
+                        for j in range(int(atom_list1[0])-1, int(atom_list1[1])):
+                            atom_flag[j]=1
+                        Fatom_valid=True
+        return atom_flag

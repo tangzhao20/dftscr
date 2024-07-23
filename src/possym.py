@@ -4,8 +4,7 @@
 
 import sys
 import os
-from classes import POSCAR
-
+from classes import Poscar
 from load_data import load_symops
 from v3math import v3matchpp, v3dpp
 
@@ -16,8 +15,8 @@ for iw in range(1,len(sys.argv)) :
         filename1=sys.argv[iw]
         del sys.argv[iw]
         break
-poscar1=POSCAR()
-poscar1.fileread_parsec(filename1)
+poscar1=Poscar()
+poscar1.read_parsec(filename1)
 
 mtx, ops = load_symops()
 

@@ -7,7 +7,7 @@
 #
 # Input: POSCAR
 
-from classes import POSCAR
+from classes import Poscar
 import sys
 
 if len(sys.argv)<2 :
@@ -17,9 +17,9 @@ if len(sys.argv)<2 :
 else :
     z_vac=float(sys.argv[1])
 
-poscar1=POSCAR()
-poscar1.fileread_vasp()
+poscar1=Poscar()
+poscar1.read_vasp()
 
 poscar1.vacuum(z_vac)
 
-poscar1.filewrite_vasp()
+poscar1.write_vasp()

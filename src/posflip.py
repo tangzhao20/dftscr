@@ -3,12 +3,12 @@
 # posflip.py
 # flip the z coordinate of the structure
 
-from classes import POSCAR
+from classes import Poscar
 import sys
 
-poscar1=POSCAR()
-poscar1.fileread_vasp()
+poscar1=Poscar()
+poscar1.read_vasp()
 
 poscar1.flip()
 
-poscar1.filewrite_vasp()
+poscar1.write_vasp()

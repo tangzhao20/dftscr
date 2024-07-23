@@ -1,15 +1,15 @@
 import sys
 import os
 
-class KPOINTS_band :
-    def __init__(self) :
+class KpointsBand:
+    def __init__(self):
         
         self.kpdict={} # a dictionary which maps label to b-coordinate
         self.xlabels=[] # a path of high symmetry k-points. xlabels[Np][Nh[ip]]
         # use kpdict[xlabels[ip][ik]][ix] for the ik-th points in the ip-th path. ix indicates kx, ky, or kz
         self.Nk_line=[]
 
-    def __str__(self) :
+    def __str__(self):
         str_out = "KPOINTS:\n"
         str_out += " Nk_line = " + str(self.Nk_line) + "\n" 
         for xlabel in self.xlabels :
@@ -21,7 +21,7 @@ class KPOINTS_band :
 
 #########################################################################
 
-    def fileread_vasp(self,filename="KPOINTS"):
+    def read_vasp(self, filename="KPOINTS"):
 
         f0=open(filename,"r")
         line=f0.readlines()
@@ -58,8 +58,7 @@ class KPOINTS_band :
                 self.Nk_line[-1].append(Nk_line)
             ffirst=not ffirst
 
-    def fileread_kpathin(self,filename="kpath.in",Nk_line=40):
-
+    def read_kpathin(self, filename="kpath.in", Nk_line=40):
         #self.Nk_line=Nk_line
 
         f0=open(filename,"r")
@@ -91,7 +90,7 @@ class KPOINTS_band :
 
 #########################################################################
 
-    def filewrite_vasp(self,filename="KPOINTS.new") :
+    def write_vasp(self, filename="KPOINTS.new"):
         f1=open(filename,"w")
         f1.write("k points along high symmetry lines\n")
         f1.write("40\n")
@@ -107,7 +106,7 @@ class KPOINTS_band :
                 f1.write(p[ih+1]+"\n\n")
         f1.close()
 
-    def filewrite_qe(self,filename="kpath.out",Nk=0,rlc=[]):
+    def write_qe(self, filename="kpath.out", Nk=0, rlc=[]):
         if Nk>0 :
             xticks=self.xticks_out(rlc=rlc)
 
@@ -141,7 +140,7 @@ class KPOINTS_band :
             f1.write("1.0\n")
         f1.close()
 
-    def filewrite_kpathin(self, filename="kpath.in.new") :
+    def write_kpathin(self, filename="kpath.in.new"):
         f1=open(filename,"w")
         for h in self.kpdict :
             for ix in range(3) :
@@ -154,7 +153,7 @@ class KPOINTS_band :
             f1.write("\n")
         f1.close()
 
-    def filewrite_wannier90(self, filename="wannier90_kpath.dat") :
+    def write_wannier90(self, filename="wannier90_kpath.dat"):
         f1=open(filename,"w")
         f1.write("bands_plot = true\n\n")
         f1.write("begin kpoint_path\n")
@@ -170,7 +169,7 @@ class KPOINTS_band :
         f1.write("end kpoint_path\n\n")
         f1.close()
 
-    def filewrite_parsec(self, filename="parsec_kpath.dat") :
+    def write_parsec(self, filename="parsec_kpath.dat"):
         f1=open(filename,"w")
         f1.write("begin Bandstruc\n")
         ih2=1

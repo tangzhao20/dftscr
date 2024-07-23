@@ -12,8 +12,8 @@ import sys
 import os
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from classes import DOSCAR
-from load_data import load_packagename, load_palette
+from classes import Doscar
+from load_data import load_package_name, load_palette
 
 fvertical=False
 filename_out="dos.png"
@@ -29,12 +29,12 @@ if len(sys.argv)<=1 :
     sys.exit()
 package=sys.argv[1]
 
-packagename=load_packagename()
+package_name=load_package_name()
 
-doscar0=DOSCAR()
-if package in packagename["vasp"]: 
-    doscar0.fileread_vasp()
-elif package in packagename["qe"]+packagename["qeproj"]:
+doscar0=Doscar()
+if package in package_name["vasp"]: 
+    doscar0.read_vasp()
+elif package in package_name["qe"]+package_name["qeproj"]:
     # find a *.dos file
     files = os.listdir(".")
     fxml=False
@@ -44,17 +44,17 @@ elif package in packagename["qe"]+packagename["qeproj"]:
         if f.endswith('.xml'): # sometimes EFermi in .dos file could be wrong??
             fxml=True          # read from .xml file instead.
             xmlname=f
-    doscar0.fileread_qe(filename)
+    doscar0.read_qe(filename)
     if fxml:
         print("EFermi read from .xml file")
-        doscar0.fileread_xml(xmlname)
+        doscar0.read_xml(xmlname)
 else:
     print("Package \""+package+"\" is not supported yet.")
     print("python dos.py (v) package (Emin) (Emax)")
     sys.exit()
 
 lproj=False
-if package in packagename["qeproj"] :
+if package in package_name["qeproj"] :
     lproj=True
     doscar0.readpdos_qe()
     if doscar0.Ns==2 :
@@ -64,12 +64,12 @@ if package in packagename["qeproj"] :
     # Input: *.pdos_atm#*(*)_wfc#*(*)
     doscar0.readpdos_qe()
 
-    atomlist=sys.argv[2]
+    atom_list=sys.argv[2]
     del sys.argv[2]
-    atomflag=doscar0.readatomlist(atomlist)
-    orblist=sys.argv[2]
+    atom_flag=doscar0.read_atom_list(atom_list)
+    orb_list=sys.argv[2]
     del sys.argv[2]
-    orbflag=doscar0.readorblist(orblist)
+    orb_flag=doscar0.read_orb_list(orb_list)
 
 if len(sys.argv)>=4 :
     xmax=float(sys.argv[3])
@@ -109,10 +109,10 @@ if fvertical==False :
 
     ax0.axvline(linewidth=1,color=palette["gray"],zorder=0)
     ax0.plot(doscar0.energy,doscar0.dos[0],color=palette["darkblue"],linewidth=1,zorder=3)
-    if package in packagename["qeproj"]:
-        pdos=doscar0.plotpdos(atomflag,orbflag)
+    if package in package_name["qeproj"]:
+        pdos=doscar0.plot_pdos(atom_flag,orb_flag)
         ax0.plot(doscar0.energy_pdos,pdos,color=palette["orange"],linewidth=1,zorder=3.5)
-        filename_out="dos_"+atomlist+"_"+orblist+".png"
+        filename_out="dos_"+atom_list+"_"+orb_list+".png"
 
     ax0.set_xlim([xmin,xmax])
     ax0.set_ylim([0,dosmax*1.1])
@@ -129,10 +129,10 @@ else : # vertical
 
     ax0.axhline(linewidth=1,color=palette["gray"],zorder=0)
     ax0.plot(doscar0.dos[0],doscar0.energy,color=palette["darkblue"],linewidth=1,zorder=3)
-    if package in packagename["qeproj"]:
-        pdos=doscar0.plotpdos(atomflag,orbflag)
+    if package in package_name["qeproj"]:
+        pdos=doscar0.plot_pdos(atom_flag,orb_flag)
         ax0.plot(pdos,doscar0.energy_pdos,color=palette["orange"],linewidth=1,zorder=3.5)
-        filename_out="dos_v_"+atomlist+"_"+orblist+".png"
+        filename_out="dos_v_"+atom_list+"_"+orb_list+".png"
 
     ax0.set_xlim([0,dosmax*1.1])
     ax0.set_ylim([xmin,xmax])

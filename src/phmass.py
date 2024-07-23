@@ -7,17 +7,17 @@
 
 import yaml
 import matplotlib.pyplot as plt
-from classes import POSCAR
+from classes import Poscar
 from pos2 import displacement
 from load_data import load_constant
 
 with open("qpoints.yaml") as f0:
     q1=yaml.full_load(f0)
 
-poscar_i=POSCAR()
-poscar_i.fileread_vasp(filename="POSCAR_i")
-poscar_f=POSCAR()
-poscar_f.fileread_vasp(filename="POSCAR_f")
+poscar_i=Poscar()
+poscar_i.read_vasp(filename="POSCAR_i")
+poscar_f=Poscar()
+poscar_f.read_vasp(filename="POSCAR_f")
 
 disp=displacement(poscar_i,poscar_f)
 

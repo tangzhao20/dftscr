@@ -1,26 +1,26 @@
 import os
-def load_packagename() :
-    # read the package name from the data/packagename.dat into a dictionary
-    # data/packagename.dat: 1st column is the key, following columns are the values
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "packagename.dat")
-    f0=open(DATA_PATH,"r")
+def load_package_name() :
+    # read the package name from the data/package_name.dat into a dictionary
+    # data/package_name.dat: 1st column is the key, following columns are the values
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "package_name.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
-    packagename={}
+    package_name={}
     for l in line :
         word=l.split()
         if len(word)==0 or word[0][0] in {"#", "!"} :
             continue
-        packagename[word[0]]=word[1:]
-    return packagename
+        package_name[word[0]]=word[1:]
+    return package_name
 
 def load_palette() :
     # read the color palette from the data/palette.dat into a dictionary :
     # data/palette.dat: key, values
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "palette.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "palette.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
     palette={}
@@ -34,9 +34,9 @@ def load_palette() :
 def load_symops() :
     # read the crystallographic symmetry operations from the data/symops.dat into a list of length 48 :
     # data/symops.dat: index, xyz, opname, mtx[9]
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "symops.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "symops.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
     mtx=[]
@@ -54,9 +54,9 @@ def load_symops() :
 
 def load_constant(const_name) :
     # read the constants from the data/constant.dat file
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "constant.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "constant.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
     const_name=const_name.lower()
@@ -70,9 +70,9 @@ def load_constant(const_name) :
 
 def load_atom_index() :
     # return a dictionary of atom_name -> atom_index
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
 
@@ -86,9 +86,9 @@ def load_atom_index() :
 
 def load_atom_mass() :
     # return a dictionary of atom_name -> atom_mass
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
 
@@ -102,9 +102,9 @@ def load_atom_mass() :
 
 def load_atom_color():
     # return a dictionary of atom_name -> atom_color
-    this_dir, this_filename = os.path.split(__file__)
-    DATA_PATH = os.path.join(this_dir, "..", "data", "atom.dat")
-    f0=open(DATA_PATH,"r")
+    this_dir, this_file = os.path.split(__file__)
+    data_path = os.path.join(this_dir, "..", "data", "atom.dat")
+    f0=open(data_path,"r")
     line=f0.readlines()
     f0.close()
 
