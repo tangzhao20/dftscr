@@ -261,7 +261,7 @@ if lfdet:
     filename_parsec="parsec_st_spot.dat"
     f2=open(filename_parsec,"w")
     f2.write("#---------output from afm.py----------\n")
-    if lspin :
+    if lspin:
         f2.write("spin_polarization .true.\n")
     f2.write("states_num "+str(Nb2)+"\n\n")
     if poscar2.Ndim==0:

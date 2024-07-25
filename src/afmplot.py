@@ -69,7 +69,7 @@ for l in line :
         parallel=int(word[1])
     elif word[0]=="k_spring" :
         k_spring=float(word[1])
-    elif word[0] in ["fdet","boundary"] :
+    elif word[0] in ["fdet", "boundary", "spin"]:
         pass
     else :
         print("Warning: keyword \""+word[0]+"\" is not defined.")
