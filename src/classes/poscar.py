@@ -663,89 +663,96 @@ class Poscar:
 
         self.movetobox()
 
-    def vacuum(self, z_vac) :
+    def vacuum(self, z_vac):
         # Add a vacuum layer to the structure
         # z_vac is in angstrom
         # This version assumes a1 x a2 // a3 // z
-        if z_vac<=0 :
+        if z_vac <= 0:
             print("Error: z_vac <= 0")
             sys.exit()
 
-        a3_new=self.lc[2][2]+z_vac
+        a3_new = self.lc[2][2] + z_vac
 
         self.movetobox()
 
-        ia=0
-        ap_new=[]
-        for itype in range(self.Ntype) :
-            ap_new0=[]
-            for iaint in range(self.Naint[itype]) :
-                if self.ap[ia][2]<1e-8 :
-                    ap_new0.append([self.ap[ia][0],self.ap[ia][1],1.0])
-                ia+=1
+        ia = 0
+        ap_new = []
+        for itype in range(self.Ntype):
+            ap_new0 = []
+            for iaint in range(self.Naint[itype]):
+                if self.ap[ia][2] < 1e-8:
+                    ap_new0.append([self.ap[ia][0], self.ap[ia][1], 1.0])
+                ia += 1
             ap_new.append(ap_new0)
 
-        for itype in range(self.Ntype) :
-            for ap in ap_new[itype] :
-                self.add_atom(itype,ap)
+        for itype in range(self.Ntype):
+            for ap in ap_new[itype]:
+                self.add_atom(itype, ap)
 
         for ia in range(self.Natom) :
-            self.ap[ia][2]=(self.ap[ia][2]-0.5)*self.lc[2][2]/a3_new+0.5
+            self.ap[ia][2] = (self.ap[ia][2] - 0.5) * self.lc[2][2] / a3_new + 0.5
 
-        self.lc[2][2]=a3_new
+        self.lc[2][2] = a3_new
 
-    def add_atom(self, itype, ap, newtype="X") :
-        if itype<0 :
-            print("Error: itype < 0 in add_atom function.")
+    def add_atom(self, itype, ap, new_type = None):
+        if itype < 0:
+            print("Error: itype ("+str(itype)+") < 0 in add_atom function.")
             sys.exit()
-        elif itype<self.Ntype :
-            self.Natom+=1
-            self.ap.insert(sum(self.Naint[:itype+1]),ap)
-            self.Naint[itype]+=1
-        elif itype==self.Ntype :
-            # create a new type
-            self.Natom+=1
-            self.Ntype+=1
-            if newtype=="X" :
-                print("Warning: atom name is not defined in the add_atom function.")
-            self.atomtype.append(newtype)
-            self.Naint.append(1)
-            self.ap.append(ap)
-        else :
-            print("Error: itype > Ntype in add_atom function.")
+        elif itype > self.Ntype:
+            print("Error: itype ("+str(itype)+") > self.Ntype ("+str(self.Ntype)+") in add_atom function.")
+            sys.exit()
 
-    def delete_atom(self, ia) :
-        if ia<0 or ia>=self.Natom :
+        if new_type is None: 
+            if itype == self.Ntype:
+                print("Warning: itype ("+str(itype)+") > self.Ntype ("+str(self.Ntype)+") in add_atom function,")
+                print("         but atom name is not defined.")
+                new_type = "X"
+            else: # This is not a new type
+                self.Natom += 1
+                self.ap.insert(sum(self.Naint[:itype+1]), ap)
+                self.Naint[itype] += 1
+                return
+
+        else: # This is a new type 
+            self.Natom += 1
+            self.Ntype += 1
+            self.atomtype.insert(itype, new_type)
+            self.Naint.insert(itype, 1)
+            self.ap.insert(sum(self.Naint[:itype]), ap)
+
+    def delete_atom(self, ia):
+        if ia < 0 or ia >= self.Natom:
             print("Error: ia ("+ia+") is out of range")
             sys.exit()
-        self.Natom-=1
+        self.Natom -= 1
         del self.ap[ia]
-        iat=0
-        for itype in range(self.Ntype) :
-            iat=iat+self.Naint[itype]
-            if iat>ia :
-                self.Naint[itype]-=1
-                if self.Naint[itype]==0 :
+        iat = 0
+        for itype in range(self.Ntype):
+            iat = iat + self.Naint[itype]
+            if iat > ia:
+                self.Naint[itype] -= 1
+                if self.Naint[itype] == 0:
                     del self.Naint[itype]
                     del self.atomtype[itype]
-                    self.Ntype-=1
+                    self.Ntype -= 1
                 break
 
-    def rlc(self) :
-        pi=load_constant("pi")
+    def rlc(self):
+        pi = load_constant("pi")
         return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
 
-    def volume(self) :
+    def volume(self):
         return abs(np.linalg.det(self.lc))
 
-    def cartesian(self, factor=1.0) :
-        if self.Ndim==3 :
-            shift=[0.0,0.0,0.0]
-        elif self.Ndim==2 :
-            shift=[0.0,0.0,-0.5]
-        elif self.Ndim==0 :
-            shift=[-0.5,-0.5,-0.5]
-        return ((np.array(self.ap)+np.array(shift))@np.array(self.lc)*factor).tolist()
+    def cartesian(self, shift = None, factor = 1.0):
+        if shift is None:
+            if self.Ndim == 3 :
+                shift = [0.0, 0.0, 0.0]
+            elif self.Ndim == 2 :
+                shift = [0.0, 0.0, -0.5]
+            elif self.Ndim == 0 :
+                shift = [-0.5, -0.5, -0.5]
+        return ((np.array(self.ap) + np.array(shift)) @ np.array(self.lc) * factor).tolist()
 
     def atom_list(self) :
         atom=[]

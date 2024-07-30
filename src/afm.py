@@ -2,11 +2,12 @@
 
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
+import os
+import sys
+import math
+import numpy as np
 from classes import Poscar
 from load_data import load_constant, load_atom_index
-import sys
-import os
-import math
 
 bohr=load_constant("bohr")
 lvasp=False
@@ -398,52 +399,20 @@ for iz in range(nz) :
 
 # convert the structure to vasp format
 if lvasp:
-    filename_parsec="parsec_st_afm.dat"
-    f5=open(filename_parsec,"w")
-    f5.write("#---------output from afm.py----------\n")
-    f5.write("states_num "+str(Nb1_max+Nb2)+"\n\n")
-    if poscar2.Ndim==0:
-        pass
-    if poscar2.Ndim==2 :
-        f5.write("boundary_conditions slab\n")
-        f5.write("begin cell_shape\n")
-        for ix1 in range(2) :
-            for ix2 in range(3) :
-                f5.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
-            f5.write("\n")
-        f5.write("end cell_shape\n\n")
-
-    f5.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
-    f5.write("atom_types_num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
-    f5.write("coordinate_unit cartesian_bohr\n\n")
-
-    f5.write("#------------- begin tip -------------\n")
-    k=0
-    for i in range(poscar1.Ntype) :
-        f5.write("atom_type "+poscar1.atomtype[i]+"\n")
-        f5.write("local_component s\n")  # Assume the local_component is s here. A dictionary of {element: local_component} should be added
-        f5.write("begin atom_coord\n")
-        for ia in range(poscar1.Naint[i]) :
-            f5.write(f"{apc1[k][0]+sum(x_range)/2:18.12f}{apc1[k][1]+sum(y_range)/2:18.12f}{apc1[k][2]+sum(z_range)/2:18.12f}\n")
-            k=k+1
-        f5.write("end atom_coord\n\n")
-    f5.write("#-------------- end tip --------------\n\n")
-
-    f5.write("#------------ begin sample -----------\n")
-    k=0
-    for i in range(poscar2.Ntype) :
-        f5.write("atom_type "+poscar2.atomtype[i]+"\n")
-        f5.write("local_component s\n")
-        f5.write("begin atom_coord\n")
-        for ia in range(poscar2.Naint[i]) :
-            f5.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
-            k=k+1
-        f5.write("end atom_coord\n\n")
-    f5.write("#------------- end sample ------------\n\n")
-
-    f5.close()
-
-    os.system("posconvert.py parsec vasp parsec_st_afm.dat")
-    os.system("mv POSCAR.new afm.vasp")
-    os.system("rm parsec_st_afm.dat")
-
+    poscar3=Poscar()
+    if lfdet:
+        poscar3.read_parsec("parsec_st_spot.dat")
+    else:
+        poscar3.read_parsec("parsec_st_1_1.dat")
+    pi = load_constant("pi")
+    rlc3 = poscar3.rlc()
+    ap1 = ((np.array(apc1) + np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2]))*bohr @ np.array(rlc3) / (2*pi) + [0.0, 0.0, 0.5]).tolist()
+    if lfdet:
+        ia = 0
+        for itype in range(poscar1.Ntype):
+            for iaint in range(poscar1.Naint[itype]):
+                poscar3.add_atom(itype = itype, ap = ap1[ia], new_type = poscar1.atomtype[itype])
+                ia += 1
+    else:
+        poscar3.ap[0:poscar1.Natom] = ap1
+    poscar3.write_vasp("afm.vasp")
