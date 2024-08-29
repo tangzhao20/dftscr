@@ -1,19 +1,22 @@
-#python cache 
+# Bytecode caches 
 *.pyc
 */*.pyc
 __pycache__
 */__pycache__
 
-#excutable
+# Excutables
 *.x
 *.o
 
-#tar
+# Tarballs
 *.tar
 *.tar.gz
 
-#tmp
+# Temporary files
 *.swp
 
-#example
+# Examples
 example
+
+# Virtual environments
+venv
