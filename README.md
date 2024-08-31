@@ -8,7 +8,7 @@ Clone the repository and use it as is. The Python scripts are written in Python 
 pip install -r requirements.txt
 ```
 
-In newer versions of Linux that enforce PEP 668, the system's Python environment is treated as externally managed. This prevents using pip to install packages directly into the system environment to avoid conflicts with the package manager. To install Python packages independently, create a virtual environment:
+In newer versions of Linux that enforce [PEP 668](https://peps.python.org/pep-0668/), the system's Python environment is treated as externally managed. This prevents using pip to install packages directly into the system environment to avoid conflicts with the package manager. To install Python packages independently, create a virtual environment:  
 ```bash
 sudo apt install python3.12-venv
 python3 -m venv venv
