@@ -610,7 +610,7 @@ class Poscar:
 
         disp=np.array(disp)
         shape=disp.shape
-        if not (shape==(3,) or shape==(self.Natom,3)) :
+        if not (shape == (3,) or shape == (self.Natom,3)) :
             print("Error: the dimension of displacement vector should be (3) or (Na,3)")
             sys.exit()
         if lcart :
@@ -694,7 +694,9 @@ class Poscar:
 
         self.lc[2][2] = a3_new
 
-    def add_atom(self, itype, ap, new_type = None):
+    def add_atom(self, itype, ap, new_type=None, add_to_head=False):
+        # If new_type is defined, a new atom type will be inserted.
+        # add_to_head defines if the atom will be added to the head.
         if itype < 0:
             print("Error: itype ("+str(itype)+") < 0 in add_atom function.")
             sys.exit()
@@ -709,7 +711,10 @@ class Poscar:
                 new_type = "X"
             else: # This is not a new type
                 self.Natom += 1
-                self.ap.insert(sum(self.Naint[:itype+1]), ap)
+                if add_to_head:
+                    self.ap.insert(sum(self.Naint[:itype]), ap)
+                else:
+                    self.ap.insert(sum(self.Naint[:itype+1]), ap)
                 self.Naint[itype] += 1
                 return
 
@@ -724,6 +729,7 @@ class Poscar:
         if ia < 0 or ia >= self.Natom:
             print("Error: ia ("+ia+") is out of range")
             sys.exit()
+
         self.Natom -= 1
         del self.ap[ia]
         iat = 0
@@ -737,6 +743,23 @@ class Poscar:
                     self.Ntype -= 1
                 break
 
+    def replace_atom(self, ia, new_type, add_to_head=True):
+        if ia < 0 or ia >= self.Natom:
+            print("Error: ia ("+ia+") is out of range")
+            sys.exit()
+
+        ap = self.ap[ia]
+        self.delete_atom(ia)
+
+        for itype in range(self.Ntype):
+            if self.atomtype[itype] == new_type:
+                self.add_atom(itype, ap, add_to_head=add_to_head)
+                return
+        if add_to_head:
+            self.add_atom(0, ap, new_type)
+        else:
+            self.add_atom(self.Ntype, ap, new_type)
+
     def rlc(self):
         pi = load_constant("pi")
         return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
@@ -744,7 +767,7 @@ class Poscar:
     def volume(self):
         return abs(np.linalg.det(self.lc))
 
-    def cartesian(self, shift = None, factor = 1.0):
+    def cartesian(self, shift=None, factor=1.0):
         if shift is None:
             if self.Ndim == 3 :
                 shift = [0.0, 0.0, 0.0]
