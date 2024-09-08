@@ -163,8 +163,6 @@ python3 hbndef.py flake r (defect)
 * `r` is the radius of the h-BN flake.  
 * `defect` specifies the defect, such as CBVN. Ensure atomic symbols are correctly capitalized.  
 
-N is the size of the supercell, r is the radius of the h-BN flake, and (defect) is the name of the defect in h-BN, such as CBVN. Use correct capitalization of atomic symbols.
-
 ## AFM simulation preparation
 **Scripts:** [afm.py](src/afm.py), [afm.sh](src/afm.sh), [afmplot.py](src/afmplot.py)
 
