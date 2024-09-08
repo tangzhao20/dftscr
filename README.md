@@ -138,7 +138,7 @@ python wavecar.py ik ib ispin
 ## Silicon nanocrystals creation
 **Scripts:** [silicon.py](src/silicon.py), [sidef.py](src/sidef.py)
 
-[silicon.py](src/silicon.py) creates the atomic structure of silicon nanocrystals, given the radius in angstrom:  
+[silicon.py](src/silicon.py) creates the atomic structure of silicon nanocrystals, given the radius in angstrom:
 ```bash
 python silicon.py radius
 ```
@@ -147,6 +147,23 @@ python silicon.py radius
 ```bash
 python3 sidef.py filename
 ```
+
+## h-BN with defect structure creation
+**Script:** [hbndef.py](src/hbndef.py)
+
+This script generates h-BN monolayer or flake structures with or without a defect. To create a 2D h-BN structure, use the following command:
+```bash
+python3 hbndef.py N (defect)
+```
+For an h-BN flake, use:
+```bash
+python3 hbndef.py flake r (defect)
+```
+* `N` is the supercell size.  
+* `r` is the radius of the h-BN flake.  
+* `defect` specifies the defect, such as CBVN. Ensure atomic symbols are correctly capitalized.  
+
+N is the size of the supercell, r is the radius of the h-BN flake, and (defect) is the name of the defect in h-BN, such as CBVN. Use correct capitalization of atomic symbols.
 
 ## AFM simulation preparation
 **Scripts:** [afm.py](src/afm.py), [afm.sh](src/afm.sh), [afmplot.py](src/afmplot.py)

@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-# Generate 2d hBN structures by:
+# This script creates the structure of an h-BN monolayer (or flake) with or without a defect.
+
+# Generate 2d h-BN structures by:
 #  python3 hbndef.py N (defect)
-# or generate hBN flake structures by:
+
+# or generate h-BN flake structures by:
 #  python3 hbndef.py flake r (defect)
 
-# This code creates the structure of an h-BN monolayer (or flake) with a defect.
-# N defines the size of the supercell, and Defect is the name of the defect in h-BN, such as CBVN.
+# N defines the size of the supercell, r defines the radius of the h-BN flake. 
+# (defect) is the name of the defect in h-BN, such as CBVN.
 # Use correct capitalization of atomic symbols.
 
 import sys
@@ -22,7 +25,7 @@ poscar0 = Poscar()
 poscar0.read_vasp(hbn_structure)
 poscar0.Ndim = 2
 bond_b_n = poscar0.lc[1][1]*2.0/3.0
-bond_b_h = 1.2
+bond_b_h = 1.20
 bond_n_h = 1.02
 # TODO: Here B-H bond and N-H bond are taken from wikipedia, with no reference.
 
@@ -76,7 +79,8 @@ if lflake:
     find_b_distance = np.linalg.norm(find_b-np.vstack([center] * 3), axis=2)
 
     apc_h = []
-    for ia0 in range(poscar0.Naint[1]-1, -1, -1):
+    for ia0 in range(poscar0.Naint[1]-1, -1, -1): 
+        # N atoms
         ia = ia0 + poscar0.Naint[0]
         if apc_n_distance[ia0] > r_max:
             poscar0.delete_atom(ia)
@@ -86,11 +90,12 @@ if lflake:
                 if find_b_distance[ia0][ia1] < r_max + 1e-6:
                     in_range[ia1] = 1
             if sum(in_range) == 2:
-                apc_h.append(apc_n[ia0] + neighbor_n[in_range.index(0)]*bond_b_h)
+                apc_h.append(apc_n[ia0] + neighbor_n[in_range.index(0)]*bond_n_h)
             if sum(in_range) == 1:
                 poscar0.delete_atom(ia)
                 apc_h.append(apc_n[ia0] + neighbor_n[in_range.index(1)]*(bond_b_n-bond_b_h))
     for ia0 in range(poscar0.Naint[0]-1, -1, -1):
+        # B atoms
         if apc_b_distance[ia0] > r_max:
             poscar0.delete_atom(ia0)
         else:
@@ -99,7 +104,7 @@ if lflake:
                 if find_n_distance[ia0][ia1] < r_max + 1e-6:
                     in_range[ia1] = 1
             if sum(in_range) == 2:
-                apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(0)]*bond_n_h)
+                apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(0)]*bond_b_h)
             if sum(in_range) == 1:
                 poscar0.delete_atom(ia0)
                 apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(1)]*(bond_b_n-bond_n_h))
@@ -113,7 +118,14 @@ if lflake:
     apc = np.array(poscar0.cartesian())
     apc_distance = np.linalg.norm(apc-center, axis=1)
 
-if ldef: # contains a defect
+    radius = r_max + 10
+    apc = apc - center + np.array([radius, radius, radius])
+    center = np.array([radius, radius, radius])
+    poscar0.ap = (apc*(1/radius/2.0)).tolist()
+    poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
+    poscar0.Ndim = 0
+
+if ldef: # create a defect
 
     defect = re.findall(r'[A-Z][a-z]?', sys.argv[2])
     if len(defect) not in [2, 4]:
