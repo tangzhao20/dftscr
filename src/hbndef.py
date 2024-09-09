@@ -39,7 +39,7 @@ if sys.argv[1] == "flake":
     lflake = True
     del sys.argv[1]
     r_max = float(sys.argv[1])
-    N = math.ceil(r_max/poscar0.lc[1][1])*2
+    N = math.ceil(r_max / poscar0.lc[1][1]) * 2
     print("supercell: "+str(N)+", "+str(N)+", 1")
     poscar0.supercell([N, N, 1])
 else:
@@ -53,24 +53,19 @@ ldef = False
 if len(sys.argv) >= 3: # contains a defect
     ldef = True
 
-center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc) # center for Ndim=2
+center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc) # center for Ndim = 2
 apc = np.array(poscar0.cartesian())
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
 if lflake:
-    ia = 0
-    for itype in range(poscar0.Ntype):
-        Naint = poscar0.Naint[itype]
-        if poscar0.atomtype[itype] == "B":
-            apc_b = apc[ia:ia+Naint]
-            apc_b_distance = np.linalg.norm(apc_b-center, axis=1)
-        if poscar0.atomtype[itype] == "N":
-            apc_n = apc[ia:ia+Naint]
-            apc_n_distance = np.linalg.norm(apc_n-center, axis=1)
-        ia += Naint
+    apc_b = apc[:N**2]
+    apc_b_distance = apc_distance[:N**2]
+    apc_n = apc[N**2:]
+    apc_n_distance = apc_distance[N**2:]
 
-    neighbor_b = np.array([[-3.0**0.5*0.5, -0.5, 0.0], [3.0**0.5*0.5, -0.5, 0.0], [0.0, 1.0, 0.0]])
-    neighbor_n = np.array([[-3.0**0.5*0.5, 0.5, 0.0], [3.0**0.5*0.5, 0.5, 0.0], [0.0, -1.0, 0.0]])
+    const = 3.0**0.5*0.5
+    neighbor_b = np.array([[-const, -0.5, 0.0], [const, -0.5, 0.0], [0.0, 1.0, 0.0]])
+    neighbor_n = np.array([[-const, 0.5, 0.0], [const, 0.5, 0.0], [0.0, -1.0, 0.0]])
 
     find_n = np.repeat(apc_b, 3, axis=0).reshape(-1, 3, 3) + neighbor_b*bond_b_n
     find_b = np.repeat(apc_n, 3, axis=0).reshape(-1, 3, 3) + neighbor_n*bond_b_n
@@ -79,9 +74,9 @@ if lflake:
     find_b_distance = np.linalg.norm(find_b-np.vstack([center] * 3), axis=2)
 
     apc_h = []
-    for ia0 in range(poscar0.Naint[1]-1, -1, -1): 
+    for ia0 in range(N**2-1, -1, -1): 
         # N atoms
-        ia = ia0 + poscar0.Naint[0]
+        ia = ia0 + N**2
         if apc_n_distance[ia0] > r_max:
             poscar0.delete_atom(ia)
         else:
@@ -94,7 +89,7 @@ if lflake:
             if sum(in_range) == 1:
                 poscar0.delete_atom(ia)
                 apc_h.append(apc_n[ia0] + neighbor_n[in_range.index(1)]*(bond_b_n-bond_b_h))
-    for ia0 in range(poscar0.Naint[0]-1, -1, -1):
+    for ia0 in range(N**2-1, -1, -1):
         # B atoms
         if apc_b_distance[ia0] > r_max:
             poscar0.delete_atom(ia0)
@@ -152,9 +147,6 @@ if ldef: # create a defect
             poscar0.delete_atom(n)
         else:
             poscar0.replace_atom(n, defect_atoms["N"], add_to_head=True)
-
-    apc = np.array(poscar0.cartesian())
-    apc_distance = np.linalg.norm(apc-center, axis=1)
 
 if not lflake:
     poscar0.move([-0.5, -0.5, 0])

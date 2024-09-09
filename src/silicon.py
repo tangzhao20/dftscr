@@ -5,147 +5,101 @@
 # 2. select the atoms inside of the sphere
 # 3. add hydrogen atoms
 
+# python3 silicon.py r
+
+# where r is the radius in angstrom.
+
 import sys
+import os
+import math
+import numpy as np
 from classes import Poscar
 
-radius=float(sys.argv[1])
+this_dir, this_filename = os.path.split(__file__)
+silicon_structure = os.path.join(this_dir, "..", "data", "structures", "silicon.vasp")
+poscar0 = Poscar()
+poscar0.read_vasp(silicon_structure)
+bond_si_si = poscar0.lc[0][1]*3.0**0.5/2.0
+bond_si_h = 1.46 # need a reference
 
-si_a0=[[0.0,0.0,0.0],[0.0,0.5,0.5],[0.5,0.0,0.5],[0.5,0.5,0.0]] # the site-A silicon atoms at (0,0,0)
-si_b0=[[0.25,0.25,0.25],[0.25,0.75,0.75],[0.75,0.25,0.75],[0.75,0.75,0.25]] # the site-B silicon atoms at (1/4,1/4,1/4)
-#si_a0=[[-0.125,-0.125,-0.125],[-0.125,0.375,0.375],[0.375,-0.125,0.375],[0.375,0.375,-0.125]] # the site-A silicon atoms at (-1/8,-1/8,-1/8)
-#si_b0=[[0.125,0.125,0.125],[0.125,0.625,0.625],[0.625,0.125,0.625],[0.625,0.625,0.125]] # the site-B silicon atoms at (1/8,1/8,1/8)
-H=[] # hydrogen
+if len(sys.argv) < 2:
+    print("Need input:")
+    print(" python3 silicon.py r") 
+r_max = float(sys.argv[1])
+N = math.ceil(r_max / (poscar0.lc[0][1]*2.0/3.0**0.5)) * 2
+print("supercell: "+str(N)+", "+str(N)+", "+str(N))
+poscar0.supercell([N, N, N])
 
-#lc=5.431020511 # Ang, lenc
-lc=5.43
-lc_4=lc/4
-si_h_4=1.46/3**0.5
+center = np.array([0.5, 0.5, 0.5]) @ np.array(poscar0.lc) # center for Ndim = 3
+apc = np.array(poscar0.cartesian())
+apc_distance = np.linalg.norm(apc-center, axis=1)
 
-Ncell=int(radius/lc)+1
+apc_si1 = apc[:N**3]
+apc_si1_distance = apc_distance[:N**3]
+apc_si2 = apc[N**3:]
+apc_si2_distance = apc_distance[N**3:]
 
-# Set up the Si supercell
-si_a2=[]
-si_b2=[]
-for i0 in range(-Ncell,Ncell+1) :
-    for i1 in range(-Ncell,Ncell+1) :
-        for i2 in range(-Ncell,Ncell+1) :
-            for j in range(4) :
-                si_a2.append([(si_a0[j][0]+i0)*lc,(si_a0[j][1]+i1)*lc,(si_a0[j][2]+i2)*lc])
-                si_b2.append([(si_b0[j][0]+i0)*lc,(si_b0[j][1]+i1)*lc,(si_b0[j][2]+i2)*lc])
+const = 3.0**(-0.5) 
+neighbor_si1 = np.array([[const, const, const], [const, -const, -const], [-const, const, -const], [-const, -const, const]])
+neighbor_si2 = np.array([[-const, -const, -const], [-const, const, const], [const, -const, const], [const, const, -const]])
 
-# Remove Si atoms from outside the sphere
-si_a=[]
-for si in si_a2 :
-    if si[0]**2+si[1]**2+si[2]**2 <= radius**2 :
-        si_a.append(si)
-si_b=[]
-for si in si_b2 :
-    if si[0]**2+si[1]**2+si[2]**2 <= radius**2 :
-        si_b.append(si)
+find_si2 = np.repeat(apc_si1, 4, axis=0).reshape(-1, 4, 3) + neighbor_si1*bond_si_si
+find_si1 = np.repeat(apc_si2, 4, axis=0).reshape(-1, 4, 3) + neighbor_si2*bond_si_si
 
-# setup Si-Si bonds
-# -1: no atom, i: the ith atom in the other list
-si_a_bond=[] # (+++,+--,-+-,--+)
-for ia in range(len(si_a)) :
-    si_a_bond.append([-1]*4)
-si_b_bond=[] # (---,-++,+-+,++-)
-for ia in range(len(si_b)) :
-    si_b_bond.append([-1]*4)
+find_si2_distance = np.linalg.norm(find_si2-np.vstack([center] * 4), axis=2)
+find_si1_distance = np.linalg.norm(find_si1-np.vstack([center] * 4), axis=2)
 
-for i1 in range(len(si_a)) :
-    for i2 in range(len(si_b)) :
-        if max(abs(si_b[i2][0]-si_a[i1][0]-lc_4), abs(si_b[i2][1]-si_a[i1][1]-lc_4), abs(si_b[i2][2]-si_a[i1][2]-lc_4))<=1e-6 :
-            si_a_bond[i1][0]=i2
-            si_b_bond[i2][0]=i1
-        elif max(abs(si_b[i2][0]-si_a[i1][0]-lc_4), abs(si_b[i2][1]-si_a[i1][1]+lc_4), abs(si_b[i2][2]-si_a[i1][2]+lc_4))<=1e-6 :
-            si_a_bond[i1][1]=i2
-            si_b_bond[i2][1]=i1
-        elif max(abs(si_b[i2][0]-si_a[i1][0]+lc_4), abs(si_b[i2][1]-si_a[i1][1]-lc_4), abs(si_b[i2][2]-si_a[i1][2]+lc_4))<=1e-6 :
-            si_a_bond[i1][2]=i2
-            si_b_bond[i2][2]=i1
-        elif max(abs(si_b[i2][0]-si_a[i1][0]+lc_4), abs(si_b[i2][1]-si_a[i1][1]+lc_4), abs(si_b[i2][2]-si_a[i1][2]-lc_4))<=1e-6 :
-            si_a_bond[i1][3]=i2
-            si_b_bond[i2][3]=i1
+apc_h = []
+for ia0 in range(N**3-1, -1, -1):
+    # Si 2
+    ia = ia0 + N**3
+    if apc_si2_distance[ia0] > r_max:
+        poscar0.delete_atom(ia)
+    else:
+        in_range = [0, 0, 0, 0]
+        for ia1 in range(4):
+            if find_si1_distance[ia0][ia1] < r_max + 1e-6:
+                in_range[ia1] = 1
+        if sum(in_range) == 2 or sum(in_range) == 3:
+            for ia1 in range(4):
+                if in_range[ia1] == 0:
+                    apc_h.append(apc_si2[ia0] + neighbor_si2[ia1]*bond_si_h)
+        if sum(in_range) == 1:
+            poscar0.delete_atom(ia)
+            apc_h.append(apc_si2[ia0] + neighbor_si2[in_range.index(1)]*(bond_si_si-bond_si_h))
+for ia0 in range(N**3-1, -1, -1):
+    # Si 1
+    if apc_si1_distance[ia0] > r_max:
+        poscar0.delete_atom(ia0)
+    else:
+        in_range = [0, 0, 0, 0]
+        for ia1 in range(4):
+            if find_si2_distance[ia0][ia1] < r_max + 1e-6:
+                in_range[ia1] = 1
+        if sum(in_range) == 2 or sum(in_range) == 3:
+            for ia1 in range(4):
+                if in_range[ia1] == 0:
+                    apc_h.append(apc_si1[ia0] + neighbor_si1[ia1]*bond_si_h)
+        if sum(in_range) == 1:
+            poscar0.delete_atom(ia0)
+            apc_h.append(apc_si1[ia0] + neighbor_si1[in_range.index(1)]*(bond_si_si-bond_si_h))
 
-# Remove Si atoms with only 1 Si-Si bond
-while True :
-    fsingle=False
-    nneib=[0]*len(si_a)
-    inew=[-1]*len(si_a)
-    ilog=0
-    for i1 in range(len(si_a)) :
-        for j in range(4) :
-            if si_a_bond[i1][j]!=-1 :
-                nneib[i1]+=1
-        if nneib[i1]<=1 :
-            fsingle=True
-        else :
-            inew[i1]=ilog
-            ilog+=1
-    for i1 in range(len(si_b)) :
-        for j in range(4) :
-            if si_b_bond[i1][j]>=0 :
-                si_b_bond[i1][j]=inew[si_b_bond[i1][j]]
-    si_a=[si_a[i1] for i1 in range(len(si_a)) if nneib[i1]>1 ]
-    si_a_bond=[si_a_bond[i1] for i1 in range(len(si_a_bond)) if nneib[i1]>1 ]
+ap_h = (np.array(apc_h) @ np.linalg.inv(np.array(poscar0.lc))).tolist()
+new_type = "H"
+for ia in range(len(apc_h)):
+    poscar0.add_atom(1, ap_h[ia], new_type=new_type, add_to_head=False)
+    new_type = None
 
-    nneib=[0]*len(si_b)
-    inew=[-1]*len(si_b)
-    ilog=0
-    for i1 in range(len(si_b)) :
-        for j in range(4) :
-            if si_b_bond[i1][j]!=-1 :
-                nneib[i1]+=1
-        if nneib[i1]<=1 :
-            fsingle=True
-        else :
-            inew[i1]=ilog
-            ilog+=1
-    for i1 in range(len(si_a)) :
-        for j in range(4) :
-            if si_a_bond[i1][j]>=0 :
-                si_a_bond[i1][j]=inew[si_a_bond[i1][j]]
-    si_b=[si_b[i1] for i1 in range(len(si_b)) if nneib[i1]>1 ]
-    si_b_bond=[si_b_bond[i1] for i1 in range(len(si_b_bond)) if nneib[i1]>1 ]
-    if fsingle==False :
-        break
+apc = np.array(poscar0.cartesian())
+apc_distance = np.linalg.norm(apc-center, axis=1)
 
-# Add H atoms
-for ia in range(len(si_a)) :
-    if si_a_bond[ia][0]==-1 :
-        H.append([si_a[ia][0]+si_h_4, si_a[ia][1]+si_h_4, si_a[ia][2]+si_h_4])
-    if si_a_bond[ia][1]==-1 :
-        H.append([si_a[ia][0]+si_h_4, si_a[ia][1]-si_h_4, si_a[ia][2]-si_h_4])
-    if si_a_bond[ia][2]==-1 :
-        H.append([si_a[ia][0]-si_h_4, si_a[ia][1]+si_h_4, si_a[ia][2]-si_h_4])
-    if si_a_bond[ia][3]==-1 :
-        H.append([si_a[ia][0]-si_h_4, si_a[ia][1]-si_h_4, si_a[ia][2]+si_h_4])
-for ia in range(len(si_b)) :
-    if si_b_bond[ia][0]==-1 :
-        H.append([si_b[ia][0]-si_h_4, si_b[ia][1]-si_h_4, si_b[ia][2]-si_h_4])
-    if si_b_bond[ia][1]==-1 :
-        H.append([si_b[ia][0]-si_h_4, si_b[ia][1]+si_h_4, si_b[ia][2]+si_h_4])
-    if si_b_bond[ia][2]==-1 :
-        H.append([si_b[ia][0]+si_h_4, si_b[ia][1]-si_h_4, si_b[ia][2]+si_h_4])
-    if si_b_bond[ia][3]==-1 :
-        H.append([si_b[ia][0]+si_h_4, si_b[ia][1]+si_h_4, si_b[ia][2]-si_h_4])
+radius = r_max + 10
+apc = apc - center + np.array([radius, radius, radius])
+center = np.array([radius, radius, radius])
+poscar0.ap = (apc*(1/radius/2.0)).tolist()
+poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
+poscar0.Ndim = 0
 
-# write to file
-poscar1=Poscar()
-poscar1.title="Si_r="+str(radius)+"A"
-lc_big=2*radius+10
-poscar1.lc=[[lc_big,0,0],[0,lc_big,0],[0,0,lc_big]]
-poscar1.Natom=len(si_a)+len(si_b)+len(H)
-poscar1.Ntype=2
-poscar1.atomtype=["Si","H"]
-poscar1.Naint=[len(si_a)+len(si_b),len(H)]
-for a in si_a :
-    poscar1.ap.append([a[0]/lc_big+0.5,a[1]/lc_big+0.5,a[2]/lc_big+0.5])
-for a in si_b :
-    poscar1.ap.append([a[0]/lc_big+0.5,a[1]/lc_big+0.5,a[2]/lc_big+0.5])
-for a in H :
-    poscar1.ap.append([a[0]/lc_big+0.5,a[1]/lc_big+0.5,a[2]/lc_big+0.5])
-poscar1.movetobox()
-print(" raidus "+str(radius)+" A  Si "+str(poscar1.Naint[0])+" H "+str(poscar1.Naint[1]))
-poscar1.write_vasp("Si"+str(poscar1.Naint[0])+"H"+str(poscar1.Naint[1])+".vasp")
+print(" radius "+str(r_max)+" A  Si "+str(poscar0.Naint[0])+" H "+str(poscar0.Naint[1]))
+poscar0.write_vasp("Si"+str(poscar0.Naint[0])+"H"+str(poscar0.Naint[1])+".vasp")
 
