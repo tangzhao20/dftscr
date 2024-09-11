@@ -113,7 +113,7 @@ if lflake:
     apc = np.array(poscar0.cartesian())
     apc_distance = np.linalg.norm(apc-center, axis=1)
 
-    radius = r_max + 10
+    radius = r_max + 5
     apc = apc - center + np.array([radius, radius, radius])
     center = np.array([radius, radius, radius])
     poscar0.ap = (apc*(1/radius/2.0)).tolist()
