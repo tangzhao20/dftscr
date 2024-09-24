@@ -6,7 +6,7 @@
 # Input: afm.in
 #
 if [[ "$1" == "remove" ]]; then
-    rm manual_*.dat parsec_st_*.dat steps.dat toten.dat sbatch.log
+    rm manual_*.dat parsec_st_*.dat steps.dat toten.dat sbatch.log afm.vasp
     exit
 fi
 
@@ -52,11 +52,11 @@ if [[ "$1" == "seq" ]]; then
             cat ../parsec.in.head > parsec.in
             echo "" >> parsec.in
             echo "#---------output from afm.sh----------" >> parsec.in
-            echo "Potential_Field: .TRUE." >> parsec.in
-            echo "Potential_Field_Name: s_pot.dat" >> parsec.in
-            echo "Kinetic_Energy_Functional: pb" >> parsec.in
+            echo "potential_field  .TRUE." >> parsec.in
+            echo "potential_field_name  s_pot.dat" >> parsec.in
+            echo "kinetic_energy_functional pb" >> parsec.in
             echo "" >> parsec.in
-            echo "Minimization manual" >> parsec.in
+            echo "minimization manual" >> parsec.in
             STEP=`awk -v j=$j 'NR==j {print}' ../steps.dat`
             echo "movement_num  $((STEP-1))" >> parsec.in
             echo "" >> parsec.in

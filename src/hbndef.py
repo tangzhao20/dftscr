@@ -35,22 +35,35 @@ if len(sys.argv) < 2:
     print(" python3 hbndef.py flake r (defect)")
     sys.exit()
 
-if sys.argv[1] == "flake":
+if "flake" in sys.argv:
     lflake = True
-    del sys.argv[1]
-    r_max = float(sys.argv[1])
+    sys.argv.remove("flake")
+    for word in sys.argv:
+        try:
+            float(word)
+            r_max = float(word)
+            sys.argv.remove(word)
+            break
+        except ValueError:
+            pass
     N = math.ceil(r_max / poscar0.lc[1][1]) * 2
     print("supercell: "+str(N)+", "+str(N)+", 1")
     poscar0.supercell([N, N, 1])
 else:
     lflake = False
-    N = int(sys.argv[1])
+    for word in sys.argv:
+        try:
+            int(word)
+            N = int(word)
+            sys.argv.remove(word)
+            break
+        except ValueError:
+            pass
     print("supercell: "+str(N)+", "+str(N)+", 1")
     poscar0.supercell([N, N, 1])
     poscar0.move([0.5, 0.5, 0])
-    poscar0.write_vasp()
 ldef = False
-if len(sys.argv) >= 3: # contains a defect
+if len(sys.argv) >= 2: # contains a defect
     ldef = True
 
 center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc) # center for Ndim = 2
@@ -122,7 +135,7 @@ if lflake:
 
 if ldef: # create a defect
 
-    defect = re.findall(r'[A-Z][a-z]?', sys.argv[2])
+    defect = re.findall(r'[A-Z][a-z]?', sys.argv[1])
     if len(defect) not in [2, 4]:
         # Maybe this is not necessary?
         print("Error: Only single or double site defects are recognized here")
@@ -153,10 +166,11 @@ if not lflake:
 
 filename = "hbn_"
 if lflake:
-    filename += "flake_"
-filename += sys.argv[1]
+    filename += "flake_" + str(r_max)
+else:
+    filename += str(N)
 if ldef:
-    filename += "_" + sys.argv[2]
+    filename += "_" + sys.argv[1]
 filename += ".vasp"
 
 poscar0.write_vasp(filename)

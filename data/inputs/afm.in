@@ -11,6 +11,7 @@ y_range -9.3 9.3
 # z_spacing 0.3
 
 # boundary 15.568814
+# vacuum 5.0
 
 parallel 8
 

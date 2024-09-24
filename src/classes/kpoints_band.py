@@ -171,7 +171,7 @@ class KpointsBand:
 
     def write_parsec(self, filename="parsec_kpath.dat"):
         f1=open(filename,"w")
-        f1.write("begin Bandstruc\n")
+        f1.write("begin bandstruc\n")
         ih2=1
         for p in self.xlabels :
             for ih in range(len(p)-1) :
@@ -182,8 +182,8 @@ class KpointsBand:
                     f1.write(f"{self.kpdict[p[ih+1]][ix]:12.8f}")
                 f1.write(" "+p[ih]+"-"+p[ih+1]+"\n")
                 ih2+=1
-        f1.write("end Bandstruc\n")
-        f1.write("Bandstruc_Points 40\n\n")
+        f1.write("end bandstruc\n")
+        f1.write("bandstruc_points 40\n\n")
         f1.close()
             
 #########################################################################

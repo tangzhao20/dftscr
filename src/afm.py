@@ -22,6 +22,7 @@ y_spacing=0.6
 z_spacing=0.3
 z_range=[5.7,6.3]
 boundary=-1e0
+vacuum = 5.0
 lfdet=False
 lspin=False
 
@@ -49,6 +50,8 @@ for l in line :
         boundary=float(word[1])
         if len(word)>2 and word[2][0] in ["a","A"] :
             boundary=boundary/bohr
+    elif word[0] == "vacuum":
+        vacuum = float(word[1])
     elif word[0]=="parallel" :
         parallel=int(word[1])
     elif word[0]=="fdet" :
@@ -229,7 +232,7 @@ if boundary<0 :
                     boundary=max(boundary,(a[0]+x_range[ix])**2+(a[1]+y_range[iy])**2+(a[2]+z_range[1])**2)
         for a in apc2 :
             boundary=max(boundary,a[0]**2+a[1]**2+a[2]**2)
-        boundary=boundary**0.5+10.0
+        boundary = boundary**0.5 + vacuum
 
     elif poscar2.Ndim==2 :
         boundary_min=1e6
@@ -244,13 +247,13 @@ if boundary<0 :
             apc1[ia][2]-=z_move
         for ia in range(poscar2.Natom) :
             apc2[ia][2]-=z_move
-        boundary=0.5*(boundary_max-boundary_min)+10.0
+        boundary = 0.5*(boundary_max-boundary_min) + vacuum
 else : # Calculate the z_move, make the bottom at 10 bohr from boundary
     if poscar2.Ndim==2 :
         boundary_min=1e6
         for a in apc2 :
             boundary_min=min(boundary_min,a[2])
-        z_move=boundary_min-(-boundary+10.0)
+        z_move = boundary_min - (-boundary + vacuum)
         for ia in range(poscar1.Natom) :
             apc1[ia][2]-=z_move
         for ia in range(poscar2.Natom) :
@@ -406,7 +409,11 @@ if lvasp:
         poscar3.read_parsec("parsec_st_1_1.dat")
     pi = load_constant("pi")
     rlc3 = poscar3.rlc()
-    ap1 = ((np.array(apc1) + np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2]))*bohr @ np.array(rlc3) / (2*pi) + [0.0, 0.0, 0.5]).tolist()
+    if poscar2.Ndim == 0:
+        shift = [0.5, 0.5, 0.5]
+    elif poscar2.Ndim == 2:
+        shift = [0.0, 0.0, 0.5]
+    ap1 = ((np.array(apc1) + np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2]))*bohr @ np.array(rlc3) / (2*pi) + shift).tolist()
     if lfdet:
         ia = 0
         for itype in range(poscar1.Ntype):
