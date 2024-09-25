@@ -242,99 +242,101 @@ class Poscar:
 
     def read_parsec(self, filename=""):
 
-        if filename=="" :
-            filename="parsec.in"
+        if filename == "":
+            filename = "parsec.in"
 
-        bohr=load_constant("bohr")
+        bohr = load_constant("bohr")
 
-        f1=open(filename,"r")
-        line=f1.readlines()
+        f1 = open(filename, "r")
+        line = f1.readlines()
         f1.close()
 
-        self.Ndim=0
+        self.Ndim = 0
         for il in range(len(line)):
-            word=line[il].replace(":"," ").replace("="," ").split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+            word = line[il].replace(":", " ").replace("=", " ").split()
+            if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
-            if word[0].lower()=="boundary_conditions" :
-                if word[1].lower()=="slab" :
-                    self.Ndim=2
+            if word[0].lower() == "boundary_conditions":
+                if word[1].lower() == "slab":
+                    self.Ndim = 2
                     break
-                if word[1].lower()=="bulk" :
-                    self.Ndim=3
+                if word[1].lower() == "bulk":
+                    self.Ndim = 3
                     break
 
-        Fat=False
-        Flc=False
-        self.lc=[[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]
-        factor_lc=bohr
+        Fat = False
+        Flc = False
+        self.lc = [[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]]
+        factor_lc = bohr
         for il in range(len(line)):
-            word=line[il].replace(":"," ").replace("="," ").split()
-            if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+            word = line[il].replace(":", " ").replace("=", " ").split()
+            if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
-            if len(word)>=2 and word[0].lower()=="begin" and word[1].lower()=="atom_coord" :
-                Fat=True
-                rlc=np.linalg.inv(np.array(self.lc)).tolist()
+            if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "atom_coord":
+                Fat = True
+                rlc = np.linalg.inv(np.array(self.lc)).tolist()
                 continue
-            if len(word)>=2 and word[0].lower()=="end" and word[1].lower()=="atom_coord" :
-                Fat=False
+            if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "atom_coord":
+                Fat = False
                 continue
-            if len(word)>=2 and word[0].lower()=="begin" and word[1].lower()=="cell_shape" :
-                Flc=True
+            if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "cell_shape":
+                Flc = True
                 ilc=0
                 continue
-            if len(word)>=2 and word[0].lower()=="end" and word[1].lower()=="cell_shape" :
-                Flc=False
+            if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "cell_shape":
+                Flc = False
                 continue
-            if word[0].lower()=="boundary_sphere_radius": 
-                alat=float(word[1])*bohr*2.0 # in Bohr here
-                if self.Ndim==0 :
-                    self.lc[0][0]=alat
-                    self.lc[1][1]=alat
-                    self.lc[2][2]=alat
-                elif self.Ndim==2 :
-                    self.lc[2][2]=alat
-            if word[0].lower()=="lattice_vector_scale" :
-                factor_lc=float(word[1])
-                if len(word)<3 or word[2].lower()!="ang" :
-                    factor_lc=factor_lc*bohr
-            if word[0].lower()=="atom_types_num" :
-                self.Ntype=int(word[1])
-            if word[0].lower()=="atom_type" :
+            if word[0].lower() == "boundary_sphere_radius":
+                alat = float(word[1]) * 2.0 # in Bohr here
+                if len(word) < 3 or word[2].lower() != "ang":
+                    alat = alat * bohr
+                if self.Ndim == 0:
+                    self.lc[0][0] = alat
+                    self.lc[1][1] = alat
+                    self.lc[2][2] = alat
+                elif self.Ndim == 2:
+                    self.lc[2][2] = alat
+            if word[0].lower() == "lattice_vector_scale":
+                factor_lc = float(word[1])
+                if len(word) < 3 or word[2].lower() != "ang":
+                    factor_lc = factor_lc * bohr
+            if word[0].lower() == "atom_types_num":
+                self.Ntype = int(word[1])
+            if word[0].lower() == "atom_type":
                 self.atomtype.append(word[1])
                 self.Naint.append(0)
-            if word[0].lower()=="coordinate_unit" :
-                if word[1].lower()=="cartesian_ang" :
-                    lcart=True
-                    factor_ap=1.0
-                elif word[1].lower()=="lattice_vectors" :
-                    lcart=False
-                    factor_ap=1.0
+            if word[0].lower() == "coordinate_unit":
+                if word[1].lower() == "cartesian_ang":
+                    lcart = True
+                    factor_ap = 1.0
+                elif word[1].lower() == "lattice_vectors":
+                    lcart = False
+                    factor_ap = 1.0
                 else : # cartesian_bohr
-                    lcart=True
-                    factor_ap=bohr
-            if Flc==True :
-                for ix in range(3) :
-                    self.lc[ilc][ix]=float(word[ix])*factor_lc
-                ilc+=1
-            if Fat==True :
+                    lcart = True
+                    factor_ap = bohr
+            if Flc:
+                for ix in range(3):
+                    self.lc[ilc][ix] = float(word[ix]) * factor_lc
+                ilc += 1
+            if Fat:
                 ap=[]
-                for ix in range(3) :
+                for ix in range(3):
                     ap.append(float(word[ix])*factor_ap)
                 self.ap.append(ap)
-                self.Naint[-1]+=1
-                self.Natom+=1
-        if lcart :
-            self.ap=(np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
-        if self.Ndim==0 :
-            shift=[0.5,0.5,0.5]
-        elif self.Ndim==2 :
-            shift=[0.0,0.0,0.5]
-        else : # bulk
-            shift=[0.0,0.0,0.0]
-        for ia in range(self.Natom) :
-            for ix in range(3) :
-                self.ap[ia][ix]+=shift[ix]
+                self.Naint[-1] += 1
+                self.Natom += 1
+        if lcart:
+            self.ap = (np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
+        if self.Ndim == 0:
+            shift = [0.5, 0.5, 0.5]
+        elif self.Ndim == 2:
+            shift = [0.0, 0.0, 0.5]
+        else: # bulk
+            shift=[0.0, 0.0, 0.0]
+        for ia in range(self.Natom):
+            for ix in range(3):
+                self.ap[ia][ix] += shift[ix]
 
     def read_xyz(self, filename=""):
 

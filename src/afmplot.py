@@ -274,9 +274,11 @@ if latom :
     color_dict=load_atom_color()
     poscar1=Poscar()
     poscar1.read_parsec(filename="sample.parsec_st.dat")
+    print(str(poscar1))
     # poscar1 is modified here. If a feature needs to keep poscar1, use copy.
     poscar1.supercell([2,2,1])
-    poscar1.move([-0.5,-0.5,0],lbox=False)
+    if poscar1.Ndim == 2:
+        poscar1.move([-0.5,-0.5,0],lbox=False)
     apc=poscar1.cartesian()
     atom=poscar1.atom_list()
     
@@ -317,19 +319,19 @@ if latom :
 ax0.set_xlim([x_range[0]/funit,x_range[1]/funit])
 ax0.set_ylim([y_range[0]/funit,y_range[1]/funit])
 if lbohr :
-    ax0.set_xlabel("$\mathit{x}\ (Bohr)$",color=palette["black"])
-    ax0.set_ylabel("$\mathit{y}\ (Bohr)$",color=palette["black"])
+    ax0.set_xlabel(r"$\mathit{x}\ (Bohr)$",color=palette["black"])
+    ax0.set_ylabel(r"$\mathit{y}\ (Bohr)$",color=palette["black"])
 else :
-    ax0.set_xlabel("$\mathit{x}\ (Å)$",color=palette["black"])
-    ax0.set_ylabel("$\mathit{y}\ (Å)$",color=palette["black"])
+    ax0.set_xlabel(r"$\mathit{x}\ (Å)$",color=palette["black"])
+    ax0.set_ylabel(r"$\mathit{y}\ (Å)$",color=palette["black"])
 
 cb=fig.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
 if lbohr :
-    ax1.set_ylabel("$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
+    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
 else :
-    ax1.set_ylabel("$\mathit{k}_{ts}\ (eV/Å^2)$",color=palette["black"])
+    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$",color=palette["black"])
 
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
 ax0.tick_params(axis="y", left=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
