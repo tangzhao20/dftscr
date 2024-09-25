@@ -274,11 +274,10 @@ if latom :
     color_dict=load_atom_color()
     poscar1=Poscar()
     poscar1.read_parsec(filename="sample.parsec_st.dat")
-    print(str(poscar1))
     # poscar1 is modified here. If a feature needs to keep poscar1, use copy.
-    poscar1.supercell([2,2,1])
     if poscar1.Ndim == 2:
-        poscar1.move([-0.5,-0.5,0],lbox=False)
+        poscar1.supercell([2, 2, 1])
+        poscar1.move([-0.5, -0.5, 0], lbox=False)
     apc=poscar1.cartesian()
     atom=poscar1.atom_list()
     
