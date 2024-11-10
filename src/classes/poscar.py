@@ -579,6 +579,9 @@ class Poscar:
         f2.close()
 
     def write_xyz(self, filename="structure.xyz"):
+
+        self.Ndim = 0
+
         f2=open(filename,"w")
         f2.write(str(self.Natom)+"\n\n")
         it1=0

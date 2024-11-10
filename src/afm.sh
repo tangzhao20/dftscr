@@ -38,7 +38,7 @@ if [[ "$1" == "seq" ]]; then
         cat ../parsec.in.head > parsec.in
         echo "" >> parsec.in
         cat ../parsec_st_spot.dat >> parsec.in
-        cat ../job.sh | sed "s/%%jobname%%/a_spot/g" > job.sh
+        cat ../job.sh | sed "s/%%jobname%%/a_spot/g" | sed "/s_pot.dat/s/^/#/" > job.sh
         cd ..
     fi
 
