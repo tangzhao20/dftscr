@@ -48,6 +48,21 @@ else :
     print("python3 posconvert.py package1 package2 (filename1)")
     sys.exit()
 
+# read the Ndim
+for iw in range(len(sys.argv)-1, -1, -1):
+    if sys.argv[iw] in ["0d", "molecule", "cluster"]:
+        poscar1.Ndim = 0
+        del sys.argv[iw]
+    elif sys.argv[iw] in ["1d", "wire"]:
+        poscar1.Ndim = 1
+        del sys.argv[iw]
+    elif sys.argv[iw] in ["2d", "slab"]:
+        poscar1.Ndim = 2
+        del sys.argv[iw]
+    elif sys.argv[iw] in ["3d", "bulk"]:
+        poscar1.Ndim = 3
+        del sys.argv[iw]
+
 # read the file posconvert.in if it exists, then do some operations here
 files = os.listdir()
 if "posconvert.in" in files:
@@ -105,22 +120,13 @@ elif package2 in package_name['parsec']:
     lcart = False
     Ndim = -1
     for iw in range(len(sys.argv)-1, -1, -1):
-        if sys.argv[iw].startswith("molecule") or sys.argv[iw].startswith("cluster") or sys.argv[iw].startswith("0d"):
-            Ndim = 0
-            del sys.argv[iw]
-        elif sys.argv[iw].startswith("slab") or sys.argv[iw].startswith("2d"):
-            Ndim = 2
-            del sys.argv[iw]
-        elif sys.argv[iw].startswith("bulk") or sys.argv[iw].startswith("3d"):
-            Ndim = 3
-            del sys.argv[iw]
-        elif sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr"):
+        if sys.argv[iw].startswith("bohr") or sys.argv[iw].startswith("Bohr"):
             lbohr = True
             del sys.argv[iw]
         elif sys.argv[iw].startswith("cart") or sys.argv[iw].startswith("Cart"):
             lcart = True
             del sys.argv[iw]
-    poscar1.write_parsec(lcartesian = lcart, lbohr = lbohr, Ndim = Ndim)
+    poscar1.write_parsec(lcartesian = lcart, lbohr = lbohr)
 elif package2 in package_name['wannier90']:
     poscar1.write_wannier90()
 elif package2 in package_name['xyz']:

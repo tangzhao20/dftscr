@@ -335,8 +335,8 @@ for iz in range(nz) :
 
             f2.write("kpoint_method mp\n\n")
             f2.write("begin monkhorst_pack_grid\n")
-            for ix in range(2) :
-                kgrid=math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
+            for ix in range(self.Ndim):
+                kgrid = math.ceil(30.0/(np.linalg.norm(poscar2.lc[ix])))
                 f2.write(f"  {kgrid:d}")
             f2.write("\nend monkhorst_pack_grid\n\n")
             f2.write("begin monkhorst_pack_shift\n")
