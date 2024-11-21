@@ -34,7 +34,7 @@ poscar1 = Poscar()
 if package1 in package_name["vasp"]:
     poscar1.read_vasp(filename1)
 elif package1 in package_name['qe']:
-   poscar1.read_qe(filename1)
+    poscar1.read_qe(filename1)
 elif package1 in package_name['qexml']:
     poscar1.read_xml(filename1)
 elif package1 in package_name['prt']:
@@ -43,7 +43,7 @@ elif package1 in package_name['parsec']:
     poscar1.read_parsec(filename1)
 elif package1 in package_name['xyz']:
     poscar1.read_xyz(filename1)
-else :
+else:
     print("Package "+package1+" input is not supported yet.")
     print("python3 posconvert.py package1 package2 (filename1)")
     sys.exit()
@@ -69,7 +69,7 @@ if "posconvert.in" in files:
     f1 = open("posconvert.in", "r")
     line = f1.readlines()
     f1.close()
-    for l in line :
+    for l in line:
         word = l.split()
         if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
             continue
@@ -81,18 +81,18 @@ if "posconvert.in" in files:
                 lcart = True
                 word.remove("cart")
             disp = [float(word[1]), float(word[2]), float(word[3])]
-            poscar1.move(disp = disp, lcart = lcart)
+            poscar1.move(disp=disp, lcart=lcart)
         elif word[0] == "rotate":
             theta = float(word[1])
-            poscar1.rotate(theta = theta)
+            poscar1.rotate(theta=theta)
         elif word[0] == "flip":
             poscar1.flip()
         elif word[0] == "supercell":
-            N=[int(word[1]), int(word[2]), int(word[3])]
-            poscar1.supercell(N = N)
+            N = [int(word[1]), int(word[2]), int(word[3])]
+            poscar1.supercell(N=N)
         elif word[0] == "vacuum":
             z_vac = float(word[1])
-            poscar1.vacuum(z_vac = z_vac)
+            poscar1.vacuum(z_vac=z_vac)
         elif word[0] == "add_atom":
             new_type = word[1]
             ap = [float(word[2]), float(word[3]), float(word[4])]
@@ -101,17 +101,17 @@ if "posconvert.in" in files:
                 new_type = None
             else:
                 itype = poscar1.Ntype
-            poscar1.add_atom(itype = itype, ap = ap, new_type = new_type)
+            poscar1.add_atom(itype=itype, ap=ap, new_type=new_type)
         elif word[0] == "delete_atom":
             ia = int(word[1])
-            poscar1.delete_atom(ia = ia)
+            poscar1.delete_atom(ia=ia)
         else:
             print("Warning: in posconvert.in, keyword "+word[0]+" is not supported yet")
 
 # write poscar
 if package2 in package_name["vasp"]:
     poscar1.write_vasp()
-elif  package2 in package_name['qe']:
+elif package2 in package_name['qe']:
     poscar1.write_qe()
 elif package2 in package_name['prt']:
     poscar1.write_prt()
@@ -126,13 +126,12 @@ elif package2 in package_name['parsec']:
         elif sys.argv[iw].startswith("cart") or sys.argv[iw].startswith("Cart"):
             lcart = True
             del sys.argv[iw]
-    poscar1.write_parsec(lcartesian = lcart, lbohr = lbohr)
+    poscar1.write_parsec(lcartesian=lcart, lbohr=lbohr)
 elif package2 in package_name['wannier90']:
     poscar1.write_wannier90()
 elif package2 in package_name['xyz']:
     poscar1.write_xyz()
-else :
+else:
     print("Package "+package2+" output is not supported yet.")
     print("python3 posconvert.py package1 package2")
     sys.exit()
-

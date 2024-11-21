@@ -30,4 +30,3 @@ apc = np.array(poscar1.cartesian())
 dis = np.linalg.norm(apc[ia1, :] - apc[ia2, :])
 
 print(f"{dis:10.5f}")
-

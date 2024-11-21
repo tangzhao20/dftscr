@@ -28,7 +28,7 @@ if package in package_name["vasp"]:
     # Input: EIGENVAL
     # TODO: test VASP
     eigenval1.read_vasp()
-    
+
 elif package in package_name["qe"]:
     # Input: *.xml
     eigenval1.read_qexml()
@@ -44,7 +44,7 @@ else:
 
 if eigenval1.is_semic == True:
     eigenval1.eigshift(eigenval1.vbm)
-else :
+else:
     if package in package_name["qe"]:
         doscar1 = Doscar()
         doscar1.read_xml()
@@ -71,7 +71,7 @@ if len(sys.argv) >= 4:
 elif len(sys.argv) == 3:
     ymax = float(sys.argv[2])
     ymin = -float(sys.argv[2])
-else :
+else:
     ymax = 5.0
     ymin = -5.0
 
@@ -98,7 +98,8 @@ for ispin in range(eigenval1.Ns):
             linestyle = "solid"
         else:
             linestyle = "dashed"
-        ax[ispin].axhline(y=eigenval1.eig[ik_gamma][ib][ispin], linestyle=linestyle, linewidth=1, color=palette[linecolor[ispin]], zorder=2)
+        ax[ispin].axhline(y=eigenval1.eig[ik_gamma][ib][ispin], linestyle=linestyle,
+                          linewidth=1, color=palette[linecolor[ispin]], zorder=2)
 
 outputname = "eig0.png"
 
@@ -108,7 +109,8 @@ for ispin in range(eigenval1.Ns):
     ax[ispin].set_xlim(0, 1)
     ax[ispin].set_xticks([])
     ax[ispin].tick_params(axis="x", direction="in", length=0)
-    ax[ispin].tick_params(axis="y", left=False, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax[ispin].tick_params(axis="y", left=False, right=False, direction="in",
+                          color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
     if ispin != 0:
         ax[ispin].yaxis.set_ticklabels([])
     for edge in ["bottom", "top", "left", "right"]:
@@ -119,4 +121,3 @@ ax[0].tick_params(axis="y", left=True)
 ax[-1].tick_params(axis="y", right=True)
 
 fig.savefig(outputname, dpi=1200)
-

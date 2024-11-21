@@ -6,7 +6,7 @@
 from classes import Poscar
 import sys
 
-poscar1=Poscar()
+poscar1 = Poscar()
 poscar1.read_vasp()
 
 poscar1.flip()

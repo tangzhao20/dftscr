@@ -10,14 +10,14 @@
 from classes import Poscar
 import sys
 
-poscar1=Poscar()
+poscar1 = Poscar()
 poscar1.read_vasp()
 
-if len(sys.argv)<4 :
+if len(sys.argv) < 4:
     print("too few argv")
     print("expand by n1 n2 n3")
     sys.exit()
-N=[int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3])]
+N = [int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])]
 
 poscar1.supercell(N)
 

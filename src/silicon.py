@@ -20,17 +20,17 @@ silicon_structure = os.path.join(this_dir, "..", "data", "structures", "silicon.
 poscar0 = Poscar()
 poscar0.read_vasp(silicon_structure)
 bond_si_si = poscar0.lc[0][1]*3.0**0.5/2.0
-bond_si_h = 1.46 # need a reference
+bond_si_h = 1.46  # need a reference
 
 if len(sys.argv) < 2:
     print("Need input:")
-    print(" python3 silicon.py r") 
+    print(" python3 silicon.py r")
 r_max = float(sys.argv[1])
 N = math.ceil(r_max / (poscar0.lc[0][1]*2.0/3.0**0.5)) * 2
 print("supercell: "+str(N)+", "+str(N)+", "+str(N))
 poscar0.supercell([N, N, N])
 
-center = np.array([0.5, 0.5, 0.5]) @ np.array(poscar0.lc) # center for Ndim = 3
+center = np.array([0.5, 0.5, 0.5]) @ np.array(poscar0.lc)  # center for Ndim = 3
 apc = np.array(poscar0.cartesian())
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
@@ -39,9 +39,11 @@ apc_si1_distance = apc_distance[:N**3]
 apc_si2 = apc[N**3:]
 apc_si2_distance = apc_distance[N**3:]
 
-const = 3.0**(-0.5) 
-neighbor_si1 = np.array([[const, const, const], [const, -const, -const], [-const, const, -const], [-const, -const, const]])
-neighbor_si2 = np.array([[-const, -const, -const], [-const, const, const], [const, -const, const], [const, const, -const]])
+const = 3.0**(-0.5)
+neighbor_si1 = np.array([[const, const, const], [const, -const, -const],
+                        [-const, const, -const], [-const, -const, const]])
+neighbor_si2 = np.array([[-const, -const, -const], [-const, const, const],
+                        [const, -const, const], [const, const, -const]])
 
 find_si2 = np.repeat(apc_si1, 4, axis=0).reshape(-1, 4, 3) + neighbor_si1*bond_si_si
 find_si1 = np.repeat(apc_si2, 4, axis=0).reshape(-1, 4, 3) + neighbor_si2*bond_si_si
@@ -102,4 +104,3 @@ poscar0.Ndim = 0
 
 print(" radius "+str(r_max)+" A  Si "+str(poscar0.Naint[0])+" H "+str(poscar0.Naint[1]))
 poscar0.write_vasp("Si"+str(poscar0.Naint[0])+"H"+str(poscar0.Naint[1])+".vasp")
-

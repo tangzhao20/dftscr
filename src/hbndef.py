@@ -8,7 +8,7 @@
 # or generate h-BN flake structures by:
 #  python3 hbndef.py flake r (defect)
 
-# N defines the size of the supercell, r defines the radius of the h-BN flake. 
+# N defines the size of the supercell, r defines the radius of the h-BN flake.
 # (defect) is the name of the defect in h-BN, such as CBVN.
 # Use correct capitalization of atomic symbols.
 
@@ -63,10 +63,10 @@ else:
     poscar0.supercell([N, N, 1])
     poscar0.move([0.5, 0.5, 0])
 ldef = False
-if len(sys.argv) >= 2: # contains a defect
+if len(sys.argv) >= 2:  # contains a defect
     ldef = True
 
-center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc) # center for Ndim = 2
+center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc)  # center for Ndim = 2
 apc = np.array(poscar0.cartesian())
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
@@ -87,7 +87,7 @@ if lflake:
     find_b_distance = np.linalg.norm(find_b-np.vstack([center] * 3), axis=2)
 
     apc_h = []
-    for ia0 in range(N**2-1, -1, -1): 
+    for ia0 in range(N**2-1, -1, -1):
         # N atoms
         ia = ia0 + N**2
         if apc_n_distance[ia0] > r_max:
@@ -117,7 +117,7 @@ if lflake:
                 poscar0.delete_atom(ia0)
                 apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(1)]*(bond_b_n-bond_n_h))
 
-    ap_h = ((np.array(apc_h) @ np.linalg.inv(np.array(poscar0.lc))) + np.array([0.0,0.0,0.5])).tolist()
+    ap_h = ((np.array(apc_h) @ np.linalg.inv(np.array(poscar0.lc))) + np.array([0.0, 0.0, 0.5])).tolist()
     new_type = "H"
     for ia in range(len(apc_h)):
         poscar0.add_atom(2, ap_h[ia], new_type=new_type, add_to_head=False)
@@ -133,7 +133,7 @@ if lflake:
     poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
     poscar0.Ndim = 0
 
-if ldef: # create a defect
+if ldef:  # create a defect
 
     defect = re.findall(r'[A-Z][a-z]?', sys.argv[1])
     if len(defect) not in [2, 4]:
@@ -176,5 +176,3 @@ filename += ".vasp"
 poscar0.write_vasp(filename)
 
 print(str(poscar0))
-
-

@@ -13,342 +13,349 @@ import matplotlib.pyplot as plt
 import scipy
 import numpy as np
 
-bohr=load_constant("bohr")
-rydberg=load_constant("rydberg")
-Ha=rydberg*2.0
-electron=load_constant("electron")
-angstrom=load_constant("angstrom")
+bohr = load_constant("bohr")
+rydberg = load_constant("rydberg")
+Ha = rydberg*2.0
+electron = load_constant("electron")
+angstrom = load_constant("angstrom")
 
-latom=False
-if "atom" in sys.argv :
-    latom=True
+latom = False
+if "atom" in sys.argv:
+    latom = True
     sys.argv.remove("atom")
-lbohr=False
-if "bohr" in sys.argv :
-    lbohr=True
+lbohr = False
+if "bohr" in sys.argv:
+    lbohr = True
     sys.argv.remove("bohr")
-ltilt=False
-if "tilt" in sys.argv :
-    ltilt=True
+ltilt = False
+if "tilt" in sys.argv:
+    ltilt = True
     sys.argv.remove("tilt")
-icenter=1
-for word in sys.argv :
-    if word.isnumeric() :
-        icenter=int(word)-1
+icenter = 1
+for word in sys.argv:
+    if word.isnumeric():
+        icenter = int(word)-1
         sys.argv.remove(word)
 
 # ==================== read the input file ====================
 x_spacing = 0.6
 y_spacing = 0.6
 z_spacing = 0.3
-z_range = [5.7,6.3]
+z_range = [5.7, 6.3]
 parallel = 1
-k_spring = 0.8 # k in N/m
-k_spring = k_spring * angstrom**2/electron # convert spring constant to eV/A^2
+k_spring = 0.8  # k in N/m
+k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 
-f1=open("afm.in","r")
-line=f1.readlines()
+f1 = open("afm.in", "r")
+line = f1.readlines()
 f1.close()
-for l in line :
-    word=l.split()
-    if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+for l in line:
+    word = l.split()
+    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
         continue
-    if word[0]=="x_range" :
-        x_range=[float(word[1]),float(word[2])]
-    elif word[0]=="y_range" :
-        y_range=[float(word[1]),float(word[2])]
-    elif word[0]=="z_range" :
-        z_range=[float(word[1]),float(word[2])]
-    elif word[0]=="x_spacing" :
-        x_spacing=float(word[1])
-    elif word[0]=="y_spacing" :
-        y_spacing=float(word[1])
-    elif word[0]=="z_spacing" :
-        z_spacing=float(word[1])
-    elif word[0]=="parallel" :
-        parallel=int(word[1])
-    elif word[0]=="k_spring" :
-        k_spring=float(word[1])
+    if word[0] == "x_range":
+        x_range = [float(word[1]), float(word[2])]
+    elif word[0] == "y_range":
+        y_range = [float(word[1]), float(word[2])]
+    elif word[0] == "z_range":
+        z_range = [float(word[1]), float(word[2])]
+    elif word[0] == "x_spacing":
+        x_spacing = float(word[1])
+    elif word[0] == "y_spacing":
+        y_spacing = float(word[1])
+    elif word[0] == "z_spacing":
+        z_spacing = float(word[1])
+    elif word[0] == "parallel":
+        parallel = int(word[1])
+    elif word[0] == "k_spring":
+        k_spring = float(word[1])
     elif word[0] in ["fdet", "boundary", "spin"]:
         pass
-    else :
+    else:
         print("Warning: keyword \""+word[0]+"\" is not defined.")
 
 
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
 z_spacing = z_spacing * bohr
-x_range = [ x_range[0] * bohr, x_range[1] * bohr ]
-y_range = [ y_range[0] * bohr, y_range[1] * bohr ]
-z_range = [ z_range[0] * bohr, z_range[1] * bohr ]
+x_range = [x_range[0] * bohr, x_range[1] * bohr]
+y_range = [y_range[0] * bohr, y_range[1] * bohr]
+z_range = [z_range[0] * bohr, z_range[1] * bohr]
 
 # ==================== prepare the x and y coordinates ====================
 
-x=x_range[0]
-nx=0
-xlist=[]
-while (x<x_range[1]+1e-6) :
+x = x_range[0]
+nx = 0
+xlist = []
+while (x < x_range[1]+1e-6):
     xlist.append(x)
-    x+=x_spacing
-    nx+=1
-y=y_range[0]
-ny=0
-ylist=[]
-while (y<y_range[1]+1e-6) :
+    x += x_spacing
+    nx += 1
+y = y_range[0]
+ny = 0
+ylist = []
+while (y < y_range[1]+1e-6):
     ylist.append(y)
-    y+=y_spacing
-    ny+=1
-z=z_range[0]
-nz=0
-zlist=[]
-while (z<z_range[1]+1e-6) :
+    y += y_spacing
+    ny += 1
+z = z_range[0]
+nz = 0
+zlist = []
+while (z < z_range[1]+1e-6):
     zlist.append(z)
-    z+=z_spacing
-    nz+=1
+    z += z_spacing
+    nz += 1
 
-f3=open("steps.dat","r")
-line=f3.readlines()
+f3 = open("steps.dat", "r")
+line = f3.readlines()
 f3.close()
-steplist=[]
-for l in line :
-    word=l.split()
-    if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+steplist = []
+for l in line:
+    word = l.split()
+    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
         continue
     steplist.append(int(word[0]))
 
-lxincrease=True
-k=0
-ip=0
+lxincrease = True
+k = 0
+ip = 0
 # movelist here is the index (ix,iy) of each point
-movelist=[]
-for iy in range(ny) :
-    if lxincrease :
-        for ix in range(nx) :
-            if k==0 :
+movelist = []
+for iy in range(ny):
+    if lxincrease:
+        for ix in range(nx):
+            if k == 0:
                 movelist.append([])
-            movelist[-1].append([ix,iy])
-            k+=1
-            if k==steplist[ip] :
-                ip+=1
-                k=0
-    else :
-        for ix in range(nx-1,-1,-1) :
-            if k==0 :
+            movelist[-1].append([ix, iy])
+            k += 1
+            if k == steplist[ip]:
+                ip += 1
+                k = 0
+    else:
+        for ix in range(nx-1, -1, -1):
+            if k == 0:
                 movelist.append([])
-            movelist[-1].append([ix,iy])
-            k+=1
-            if k==steplist[ip] :
-                ip+=1
-                k=0
-    lxincrease=not lxincrease
+            movelist[-1].append([ix, iy])
+            k += 1
+            if k == steplist[ip]:
+                ip += 1
+                k = 0
+    lxincrease = not lxincrease
 
 # ==================== calculate or read toten ====================
 
 files = os.listdir()
 # if the toten.dat exist, read it, if not, read from calculations outputs
-if "toten.dat" in files :
-    f5=open("toten.dat","r")
-    line=f5.readlines()
+if "toten.dat" in files:
+    f5 = open("toten.dat", "r")
+    line = f5.readlines()
     f5.close()
-    il=1
-    toten=[]
-    for iz in range(nz) :
-        toten1=[]
-        for iy in range(ny) :
-            toten0=[]
-            for ix in range(nx) :
+    il = 1
+    toten = []
+    for iz in range(nz):
+        toten1 = []
+        for iy in range(ny):
+            toten0 = []
+            for ix in range(nx):
                 toten0.append(float(line[il].split()[3]))
-                il+=1
+                il += 1
             toten1.append(toten0)
         toten.append(toten1)
 
 else:
     # initialize toten matrix
     # toten[nz][ny][nx] in Ry
-    toten=[]
-    for iz in range(nz) :
-        toten0=[]
-        for iy in range(ny) :
+    toten = []
+    for iz in range(nz):
+        toten0 = []
+        for iy in range(ny):
             toten0.append([0.0]*nx)
         toten.append(toten0)
 
-    for iz in range(nz) :
-        for ip in range(parallel) :
-            istep=-1
-            filename="seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
-            f1=open(filename,"r")
-            line=f1.readlines()
+    for iz in range(nz):
+        for ip in range(parallel):
+            istep = -1
+            filename = "seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
+            f1 = open(filename, "r")
+            line = f1.readlines()
             f1.close()
-            
-            for l in line: 
-                word=l.split()
-                if len(word)==0 or word[0][0]=="#" or word[0][0]=="!" :
+
+            for l in line:
+                word = l.split()
+                if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                     continue
-                if len(word)>=2 and word[0]=="Starting" and word[1]=="SCF..." :
-                    istep+=1
-                if len(word)>=5 and word[0]=="Total" and word[1]=="Energy" and word[2]=="=" :
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]]=float(word[3])*rydberg # convert Ry to eV
-    
+                if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
+                    istep += 1
+                if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
+                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep]
+                                                      [0]] = float(word[3])*rydberg  # convert Ry to eV
+
     # write the toten file
-    f5=open("toten.dat","w")
+    f5 = open("toten.dat", "w")
     f5.write("#ix iy iz toten(eV)\n")
-    for iz in range(nz) :
-        for iy in range(ny) :
-            for ix in range(nx) :
+    for iz in range(nz):
+        for iy in range(ny):
+            for ix in range(nx):
                 f5.write(str(ix+1)+" "+str(iy+1)+" "+str(iz+1)+" "+str(toten[iz][iy][ix])+"\n")
     f5.close()
 
 # ==================== caclulate forces for tilt correction ====================
 
-if ltilt :
-    fx=[] # fx[ny][nx]
-    fy=[] # fy[ny][nx]
-    for iy in range(ny) :
-        fx0=[0.0]*nx
+if ltilt:
+    fx = []  # fx[ny][nx]
+    fy = []  # fy[ny][nx]
+    for iy in range(ny):
+        fx0 = [0.0]*nx
         fx.append(fx0)
-        fy0=[0.0]*nx
+        fy0 = [0.0]*nx
         fy.append(fy0)
-    for iy in range(ny) :
-        for ix in range(nx) :
-            if ix!=0 and ix!=nx-1 :
-                fx[iy][ix]=(toten[icenter][iy][ix-1]-toten[icenter][iy][ix+1])*0.5/x_spacing
-            #elif ix==0 :
+    for iy in range(ny):
+        for ix in range(nx):
+            if ix != 0 and ix != nx-1:
+                fx[iy][ix] = (toten[icenter][iy][ix-1]-toten[icenter][iy][ix+1])*0.5/x_spacing
+            # elif ix==0 :
             #    fx[iy][ix]=(toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
-            #elif ix==nx-1 :
+            # elif ix==nx-1 :
             #    fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
-            if iy!=0 and iy!=ny-1 :
-                fy[iy][ix]=(toten[icenter][iy-1][ix]-toten[icenter][iy+1][ix])*0.5/y_spacing
-            #elif iy==0 :
+            if iy != 0 and iy != ny-1:
+                fy[iy][ix] = (toten[icenter][iy-1][ix]-toten[icenter][iy+1][ix])*0.5/y_spacing
+            # elif iy==0 :
             #    fy[iy][ix]=(toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
-            #elif iy==ny-1 :
+            # elif iy==ny-1 :
             #    fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
 
-    xy_new=[] # xy_new[ny][nx][2]
-    for iy in range(ny) :
-        xy_new0=[]
-        for ix in range(nx) :
+    xy_new = []  # xy_new[ny][nx][2]
+    for iy in range(ny):
+        xy_new0 = []
+        for ix in range(nx):
             xy_new0.append([ylist[iy] + fy[iy][ix] / k_spring, xlist[ix] + fx[iy][ix] / k_spring])
         xy_new.append(xy_new0)
 
     # create 2d map from toten
-    toten_2d=[]
-    for iz in range(nz) :
+    toten_2d = []
+    for iz in range(nz):
         toten_2d0 = scipy.interpolate.RectBivariateSpline(ylist, xlist, toten[iz])
         toten_2d.append(toten_2d0)
 
 # ==================== caclulate kts ====================
 
-kts=[]
-if ltilt :
-    for iy in range(ny) :
-        kts0=[]
-        for ix in range(nx) :
-            y_new=xy_new[iy][ix][0]
-            x_new=xy_new[iy][ix][1]
-            #kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
-            kts1=(toten_2d[icenter-1](y_new,x_new)[0,0]-2*toten_2d[icenter](y_new,x_new)[0,0]+toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
-            if lbohr :
+kts = []
+if ltilt:
+    for iy in range(ny):
+        kts0 = []
+        for ix in range(nx):
+            y_new = xy_new[iy][ix][0]
+            x_new = xy_new[iy][ix][1]
+            # kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
+            kts1 = (toten_2d[icenter-1](y_new, x_new)[0, 0]-2*toten_2d[icenter](y_new, x_new)
+                    [0, 0]+toten_2d[icenter+1](y_new, x_new)[0, 0])/z_spacing**2
+            if lbohr:
                 # convert k_ts from eV/A^2 to Ha/a0^2
                 kts1 = kts1 * bohr**2/Ha
             kts0.append(kts1)
         kts.append(kts0)
-else :
-    for iy in range(ny) :
-        kts0=[]
-        for ix in range(nx) :
-            #kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
-            kts1=(toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
-            if lbohr :
+else:
+    for iy in range(ny):
+        kts0 = []
+        for ix in range(nx):
+            # kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
+            kts1 = (toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
+            if lbohr:
                 # convert k_ts from eV/A^2 to Ha/a0^2
                 kts1 = kts1 * bohr**2/Ha
             kts0.append(kts1)
         kts.append(kts0)
 
 # ==================== construct the atomic structure ====================
-palette=load_palette()
-if lbohr :
-    funit=bohr
-else : 
-    funit=1.0
-if latom :
-    color_dict=load_atom_color()
-    poscar1=Poscar()
+palette = load_palette()
+if lbohr:
+    funit = bohr
+else:
+    funit = 1.0
+if latom:
+    color_dict = load_atom_color()
+    poscar1 = Poscar()
     poscar1.read_parsec(filename="sample.parsec_st.dat")
     # poscar1 is modified here. If a feature needs to keep poscar1, use copy.
     if poscar1.Ndim == 2:
         poscar1.supercell([2, 2, 1])
         poscar1.move([-0.5, -0.5, 0], lbox=False)
-    apc=poscar1.cartesian()
-    atom=poscar1.atom_list()
-    
-    zmax=-1e6
-    for ia in range(len(apc)) :
-        zmax=max(zmax,apc[ia][2])
+    apc = poscar1.cartesian()
+    atom = poscar1.atom_list()
 
-    atom_x=[]
-    atom_y=[]
-    atom_color=[]
-    edge_color=[]
-    for ia in range(len(apc)) :
-        if apc[ia][2] > zmax-1.0 :
+    zmax = -1e6
+    for ia in range(len(apc)):
+        zmax = max(zmax, apc[ia][2])
+
+    atom_x = []
+    atom_y = []
+    atom_color = []
+    edge_color = []
+    for ia in range(len(apc)):
+        if apc[ia][2] > zmax-1.0:
             atom_x.append(apc[ia][0]/funit)
             atom_y.append(apc[ia][1]/funit)
             atom_color.append(palette[color_dict[atom[ia]]])
-            if color_dict[atom[ia]].startswith("dark") or color_dict[atom[ia]]=="black" :
+            if color_dict[atom[ia]].startswith("dark") or color_dict[atom[ia]] == "black":
                 edge_color.append(palette["white"])
-            else :
+            else:
                 edge_color.append(palette["black"])
 
 # ==================== creating the plot ====================
-mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
+mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 mpl.rcParams.update({'mathtext.default': 'regular'})
 
-fig=plt.figure(figsize=(5,3.75))
-gs0=fig.add_gridspec(1,2,wspace=0.02,hspace=0.00,left=0.14,right=0.80,top=0.95,bottom=0.15,width_ratios=[0.6,0.04])
-[ax0,ax1]=gs0.subplots()
+fig = plt.figure(figsize=(5, 3.75))
+gs0 = fig.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
+                       top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
+[ax0, ax1] = gs0.subplots()
 
-im_extent=[x_range[0]-x_spacing*0.5,x_range[1]+x_spacing*0.5,y_range[0]-y_spacing*0.5,y_range[1]+y_spacing*0.5]
-for ic in range(len(im_extent)) :
-    im_extent[ic]=im_extent[ic]/funit
-im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r", origin="lower", extent=im_extent, aspect='equal', zorder=1)
+im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
+for ic in range(len(im_extent)):
+    im_extent[ic] = im_extent[ic]/funit
+im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r",
+                origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
-if latom :
-    ax0.scatter(atom_x,atom_y,c=atom_color,s=12,edgecolors=edge_color,linewidths=1,zorder=3)
-ax0.set_xlim([x_range[0]/funit,x_range[1]/funit])
-ax0.set_ylim([y_range[0]/funit,y_range[1]/funit])
-if lbohr :
-    ax0.set_xlabel(r"$\mathit{x}\ (Bohr)$",color=palette["black"])
-    ax0.set_ylabel(r"$\mathit{y}\ (Bohr)$",color=palette["black"])
-else :
-    ax0.set_xlabel(r"$\mathit{x}\ (Å)$",color=palette["black"])
-    ax0.set_ylabel(r"$\mathit{y}\ (Å)$",color=palette["black"])
+if latom:
+    ax0.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=1, zorder=3)
+ax0.set_xlim([x_range[0]/funit, x_range[1]/funit])
+ax0.set_ylim([y_range[0]/funit, y_range[1]/funit])
+if lbohr:
+    ax0.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
+    ax0.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
+else:
+    ax0.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
+    ax0.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
 
-cb=fig.colorbar(im, cax=ax1, orientation='vertical')
+cb = fig.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
-if lbohr :
-    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$",color=palette["black"])
-else :
-    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$",color=palette["black"])
+if lbohr:
+    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
+else:
+    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
 
-ax0.tick_params(axis="x", bottom=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax0.tick_params(axis="y", left=True, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax1.tick_params(axis="x", bottom=False, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax1.tick_params(axis="y", left=False, right=True, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-for edge in ["bottom", "top", "left", "right"] :
+ax0.tick_params(axis="x", bottom=True, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax0.tick_params(axis="y", left=True, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax1.tick_params(axis="x", bottom=False, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax1.tick_params(axis="y", left=False, right=True, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+for edge in ["bottom", "top", "left", "right"]:
     ax0.spines[edge].set_color(palette["black"])
     ax0.spines[edge].set_linewidth(1)
     ax0.spines[edge].set_zorder(4)
 
-filename="afm"
-if ltilt :
-    filename+="_tilt"
-if latom :
-    filename+="_atom"
-if lbohr :
-    filename+="_bohr"
-filename+="_"+str(icenter+1)
-filename+=".png"
-fig.savefig(filename,dpi=1200)
-
+filename = "afm"
+if ltilt:
+    filename += "_tilt"
+if latom:
+    filename += "_atom"
+if lbohr:
+    filename += "_bohr"
+filename += "_"+str(icenter+1)
+filename += ".png"
+fig.savefig(filename, dpi=1200)

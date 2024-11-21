@@ -7,9 +7,9 @@
 from classes import Poscar
 import sys
 
-theta=float(sys.argv[1])
+theta = float(sys.argv[1])
 
-poscar1=Poscar()
+poscar1 = Poscar()
 poscar1.read_vasp()
 
 poscar1.rotate(theta=theta)

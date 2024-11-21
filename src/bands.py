@@ -14,80 +14,80 @@ from load_data import load_package_name, load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-fsecond=False
+fsecond = False
 
-if len(sys.argv)<=1 :
+if len(sys.argv) <= 1:
     print("python bands.py package (Emin) (Emax)")
     sys.exit()
-package=sys.argv[1]
+package = sys.argv[1]
 
-package_name=load_package_name()
+package_name = load_package_name()
 
-poscar1=Poscar()
-eigenval1=Eigenval()
-kpoints1=KpointsBand()
+poscar1 = Poscar()
+eigenval1 = Eigenval()
+kpoints1 = KpointsBand()
 
-if package in package_name["vasp"]+package_name["vaspproj"] : 
+if package in package_name["vasp"]+package_name["vaspproj"]:
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
     # TODO: test VASP
 
     poscar1.read_vasp()
-    rlc=poscar1.rlc()
-    
+    rlc = poscar1.rlc()
+
     eigenval1.read_vasp()
 
     kpoints1.read_vasp()
-    
-    if eigenval1.is_semic==True :
+
+    if eigenval1.is_semic == True:
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
-    else :
-        doscar1=Doscar()
+    else:
+        doscar1 = Doscar()
         doscar1.read_vasp()
         eigenval1.eigshift(doscar1.ef)
-    
-    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
-    energy=eigenval1.eigtrans()
-    
-    xticks=kpoints1.xticks_out(rlc)
-    xlabels=kpoints1.xlabels_out()
 
-elif package in package_name["qe"]+package_name["qeproj"] :
+    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    energy = eigenval1.eigtrans()
+
+    xticks = kpoints1.xticks_out(rlc)
+    xlabels = kpoints1.xlabels_out()
+
+elif package in package_name["qe"]+package_name["qeproj"]:
     # Input: *.xml, kpath.in
     # No need to run bands.x
 
     poscar1.read_xml()
-    rlc=poscar1.rlc()
-    
+    rlc = poscar1.rlc()
+
     eigenval1.read_qexml()
-    
+
     kpoints1.read_kpathin()
-    
-    if eigenval1.is_semic==True :
+
+    if eigenval1.is_semic == True:
         eigenval1.eigshift(eigenval1.vbm)
         eigenval1.writegap(kpoints1)
-    else :
-        doscar1=Doscar()
+    else:
+        doscar1 = Doscar()
         doscar1.read_xml()
         eigenval1.eigshift(doscar1.ef)
-    
-    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
-    energy=eigenval1.eigtrans()
-    
-    xticks=kpoints1.xticks_out(rlc)
-    xlabels=kpoints1.xlabels_out()
 
-elif package in package_name["wannier90"] :
+    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    energy = eigenval1.eigtrans()
+
+    xticks = kpoints1.xticks_out(rlc)
+    xlabels = kpoints1.xlabels_out()
+
+elif package in package_name["wannier90"]:
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
     # Only semiconductors are supported
 
     poscar1.read_qe("nscf.in")
-    rlc=poscar1.rlc()
+    rlc = poscar1.rlc()
 
-    pad=0
-    for w in sys.argv :
-        if w.startswith("pad=") :
-            pad=int(w.split("=")[1])
+    pad = 0
+    for w in sys.argv:
+        if w.startswith("pad="):
+            pad = int(w.split("=")[1])
             sys.argv.remove(w)
             break
 
@@ -99,63 +99,63 @@ elif package in package_name["wannier90"] :
     files = os.listdir("../bands")
     for f in files:
         if f.endswith('.xml'):
-            filename=f
-            fsecond=True
+            filename = f
+            fsecond = True
             break
 
-    if fsecond :
-        eigenval2=Eigenval()
+    if fsecond:
+        eigenval2 = Eigenval()
         eigenval2.read_qexml("../bands/"+filename)
 
         eigenval2.gap()
         eigenval2.eigshift(eigenval2.vbm)
-        if eigenval2.is_semic==True :
-            eigenval1.is_semic=True
+        if eigenval2.is_semic == True:
+            eigenval1.is_semic = True
 
-    eigenval1.occ=[]
-    for ik in range(eigenval1.Nk) :
-        occ0=[]
-        for ib in range(eigenval2.Nvb[0]-pad) :
+    eigenval1.occ = []
+    for ik in range(eigenval1.Nk):
+        occ0 = []
+        for ib in range(eigenval2.Nvb[0]-pad):
             occ0.append([1.0])
-        if fsecond :
-           for ib in range(eigenval2.Nvb[0]-pad,eigenval1.Nb) :
-               occ0.append([0.0])
-           eigenval1.occ.append(occ0)
+        if fsecond:
+            for ib in range(eigenval2.Nvb[0]-pad, eigenval1.Nb):
+                occ0.append([0.0])
+            eigenval1.occ.append(occ0)
 
-    if eigenval1.is_semic==True :
+    if eigenval1.is_semic == True:
         eigenval1.gap()
         eigenval1.writegap(kpoints1)
         eigenval1.eigshift(eigenval1.vbm)
-    else : 
+    else:
         print("Metal band structure are not shifted")
 
-    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
-    energy=eigenval1.eigtrans()
+    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    energy = eigenval1.eigtrans()
 
-    xticks=kpoints1.xticks_out(rlc)
-    xlabels=kpoints1.xlabels_out()
+    xticks = kpoints1.xticks_out(rlc)
+    xlabels = kpoints1.xlabels_out()
 
-    if fsecond :
-        x2=eigenval2.bandkpout(kp=kpoints1,rlc=rlc)
-        energy2=eigenval2.eigtrans()
+    if fsecond:
+        x2 = eigenval2.bandkpout(kp=kpoints1, rlc=rlc)
+        energy2 = eigenval2.eigtrans()
 
 
-elif package in package_name["parsec"] :
+elif package in package_name["parsec"]:
     # Input: bands.dat, parsec.in, kpath.in
 
     poscar1.read_parsec()
-    rlc=poscar1.rlc()
+    rlc = poscar1.rlc()
 
     eigenval1.read_parsec()
     eigenval1.kc2kd(poscar1.lc)
-    
+
     kpoints1.read_kpathin()
-    
-    x=eigenval1.bandkpout(kp=kpoints1,rlc=rlc)
-    energy=eigenval1.eigtrans()
-    
-    xticks=kpoints1.xticks_out(rlc)
-    xlabels=kpoints1.xlabels_out()
+
+    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    energy = eigenval1.eigtrans()
+
+    xticks = kpoints1.xticks_out(rlc)
+    xlabels = kpoints1.xlabels_out()
 
 else:
     print("Package \""+package+"\" is not supported yet.")
@@ -165,168 +165,172 @@ else:
 # width is the physical width of each plots
 # Nx is the number of x points in each plots
 # ixl and ixr are the left and right index of each panel, to seperate the bands
-width=[]
-Nx=[]
-ixl=[]
-ixr=[]
-for p in x :
+width = []
+Nx = []
+ixl = []
+ixr = []
+for p in x:
     width.append(max(p))
     Nx.append(len(p))
-    if ixl==[] :
-        ixl=[0]
-    else :
+    if ixl == []:
+        ixl = [0]
+    else:
         ixl.append(ixr[-1])
     ixr.append(ixl[-1]+Nx[-1])
-if fsecond :
-    Nx2=[]
-    ix2l=[]
-    ix2r=[]
-    for p in x2 :
+if fsecond:
+    Nx2 = []
+    ix2l = []
+    ix2r = []
+    for p in x2:
         Nx2.append(len(p))
-        if ix2l==[] :
-            ix2l=[0]
-        else :
+        if ix2l == []:
+            ix2l = [0]
+        else:
             ix2l.append(ix2r[-1])
         ix2r.append(ix2l[-1]+Nx2[-1])
 
-lproj=False
-if package in package_name["vaspproj"]+package_name["qeproj"] :
-    lproj=True
-    if eigenval1.Ns==2 :
+lproj = False
+if package in package_name["vaspproj"]+package_name["qeproj"]:
+    lproj = True
+    if eigenval1.Ns == 2:
         print("Spin polarized projected band structure not supported yet.\n")
         sys.exit()
 
-    procar1=Procar()
-    if package in package_name["vaspproj"] :
+    procar1 = Procar()
+    if package in package_name["vaspproj"]:
         # Input: PROCAR
         procar1.read_vasp()
-    elif package in package_name["qeproj"] :
+    elif package in package_name["qeproj"]:
         # Input: projwfc.out
         procar1.read_qe()
-    
-    atom_list=sys.argv[2]
-    del sys.argv[2]
-    atom_flag=procar1.read_atom_list(atom_list,poscar1)
-    orb_list=sys.argv[2]
-    del sys.argv[2]
-    orb_flag=procar1.read_orb_list(orb_list)
 
-if len(sys.argv)>=4 :
-    ymax=float(sys.argv[3])
-    ymin=float(sys.argv[2])
-elif len(sys.argv)==3 :
-    ymax=float(sys.argv[2])
-    ymin=-float(sys.argv[2])
-else :
-    ymax=5.0
-    ymin=-5.0
+    atom_list = sys.argv[2]
+    del sys.argv[2]
+    atom_flag = procar1.read_atom_list(atom_list, poscar1)
+    orb_list = sys.argv[2]
+    del sys.argv[2]
+    orb_flag = procar1.read_orb_list(orb_list)
 
-palette=load_palette()
-mpl.rcParams["font.sans-serif"].insert(0,"Noto Sans")
+if len(sys.argv) >= 4:
+    ymax = float(sys.argv[3])
+    ymin = float(sys.argv[2])
+elif len(sys.argv) == 3:
+    ymax = float(sys.argv[2])
+    ymin = -float(sys.argv[2])
+else:
+    ymax = 5.0
+    ymin = -5.0
+
+palette = load_palette()
+mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
 
-spinlabel=["spin up","spin down"]
-linecolor=["darkblue","orange"]
+spinlabel = ["spin up", "spin down"]
+linecolor = ["darkblue", "orange"]
 
-fig=plt.figure(figsize=(5,3.75))
-gs0=fig.add_gridspec(1,len(xticks),wspace=0.0,hspace=0.00,left=0.14,right=0.98,top=0.97, bottom=0.07,width_ratios=width[:len(xticks)])
-ax=[]
+fig = plt.figure(figsize=(5, 3.75))
+gs0 = fig.add_gridspec(1, len(xticks), wspace=0.0, hspace=0.00, left=0.14, right=0.98,
+                       top=0.97, bottom=0.07, width_ratios=width[:len(xticks)])
+ax = []
 for ip in range(len(xticks)):
     ax.append(fig.add_subplot(gs0[ip]))
 
-    ax[ip].grid(axis="x",linewidth=1, color=palette["gray"],zorder=0)
-    ax[ip].axhline(linewidth=1,color=palette["gray"],zorder=0)
-    for ispin in range(eigenval1.Ns) :
-        for ib in range(eigenval1.Nb) :
-            if eigenval1.Ns==2 and ib==0 :
-                ax[ip].plot(x[ip],energy[ispin][ib][ixl[ip]:ixr[ip]],color=palette[linecolor[ispin]],label=spinlabel[ispin],linewidth=1,zorder=3-ispin)
-            else :
-                ax[ip].plot(x[ip],energy[ispin][ib][ixl[ip]:ixr[ip]],color=palette[linecolor[ispin]],linewidth=1,zorder=3-ispin)
+    ax[ip].grid(axis="x", linewidth=1, color=palette["gray"], zorder=0)
+    ax[ip].axhline(linewidth=1, color=palette["gray"], zorder=0)
+    for ispin in range(eigenval1.Ns):
+        for ib in range(eigenval1.Nb):
+            if eigenval1.Ns == 2 and ib == 0:
+                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[linecolor[ispin]],
+                            label=spinlabel[ispin], linewidth=1, zorder=3-ispin)
+            else:
+                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]],
+                            color=palette[linecolor[ispin]], linewidth=1, zorder=3-ispin)
 
-outputname="bs.png"
+outputname = "bs.png"
 
-#if eigenval1.Ns==2 :
+# if eigenval1.Ns==2 :
 #    plt.legend()
 
-f3=open("eigenval.dat","w")
-if eigenval1.Ns==2 :
+f3 = open("eigenval.dat", "w")
+if eigenval1.Ns == 2:
     for ib in range(len(energy[0])):
         for ip in range(len(xticks)):
-            ik0=0
+            ik0 = 0
             for ik in range(len(x[ip])):
                 f3.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(energy[1][ib][ik0])+"\n")
-                ik0+=1
+                ik0 += 1
         f3.write("\n")
-else :
+else:
     for ib in range(len(energy[0])):
         for ip in range(len(xticks)):
-            ik0=0
+            ik0 = 0
             for ik in range(len(x[ip])):
                 f3.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+"\n")
-                ik0+=1
+                ik0 += 1
         f3.write("\n")
 f3.close()
 
 # projection plot
 
 if lproj:
-    dot_size=50.0
-    proj_plot_size=procar1.plot(atom_flag,orb_flag,dot_size)
+    dot_size = 50.0
+    proj_plot_size = procar1.plot(atom_flag, orb_flag, dot_size)
     for ip in range(len(xticks)):
         for ib in range(eigenval1.Nb):
-            ax[ip].scatter(x[ip],energy[0][ib][ixl[ip]:ixr[ip]],s=proj_plot_size[ib][ixl[ip]:ixr[ip]],c=palette["orange"],zorder=2)
-    outputname="proj_"+atom_list+"_"+orb_list+".png"
-    
-    f2=open("proj_"+atom_list+"_"+orb_list+".dat","w")
+            ax[ip].scatter(x[ip], energy[0][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ib]
+                           [ixl[ip]:ixr[ip]], c=palette["orange"], zorder=2)
+    outputname = "proj_"+atom_list+"_"+orb_list+".png"
+
+    f2 = open("proj_"+atom_list+"_"+orb_list+".dat", "w")
     f2.write("#k-point energy(eV) pointsize\n")
     for ib in range(eigenval1.Nb):
         for ip in range(len(x)):
-            ik0=0
+            ik0 = 0
             for ik in range(len(x[ip])):
                 f2.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(proj_plot_size[ib][ik0])+"\n")
-                ik0+=1
+                ik0 += 1
         f2.write("\n")
     f2.close()
 
 # second band structure plot (for wannier)
 
-if fsecond :
+if fsecond:
     for ip in range(len(xticks)):
         for ib in range(eigenval2.Nb):
-            ax[ip].plot(x2[ip],energy2[0][ib][ix2l[ip]:ix2r[ip]],color=palette["orange"],linewidth=1,zorder=2)
-    f3=open("eigenval2.dat","w")
+            ax[ip].plot(x2[ip], energy2[0][ib][ix2l[ip]:ix2r[ip]], color=palette["orange"], linewidth=1, zorder=2)
+    f3 = open("eigenval2.dat", "w")
     for ib in range(len(energy2[0])):
         for ip in range(len(xticks)):
-            ik0=0
-            for ik in range(len(x2[ip])) :
+            ik0 = 0
+            for ik in range(len(x2[ip])):
                 f3.write(str(x2[ip][ik])+" "+str(energy2[0][ib][ik0])+" "+"\n")
-                ik0+=1
+                ik0 += 1
         f3.write("\n")
     f3.close()
 
-ax[0].set_ylabel("Energy (eV)",labelpad=-2,color=palette["black"])
+ax[0].set_ylabel("Energy (eV)", labelpad=-2, color=palette["black"])
 for ip in range(len(xticks)):
-    ax[ip].set_ylim(ymin,ymax)
-    ax[ip].set_xlim(xticks[ip][0],xticks[ip][-1])
-    ax[ip].set_xticks(xticks[ip],xlabels[ip],color=palette["black"])
+    ax[ip].set_ylim(ymin, ymax)
+    ax[ip].set_xlim(xticks[ip][0], xticks[ip][-1])
+    ax[ip].set_xticks(xticks[ip], xlabels[ip], color=palette["black"])
     ax[ip].tick_params(axis="x", direction="in", length=0)
-    ax[ip].tick_params(axis="y", left=False, right=False, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-    if ip!=0 :
+    ax[ip].tick_params(axis="y", left=False, right=False, direction="in",
+                       color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    if ip != 0:
         ax[ip].yaxis.set_ticklabels([])
-    for edge in ["bottom", "top", "left", "right"] :
+    for edge in ["bottom", "top", "left", "right"]:
         ax[ip].spines[edge].set_color(palette["black"])
         ax[ip].spines[edge].set_linewidth(1)
         ax[ip].spines[edge].set_zorder(4)
 ax[0].tick_params(axis="y", left=True)
 ax[-1].tick_params(axis="y", right=True)
 
-f4=open("label.dat","w")
+f4 = open("label.dat", "w")
 for ip in range(len(xticks)):
     for ik in range(len(xticks[ip])):
         f4.write(str(xticks[ip][ik])+" "+xlabels[ip][ik]+"\n")
 f4.close()
 
-fig.savefig(outputname,dpi=1200)
-
+fig.savefig(outputname, dpi=1200)
