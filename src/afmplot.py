@@ -74,7 +74,6 @@ for l in line:
     else:
         print("Warning: keyword \""+word[0]+"\" is not defined.")
 
-
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
 z_spacing = z_spacing * bohr
@@ -246,9 +245,8 @@ if ltilt:
         for ix in range(nx):
             y_new = xy_new[iy][ix][0]
             x_new = xy_new[iy][ix][1]
-            # kts1=(0.25*toten_2d[icenter-1](y_new,x_new)[0,0]-0.5*toten_2d[icenter](y_new,x_new)[0,0]+0.25*toten_2d[icenter+1](y_new,x_new)[0,0])/z_spacing**2
-            kts1 = (toten_2d[icenter-1](y_new, x_new)[0, 0]-2*toten_2d[icenter](y_new, x_new)
-                    [0, 0]+toten_2d[icenter+1](y_new, x_new)[0, 0])/z_spacing**2
+            kts1 = (toten_2d[icenter-1](y_new, x_new)[0, 0]-2*toten_2d[icenter](y_new, x_new)[0, 0]
+                    + toten_2d[icenter+1](y_new, x_new)[0, 0])/z_spacing**2
             if lbohr:
                 # convert k_ts from eV/A^2 to Ha/a0^2
                 kts1 = kts1 * bohr**2/Ha
@@ -258,7 +256,6 @@ else:
     for iy in range(ny):
         kts0 = []
         for ix in range(nx):
-            # kts1=(0.25*toten[icenter-1][iy][ix]-0.5*toten[icenter][iy][ix]+0.25*toten[icenter+1][iy][ix])/z_spacing**2
             kts1 = (toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
             if lbohr:
                 # convert k_ts from eV/A^2 to Ha/a0^2

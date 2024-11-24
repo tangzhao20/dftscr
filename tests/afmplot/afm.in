@@ -1,0 +1,15 @@
+# All the unit for lengths are Bohr
+
+x_range -5.1 5.1
+# x_spacing 0.6
+
+y_range -5.1 5.1
+# y_spacing 0.6
+
+z_range 5.7 6.3
+# z_spacing 0.3
+
+parallel 4
+
+fdet true
+# spin true
