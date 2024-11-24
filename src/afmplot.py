@@ -82,7 +82,6 @@ y_range = [y_range[0] * bohr, y_range[1] * bohr]
 z_range = [z_range[0] * bohr, z_range[1] * bohr]
 
 # ==================== prepare the x and y coordinates ====================
-
 x = x_range[0]
 nx = 0
 xlist = []
@@ -105,44 +104,7 @@ while (z < z_range[1]+1e-6):
     z += z_spacing
     nz += 1
 
-f3 = open("steps.dat", "r")
-line = f3.readlines()
-f3.close()
-steplist = []
-for l in line:
-    word = l.split()
-    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
-        continue
-    steplist.append(int(word[0]))
-
-lxincrease = True
-k = 0
-ip = 0
-# movelist here is the index (ix,iy) of each point
-movelist = []
-for iy in range(ny):
-    if lxincrease:
-        for ix in range(nx):
-            if k == 0:
-                movelist.append([])
-            movelist[-1].append([ix, iy])
-            k += 1
-            if k == steplist[ip]:
-                ip += 1
-                k = 0
-    else:
-        for ix in range(nx-1, -1, -1):
-            if k == 0:
-                movelist.append([])
-            movelist[-1].append([ix, iy])
-            k += 1
-            if k == steplist[ip]:
-                ip += 1
-                k = 0
-    lxincrease = not lxincrease
-
 # ==================== calculate or read toten ====================
-
 files = os.listdir()
 # if the toten.dat exist, read it, if not, read from calculations outputs
 if "toten.dat" in files:
@@ -162,8 +124,44 @@ if "toten.dat" in files:
         toten.append(toten1)
 
 else:
+    # Set up AFM scan path
+    f3 = open("steps.dat", "r")
+    line = f3.readlines()
+    f3.close()
+    steplist = []
+    for l in line:
+        word = l.split()
+        if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+            continue
+        steplist.append(int(word[0]))
+    lxincrease = True
+    k = 0
+    ip = 0
+    # movelist here is the index (ix,iy) of each point
+    movelist = []
+    for iy in range(ny):
+        if lxincrease:
+            for ix in range(nx):
+                if k == 0:
+                    movelist.append([])
+                movelist[-1].append([ix, iy])
+                k += 1
+                if k == steplist[ip]:
+                    ip += 1
+                    k = 0
+        else:
+            for ix in range(nx-1, -1, -1):
+                if k == 0:
+                    movelist.append([])
+                movelist[-1].append([ix, iy])
+                k += 1
+                if k == steplist[ip]:
+                    ip += 1
+                    k = 0
+        lxincrease = not lxincrease
+
     # initialize toten matrix
-    # toten[nz][ny][nx] in Ry
+    # toten[nz][ny][nx] in eV
     toten = []
     for iz in range(nz):
         toten0 = []
@@ -186,8 +184,7 @@ else:
                 if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
                     istep += 1
                 if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep]
-                                                      [0]] = float(word[3])*rydberg  # convert Ry to eV
+                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]] = float(word[3])*rydberg
 
     # write the toten file
     f5 = open("toten.dat", "w")
