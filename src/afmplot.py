@@ -46,9 +46,9 @@ parallel = 1
 k_spring = 0.8  # k in N/m
 k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 
-f1 = open("afm.in", "r")
-line = f1.readlines()
-f1.close()
+f0 = open("afm.in", "r")
+line = f0.readlines()
+f0.close()
 for l in line:
     word = l.split()
     if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
@@ -83,91 +83,70 @@ z_range = [z_range[0] * bohr, z_range[1] * bohr]
 
 # ==================== prepare the x and y coordinates ====================
 x = x_range[0]
-nx = 0
-xlist = []
-while (x < x_range[1]+1e-6):
-    xlist.append(x)
-    x += x_spacing
-    nx += 1
+x_grid = np.arange(x_range[0], x_range[1]+1e-6, x_spacing)
+nx = len(x_grid)
+
 y = y_range[0]
-ny = 0
-ylist = []
-while (y < y_range[1]+1e-6):
-    ylist.append(y)
-    y += y_spacing
-    ny += 1
+y_grid = np.arange(y_range[0], y_range[1]+1e-6, y_spacing)
+ny = len(y_grid)
+
 z = z_range[0]
-nz = 0
-zlist = []
-while (z < z_range[1]+1e-6):
-    zlist.append(z)
-    z += z_spacing
-    nz += 1
+z_grid = np.arange(z_range[0], z_range[1]+1e-6, z_spacing)
+nz = len(z_grid)
 
 # ==================== calculate or read toten ====================
+toten = np.zeros((nz, ny, nx))  # in eV
 files = os.listdir()
 # if the toten.dat exist, read it, if not, read from calculations outputs
 if "toten.dat" in files:
-    f5 = open("toten.dat", "r")
-    line = f5.readlines()
-    f5.close()
-    il = 1
-    toten = []
-    for iz in range(nz):
-        toten1 = []
-        for iy in range(ny):
-            toten0 = []
-            for ix in range(nx):
-                toten0.append(float(line[il].split()[3]))
-                il += 1
-            toten1.append(toten0)
-        toten.append(toten1)
+    il = 0
+    with open("toten.dat", "r") as f2:
+        for l in f2:
+            word = l.split()
+            if not word or word[0][0] in ("#", "!"):
+                continue
+            ix, iy, iz = map(int, word[:3])
+            toten[iz-1, iy-1, ix-1] = float(word[3])
+            il += 1
+    if il != nx * ny * nz:
+        print(f"Warning: Expected {nx * ny * nz} data points, but found {il} in toten.dat")
 
 else:
     # Set up AFM scan path
     f3 = open("steps.dat", "r")
     line = f3.readlines()
     f3.close()
-    steplist = []
+    step_list = []
     for l in line:
         word = l.split()
         if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
             continue
-        steplist.append(int(word[0]))
+        step_list.append(int(word[0]))
     lxincrease = True
     k = 0
     ip = 0
     # movelist here is the index (ix,iy) of each point
-    movelist = []
+    scan_path = []
     for iy in range(ny):
         if lxincrease:
             for ix in range(nx):
                 if k == 0:
-                    movelist.append([])
-                movelist[-1].append([ix, iy])
+                    scan_path.append([])
+                scan_path[-1].append([ix, iy])
                 k += 1
-                if k == steplist[ip]:
+                if k == step_list[ip]:
                     ip += 1
                     k = 0
         else:
             for ix in range(nx-1, -1, -1):
                 if k == 0:
-                    movelist.append([])
-                movelist[-1].append([ix, iy])
+                    scan_path.append([])
+                scan_path[-1].append([ix, iy])
                 k += 1
-                if k == steplist[ip]:
+                if k == step_list[ip]:
                     ip += 1
                     k = 0
         lxincrease = not lxincrease
-
-    # initialize toten matrix
-    # toten[nz][ny][nx] in eV
-    toten = []
-    for iz in range(nz):
-        toten0 = []
-        for iy in range(ny):
-            toten0.append([0.0]*nx)
-        toten.append(toten0)
 
     for iz in range(nz):
         for ip in range(parallel):
@@ -184,81 +163,63 @@ else:
                 if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
                     istep += 1
                 if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep][0]] = float(word[3])*rydberg
+                    toten[iz, scan_path[ip][istep][1], scan_path[ip][istep][0]] = float(word[3]) * rydberg
 
     # write the toten file
-    f5 = open("toten.dat", "w")
-    f5.write("#ix iy iz toten(eV)\n")
+    f2 = open("toten.dat", "w")
+    f2.write("#   ix    iy    iz    toten(eV)\n")
     for iz in range(nz):
         for iy in range(ny):
             for ix in range(nx):
-                f5.write(str(ix+1)+" "+str(iy+1)+" "+str(iz+1)+" "+str(toten[iz][iy][ix])+"\n")
-    f5.close()
+                f2.write(f"{ix+1:6d}{iy+1:6d}{iz+1:6d}{toten[iz][iy][ix]:22.12f}\n")
+    f2.close()
 
 # ==================== caclulate forces for tilt correction ====================
-
 if ltilt:
-    fx = []  # fx[ny][nx]
-    fy = []  # fy[ny][nx]
-    for iy in range(ny):
-        fx0 = [0.0]*nx
-        fx.append(fx0)
-        fy0 = [0.0]*nx
-        fy.append(fy0)
+    fx = np.zeros((ny, nx))
+    fy = np.zeros((ny, nx))
     for iy in range(ny):
         for ix in range(nx):
             if ix != 0 and ix != nx-1:
                 fx[iy][ix] = (toten[icenter][iy][ix-1]-toten[icenter][iy][ix+1])*0.5/x_spacing
-            # elif ix==0 :
-            #    fx[iy][ix]=(toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
-            # elif ix==nx-1 :
-            #    fx[iy][ix]=(toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
+            elif ix == 0:
+                fx[iy][ix] = (toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
+            elif ix == nx-1:
+                fx[iy][ix] = (toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
             if iy != 0 and iy != ny-1:
                 fy[iy][ix] = (toten[icenter][iy-1][ix]-toten[icenter][iy+1][ix])*0.5/y_spacing
-            # elif iy==0 :
-            #    fy[iy][ix]=(toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
-            # elif iy==ny-1 :
-            #    fy[iy][ix]=(toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
+            elif iy == 0:
+                fy[iy][ix] = (toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
+            elif iy == ny-1:
+                fy[iy][ix] = (toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
 
-    xy_new = []  # xy_new[ny][nx][2]
+    x_new = np.zeros((ny, nx))
+    y_new = np.zeros((ny, nx))
     for iy in range(ny):
-        xy_new0 = []
         for ix in range(nx):
-            xy_new0.append([ylist[iy] + fy[iy][ix] / k_spring, xlist[ix] + fx[iy][ix] / k_spring])
-        xy_new.append(xy_new0)
+            x_new[iy, ix] = x_grid[ix] + fx[iy][ix] / k_spring
+            y_new[iy, ix] = y_grid[iy] + fy[iy][ix] / k_spring
 
     # create 2d map from toten
     toten_2d = []
     for iz in range(nz):
-        toten_2d0 = scipy.interpolate.RectBivariateSpline(ylist, xlist, toten[iz])
+        toten_2d0 = scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[iz])
         toten_2d.append(toten_2d0)
 
-# ==================== caclulate kts ====================
-
-kts = []
+# ==================== calculate kts ====================
+kts = np.zeros((ny, nx))
 if ltilt:
     for iy in range(ny):
-        kts0 = []
         for ix in range(nx):
-            y_new = xy_new[iy][ix][0]
-            x_new = xy_new[iy][ix][1]
-            kts1 = (toten_2d[icenter-1](y_new, x_new)[0, 0]-2*toten_2d[icenter](y_new, x_new)[0, 0]
-                    + toten_2d[icenter+1](y_new, x_new)[0, 0])/z_spacing**2
-            if lbohr:
-                # convert k_ts from eV/A^2 to Ha/a0^2
-                kts1 = kts1 * bohr**2/Ha
-            kts0.append(kts1)
-        kts.append(kts0)
+            kts[iy][ix] = (toten_2d[icenter-1](y_new[iy, ix], x_new[iy, ix])[0, 0]
+                           - 2*toten_2d[icenter](y_new[iy, ix], x_new[iy, ix])[0, 0]
+                           + toten_2d[icenter+1](y_new[iy, ix], x_new[iy, ix])[0, 0]) / z_spacing**2
 else:
-    for iy in range(ny):
-        kts0 = []
-        for ix in range(nx):
-            kts1 = (toten[icenter-1][iy][ix]-2*toten[icenter][iy][ix]+toten[icenter+1][iy][ix])/z_spacing**2
-            if lbohr:
-                # convert k_ts from eV/A^2 to Ha/a0^2
-                kts1 = kts1 * bohr**2/Ha
-            kts0.append(kts1)
-        kts.append(kts0)
+    kts = (toten[icenter-1, :, :] - 2*toten[icenter, :, :] + toten[icenter+1, :, :]) / z_spacing**2
+
+if lbohr:
+    # convert k_ts from eV/A^2 to Ha/a0^2
+    kts = kts * bohr**2/Ha
 
 # ==================== construct the atomic structure ====================
 palette = load_palette()
@@ -300,9 +261,9 @@ mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 mpl.rcParams.update({'mathtext.default': 'regular'})
 
-fig = plt.figure(figsize=(5, 3.75))
-gs0 = fig.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
-                       top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
+fig0 = plt.figure(figsize=(5, 3.75))
+gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
+                        top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
 [ax0, ax1] = gs0.subplots()
 
 im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
@@ -322,7 +283,7 @@ else:
     ax0.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
     ax0.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
 
-cb = fig.colorbar(im, cax=ax1, orientation='vertical')
+cb = fig0.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
 if lbohr:
@@ -352,4 +313,42 @@ if lbohr:
     filename += "_bohr"
 filename += "_"+str(icenter+1)
 filename += ".png"
-fig.savefig(filename, dpi=1200)
+fig0.savefig(filename, dpi=1200)
+
+# ==================== vector map for tilt corrections ====================
+if ltilt:
+    fig1 = plt.figure(figsize=(5, 3.75))
+    gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
+    ax2 = gs1.subplots()
+
+    q = ax2.quiver(x_grid/funit, y_grid/funit, fx/k_spring/funit, fy/k_spring/funit,
+                   color=palette["darkblue"], linewidth=1, zorder=2)
+
+    if latom:
+        ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors="none", linewidths=1, zorder=3)
+    ax2.set_xlim([x_range[0]/funit, x_range[1]/funit])
+    ax2.set_ylim([y_range[0]/funit, y_range[1]/funit])
+    if lbohr:
+        ax2.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
+        ax2.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
+    else:
+        ax2.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
+        ax2.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
+
+    ax2.tick_params(axis="x", bottom=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax2.tick_params(axis="y", left=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    for edge in ["bottom", "top", "left", "right"]:
+        ax2.spines[edge].set_color(palette["black"])
+        ax2.spines[edge].set_linewidth(1)
+        ax2.spines[edge].set_zorder(4)
+
+    filename = "tilt"
+    if latom:
+        filename += "_atom"
+    if lbohr:
+        filename += "_bohr"
+    filename += "_"+str(icenter+1)
+    filename += ".png"
+    fig1.savefig(filename, dpi=1200)
