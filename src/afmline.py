@@ -194,7 +194,7 @@ else:
     for iz in range(nz):
         for iy in range(ny):
             for ix in range(nx):
-                f5.write(str(ix+1)+" "+str(iy+1)+" "+str(iz+1)+" "+str(toten[iz][iy][ix])+"\n")
+                f5.write(str(ix)+" "+str(iy)+" "+str(iz)+" "+str(toten[iz][iy][ix])+"\n")
     f5.close()
 
 # ==================== caclulate kts ====================

@@ -51,7 +51,7 @@ line = f0.readlines()
 f0.close()
 for l in line:
     word = l.split()
-    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+    if not word or word[0][0] in ("#", "!"):
         continue
     if word[0] == "x_range":
         x_range = [float(word[1]), float(word[2])]
@@ -106,7 +106,7 @@ if "toten.dat" in files:
             if not word or word[0][0] in ("#", "!"):
                 continue
             ix, iy, iz = map(int, word[:3])
-            toten[iz-1, iy-1, ix-1] = float(word[3])
+            toten[iz, iy, ix] = float(word[3])
             il += 1
     if il != nx * ny * nz:
         print(f"Warning: Expected {nx * ny * nz} data points, but found {il} in toten.dat")
@@ -119,14 +119,13 @@ else:
     step_list = []
     for l in line:
         word = l.split()
-        if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+        if not word or word[0][0] in ("#", "!"):
             continue
         step_list.append(int(word[0]))
     lxincrease = True
     k = 0
     ip = 0
-    # movelist here is the index (ix,iy) of each point
-    scan_path = []
+    scan_path = [] # index (ix,iy) of each point
     for iy in range(ny):
         if lxincrease:
             for ix in range(nx):
@@ -158,7 +157,7 @@ else:
 
             for l in line:
                 word = l.split()
-                if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+                if not word or word[0][0] in ("#", "!"):
                     continue
                 if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
                     istep += 1
@@ -167,11 +166,11 @@ else:
 
     # write the toten file
     f2 = open("toten.dat", "w")
-    f2.write("#   ix    iy    iz    toten(eV)\n")
+    f2.write("#   ix    iy    iz        toten(eV)\n")
     for iz in range(nz):
         for iy in range(ny):
             for ix in range(nx):
-                f2.write(f"{ix+1:6d}{iy+1:6d}{iz+1:6d}{toten[iz][iy][ix]:22.12f}\n")
+                f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
     f2.close()
 
 # ==================== caclulate forces for tilt correction ====================
