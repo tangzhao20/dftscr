@@ -122,29 +122,24 @@ else:
         if not word or word[0][0] in ("#", "!"):
             continue
         step_list.append(int(word[0]))
+
     lxincrease = True
     k = 0
     ip = 0
     scan_path = [] # index (ix,iy) of each point
     for iy in range(ny):
         if lxincrease:
-            for ix in range(nx):
-                if k == 0:
-                    scan_path.append([])
-                scan_path[-1].append([ix, iy])
-                k += 1
-                if k == step_list[ip]:
-                    ip += 1
-                    k = 0
+            x_indices = range(nx)
         else:
-            for ix in range(nx-1, -1, -1):
-                if k == 0:
-                    scan_path.append([])
-                scan_path[-1].append([ix, iy])
-                k += 1
-                if k == step_list[ip]:
-                    ip += 1
-                    k = 0
+            x_indices = range(nx-1, -1, -1)
+        for ix in x_indices:
+            if k == 0:
+                scan_path.append([])
+            scan_path[-1].append([ix, iy])
+            k += 1
+            if k == step_list[ip]:
+                ip += 1
+                k = 0
         lxincrease = not lxincrease
 
     for iz in range(nz):
@@ -176,28 +171,17 @@ else:
 # ==================== caclulate forces for tilt correction ====================
 if ltilt:
     fx = np.zeros((ny, nx))
-    fy = np.zeros((ny, nx))
-    for iy in range(ny):
-        for ix in range(nx):
-            if ix != 0 and ix != nx-1:
-                fx[iy][ix] = (toten[icenter][iy][ix-1]-toten[icenter][iy][ix+1])*0.5/x_spacing
-            elif ix == 0:
-                fx[iy][ix] = (toten[1][iy][ix]-toten[1][iy][ix+1])/x_spacing
-            elif ix == nx-1:
-                fx[iy][ix] = (toten[1][iy][ix-1]-toten[1][iy][ix])/x_spacing
-            if iy != 0 and iy != ny-1:
-                fy[iy][ix] = (toten[icenter][iy-1][ix]-toten[icenter][iy+1][ix])*0.5/y_spacing
-            elif iy == 0:
-                fy[iy][ix] = (toten[1][iy][ix]-toten[1][iy+1][ix])/y_spacing
-            elif iy == ny-1:
-                fy[iy][ix] = (toten[1][iy-1][ix]-toten[1][iy][ix])/y_spacing
+    fx[:, 0] = (toten[icenter, :, 0] - toten[icenter, :, 1]) / x_spacing
+    fx[:, 1:nx-1] = (toten[icenter, :, 0:nx-2] - toten[icenter, :, 2:nx]) * 0.5 / x_spacing
+    fx[:, nx-1] = (toten[icenter, :, nx-2] - toten[icenter, :, nx-1]) / x_spacing
 
-    x_new = np.zeros((ny, nx))
-    y_new = np.zeros((ny, nx))
-    for iy in range(ny):
-        for ix in range(nx):
-            x_new[iy, ix] = x_grid[ix] + fx[iy][ix] / k_spring
-            y_new[iy, ix] = y_grid[iy] + fy[iy][ix] / k_spring
+    fy = np.zeros((ny, nx))
+    fy[0, :] = (toten[icenter, 0, :] - toten[icenter, 1, :]) / y_spacing
+    fy[1:ny-1, :] = (toten[icenter, 0:ny-2, :] - toten[icenter, 2:ny, :]) * 0.5 / y_spacing
+    fy[ny-1, :] = (toten[icenter, ny-2, :] - toten[icenter, ny-1, :]) / y_spacing
+
+    x_new = x_grid[np.newaxis, :] + fx / k_spring
+    y_new = y_grid[:, np.newaxis] + fy / k_spring
 
     # create 2d map from toten
     toten_2d = []
@@ -208,11 +192,8 @@ if ltilt:
 # ==================== calculate kts ====================
 kts = np.zeros((ny, nx))
 if ltilt:
-    for iy in range(ny):
-        for ix in range(nx):
-            kts[iy][ix] = (toten_2d[icenter-1](y_new[iy, ix], x_new[iy, ix])[0, 0]
-                           - 2*toten_2d[icenter](y_new[iy, ix], x_new[iy, ix])[0, 0]
-                           + toten_2d[icenter+1](y_new[iy, ix], x_new[iy, ix])[0, 0]) / z_spacing**2
+    kts = (toten_2d[icenter-1](y_new, x_new, grid=False) - 2*toten_2d[icenter](y_new, x_new, grid=False)
+           + toten_2d[icenter+1](y_new, x_new, grid=False)) / z_spacing**2
 else:
     kts = (toten[icenter-1, :, :] - 2*toten[icenter, :, :] + toten[icenter+1, :, :]) / z_spacing**2
 
