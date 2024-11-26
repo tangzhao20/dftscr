@@ -46,33 +46,31 @@ parallel = 1
 k_spring = 0.8  # k in N/m
 k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 
-f0 = open("afm.in", "r")
-line = f0.readlines()
-f0.close()
-for l in line:
-    word = l.split()
-    if not word or word[0][0] in ("#", "!"):
-        continue
-    if word[0] == "x_range":
-        x_range = [float(word[1]), float(word[2])]
-    elif word[0] == "y_range":
-        y_range = [float(word[1]), float(word[2])]
-    elif word[0] == "z_range":
-        z_range = [float(word[1]), float(word[2])]
-    elif word[0] == "x_spacing":
-        x_spacing = float(word[1])
-    elif word[0] == "y_spacing":
-        y_spacing = float(word[1])
-    elif word[0] == "z_spacing":
-        z_spacing = float(word[1])
-    elif word[0] == "parallel":
-        parallel = int(word[1])
-    elif word[0] == "k_spring":
-        k_spring = float(word[1])
-    elif word[0] in ["fdet", "boundary", "spin"]:
-        pass
-    else:
-        print("Warning: keyword \""+word[0]+"\" is not defined.")
+with open("afm.in", "r") as f0:
+    for l in f0:
+        word = l.split()
+        if not word or word[0][0] in ("#", "!"):
+            continue
+        if word[0] == "x_range":
+            x_range = [float(word[1]), float(word[2])]
+        elif word[0] == "y_range":
+            y_range = [float(word[1]), float(word[2])]
+        elif word[0] == "z_range":
+            z_range = [float(word[1]), float(word[2])]
+        elif word[0] == "x_spacing":
+            x_spacing = float(word[1])
+        elif word[0] == "y_spacing":
+            y_spacing = float(word[1])
+        elif word[0] == "z_spacing":
+            z_spacing = float(word[1])
+        elif word[0] == "parallel":
+            parallel = int(word[1])
+        elif word[0] == "k_spring":
+            k_spring = float(word[1])
+        elif word[0] in ["fdet", "boundary", "spin"]:
+            pass
+        else:
+            print("Warning: keyword \""+word[0]+"\" is not defined.")
 
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
@@ -113,55 +111,39 @@ if "toten.dat" in files:
 
 else:
     # Set up AFM scan path
-    f3 = open("steps.dat", "r")
-    line = f3.readlines()
-    f3.close()
     step_list = []
-    for l in line:
-        word = l.split()
-        if not word or word[0][0] in ("#", "!"):
-            continue
-        step_list.append(int(word[0]))
+    with open("steps.dat", "r") as f3:
+        for l in f3:
+            word = l.split()
+            if not word or word[0][0] in ("#", "!"):
+                continue
+            step_list.append(int(word[0]))
 
-    lxincrease = True
-    k = 0
-    ip = 0
-    scan_path = [] # index (ix,iy) of each point
-    for iy in range(ny):
-        if lxincrease:
-            x_indices = range(nx)
-        else:
-            x_indices = range(nx-1, -1, -1)
-        for ix in x_indices:
-            if k == 0:
-                scan_path.append([])
-            scan_path[-1].append([ix, iy])
-            k += 1
-            if k == step_list[ip]:
-                ip += 1
-                k = 0
-        lxincrease = not lxincrease
+    scan_path = np.zeros((ny*nx, 2), int)  # index [iy, ix] of each point
+    scan_path[:, 0] = np.repeat(range(ny), nx)
+    scan_path[:nx, 1] = range(ny)
+    scan_path[:, 1] = np.tile(np.concatenate([np.arange(ny), np.arange(ny-1, -1, -1)]), ny//2+1)[:ny*nx]
 
     for iz in range(nz):
+        istep = -1
         for ip in range(parallel):
-            istep = -1
             filename = "seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
             f1 = open(filename, "r")
             line = f1.readlines()
             f1.close()
-
-            for l in line:
-                word = l.split()
-                if not word or word[0][0] in ("#", "!"):
-                    continue
-                if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
-                    istep += 1
-                if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
-                    toten[iz, scan_path[ip][istep][1], scan_path[ip][istep][0]] = float(word[3]) * rydberg
+            with open("seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out", "r") as f1:
+                for l in f1:
+                    word = l.split()
+                    if not word or word[0][0] in ("#", "!"):
+                        continue
+                    if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
+                        istep += 1
+                    if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
+                        toten[iz, scan_path[istep][0], scan_path[istep][1]] = float(word[3]) * rydberg
 
     # write the toten file
     f2 = open("toten.dat", "w")
-    f2.write("#   ix    iy    iz        toten(eV)\n")
+    f2.write("#   ix    iy    iz      toten(eV)\n")
     for iz in range(nz):
         for iy in range(ny):
             for ix in range(nx):
