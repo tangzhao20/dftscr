@@ -141,14 +141,13 @@ else:
                     if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
                         toten[iz, scan_path[istep][0], scan_path[istep][1]] = float(word[3]) * rydberg
 
-    # write the toten file
-    f2 = open("toten.dat", "w")
-    f2.write("#   ix    iy    iz      toten(eV)\n")
-    for iz in range(nz):
-        for iy in range(ny):
-            for ix in range(nx):
-                f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
-    f2.close()
+    # write toten.dat
+    with open("toten.dat", "w") as f2:
+        f2.write("#   ix    iy    iz      toten(eV)\n")
+        for iz in range(nz):
+            for iy in range(ny):
+                for ix in range(nx):
+                    f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
 
 # ==================== caclulate forces for tilt correction ====================
 if ltilt:
@@ -172,7 +171,7 @@ if ltilt:
         toten_2d.append(toten_2d0)
 
 # ==================== calculate kts ====================
-kts = np.zeros((ny, nx))
+# kts = np.zeros((ny, nx))
 if ltilt:
     kts = (toten_2d[icenter-1](y_new, x_new, grid=False) - 2*toten_2d[icenter](y_new, x_new, grid=False)
            + toten_2d[icenter+1](y_new, x_new, grid=False)) / z_spacing**2

@@ -35,7 +35,6 @@ if "bohr" in sys.argv:
     sys.argv.remove("bohr")
 
 # ==================== read the input file ====================
-
 x_spacing = 0.6
 y_spacing = 0.6
 z_spacing = 0.3
@@ -44,34 +43,31 @@ parallel = 1
 k_spring = 0.8  # k in N/m
 k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 
-f1 = open("afm.in", "r")
-line = f1.readlines()
-f1.close()
-for l in line:
-    word = l.split()
-    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
-        continue
-    if word[0] == "x_range":
-        x_range = [float(word[1]), float(word[2])]
-    elif word[0] == "y_range":
-        y_range = [float(word[1]), float(word[2])]
-    elif word[0] == "z_range":
-        z_range = [float(word[1]), float(word[2])]
-    elif word[0] == "x_spacing":
-        x_spacing = float(word[1])
-    elif word[0] == "y_spacing":
-        y_spacing = float(word[1])
-    elif word[0] == "z_spacing":
-        z_spacing = float(word[1])
-    elif word[0] == "parallel":
-        parallel = int(word[1])
-    elif word[0] == "k_spring":
-        k_spring = float(word[1])
-    elif word[0] in ["fdet", "boundary", "spin"]:
-        pass
-    else:
-        print("Warning: keyword \""+word[0]+"\" is not defined.")
-
+with open("afm.in", "r") as f0:
+    for l in f0:
+        word = l.split()
+        if not word or word[0][0] in ("#", "!"):
+            continue
+        if word[0] == "x_range":
+            x_range = [float(word[1]), float(word[2])]
+        elif word[0] == "y_range":
+            y_range = [float(word[1]), float(word[2])]
+        elif word[0] == "z_range":
+            z_range = [float(word[1]), float(word[2])]
+        elif word[0] == "x_spacing":
+            x_spacing = float(word[1])
+        elif word[0] == "y_spacing":
+            y_spacing = float(word[1])
+        elif word[0] == "z_spacing":
+            z_spacing = float(word[1])
+        elif word[0] == "parallel":
+            parallel = int(word[1])
+        elif word[0] == "k_spring":
+            k_spring = float(word[1])
+        elif word[0] in ["fdet", "boundary", "spin"]:
+            pass
+        else:
+            print("Warning: keyword \""+word[0]+"\" is not defined.")
 
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
@@ -81,149 +77,93 @@ y_range = [y_range[0] * bohr, y_range[1] * bohr]
 z_range = [z_range[0] * bohr, z_range[1] * bohr]
 
 # ==================== prepare the x and y coordinates ====================
-
 x = x_range[0]
-nx = 0
-xlist = []
-while (x < x_range[1]+1e-6):
-    xlist.append(x)
-    x += x_spacing
-    nx += 1
+x_grid = np.arange(x_range[0], x_range[1]+1e-6, x_spacing)
+nx = len(x_grid)
+
 y = y_range[0]
-ny = 0
-ylist = []
-while (y < y_range[1]+1e-6):
-    ylist.append(y)
-    y += y_spacing
-    ny += 1
+y_grid = np.arange(y_range[0], y_range[1]+1e-6, y_spacing)
+ny = len(y_grid)
+
 z = z_range[0]
-nz = 0
-zlist = []
-while (z < z_range[1]+1e-6):
-    zlist.append(z)
-    z += z_spacing
-    nz += 1
-
-f3 = open("steps.dat", "r")
-line = f3.readlines()
-f3.close()
-steplist = []
-for l in line:
-    word = l.split()
-    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
-        continue
-    steplist.append(int(word[0]))
-
-lxincrease = True
-k = 0
-ip = 0
-# movelist here is the index (ix,iy) of each point
-movelist = []
-for iy in range(ny):
-    if lxincrease:
-        for ix in range(nx):
-            if k == 0:
-                movelist.append([])
-            movelist[-1].append([ix, iy])
-            k += 1
-            if k == steplist[ip]:
-                ip += 1
-                k = 0
-    else:
-        for ix in range(nx-1, -1, -1):
-            if k == 0:
-                movelist.append([])
-            movelist[-1].append([ix, iy])
-            k += 1
-            if k == steplist[ip]:
-                ip += 1
-                k = 0
-    lxincrease = not lxincrease
+z_grid = np.arange(z_range[0], z_range[1]+1e-6, z_spacing)
+nz = len(z_grid)
 
 # ==================== calculate or read toten ====================
-
+toten = np.zeros((nz, ny, nx))  # in eV
 files = os.listdir()
 # if the toten.dat exist, read it, if not, read from calculations outputs
 if "toten.dat" in files:
-    f5 = open("toten.dat", "r")
-    line = f5.readlines()
-    f5.close()
-    il = 1
-    toten = []
-    for iz in range(nz):
-        toten1 = []
-        for iy in range(ny):
-            toten0 = []
-            for ix in range(nx):
-                toten0.append(float(line[il].split()[3]))
-                il += 1
-            toten1.append(toten0)
-        toten.append(toten1)
+    il = 0
+    with open("toten.dat", "r") as f2:
+        for l in f2:
+            word = l.split()
+            if not word or word[0][0] in ("#", "!"):
+                continue
+            ix, iy, iz = map(int, word[:3])
+            toten[iz, iy, ix] = float(word[3])
+            il += 1
+    if il != nx * ny * nz:
+        print(f"Warning: Expected {nx * ny * nz} data points, but found {il} in toten.dat")
 
 else:
-    # initialize toten matrix
-    # toten[nz][ny][nx] in Ry
-    toten = []
-    for iz in range(nz):
-        toten0 = []
-        for iy in range(ny):
-            toten0.append([0.0]*nx)
-        toten.append(toten0)
+    # Set up AFM scan path
+    step_list = []
+    with open("steps.dat", "r") as f3:
+        for l in f3:
+            word = l.split()
+            if not word or word[0][0] in ("#", "!"):
+                continue
+            step_list.append(int(word[0]))
+
+    scan_path = np.zeros((ny*nx, 2), int)  # index [iy, ix] of each point
+    scan_path[:, 0] = np.repeat(range(ny), nx)
+    scan_path[:nx, 1] = range(ny)
+    scan_path[:, 1] = np.tile(np.concatenate([np.arange(ny), np.arange(ny-1, -1, -1)]), ny//2+1)[:ny*nx]
 
     for iz in range(nz):
+        istep = -1
         for ip in range(parallel):
-            istep = -1
             filename = "seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
             f1 = open(filename, "r")
             line = f1.readlines()
             f1.close()
+            with open("seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out", "r") as f1:
+                for l in f1:
+                    word = l.split()
+                    if not word or word[0][0] in ("#", "!"):
+                        continue
+                    if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
+                        istep += 1
+                    if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
+                        toten[iz, scan_path[istep][0], scan_path[istep][1]] = float(word[3]) * rydberg
 
-            for l in line:
-                word = l.split()
-                if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
-                    continue
-                if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
-                    istep += 1
-                if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
-                    toten[iz][movelist[ip][istep][1]][movelist[ip][istep]
-                                                      [0]] = float(word[3])*rydberg  # convert Ry to eV
+    # write toten.dat
+    with open("toten.dat", "w") as f2:
+        f2.write("#   ix    iy    iz      toten(eV)\n")
+        for iz in range(nz):
+            for iy in range(ny):
+                for ix in range(nx):
+                    f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
 
-    # write the toten file
-    f5 = open("toten.dat", "w")
-    f5.write("#ix iy iz toten(eV)\n")
-    for iz in range(nz):
-        for iy in range(ny):
-            for ix in range(nx):
-                f5.write(str(ix)+" "+str(iy)+" "+str(iz)+" "+str(toten[iz][iy][ix])+"\n")
-    f5.close()
+# ==================== calculate kts ====================
+# kts = np.zeros((nz-2, ny))
+kts = (toten[:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
+if lbohr:
+    # convert k_ts from eV/A^2 to Ha/a0^2
+    kts = kts * bohr**2/Ha
 
-# ==================== caclulate kts ====================
-
-kts = []
-ix = 0
-for iz in range(1, nz - 1):
-    kts0 = []
-    for iy in range(ny):
-        kts1 = (toten[iz-1][iy][0] - 2*toten[iz][iy][0] + toten[iz+1][iy][ix]) / z_spacing**2
-        if lbohr:
-            # convert k_ts from eV/A^2 to Ha/a0^2
-            kts1 = kts1 * bohr**2 / Ha
-        kts0.append(kts1)
-    kts.append(kts0)
-
-# ==================== caclulate maximums ====================
-
+# ==================== calculate maximums ====================
 if lmax:
-    interp_func = scipy.interpolate.RectBivariateSpline(zlist[1:nz-1], ylist, kts, kx=3, ky=3)
+    interp_func = scipy.interpolate.RectBivariateSpline(z_grid[1:nz-1], y_grid, kts, kx=3, ky=3)
     z_max_list = np.linspace(z_range[0], z_range[1], 500)
     y_max_list = []
     for z in z_max_list:
-        def ylist_1d(y): return -interp_func(z, y)[0]  # Negative for maximizing
-        z_max_result = scipy.optimize.minimize_scalar(ylist_1d, bounds=(y_range[0], y_range[1]), method='bounded')
+        def y_grid_1d(y): return -interp_func(z, y)[0]  # Negative for maximizing
+        z_max_result = scipy.optimize.minimize_scalar(y_grid_1d, bounds=(y_range[0], y_range[1]), method='bounded')
         y_max_list.append(z_max_result.x[0])
 
 # ==================== construct the atomic structure ====================
-
 palette = load_palette()
 if lbohr:
     funit = bohr
@@ -252,14 +192,13 @@ if latom:
             atom_color.append(palette[color_dict[atom[ia]]])
 
 # ==================== creating the plot ====================
-
 mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 mpl.rcParams.update({'mathtext.default': 'regular'})
 
-fig = plt.figure(figsize=(5, 3.75))
-gs0 = fig.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
-                       top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
+fig0 = plt.figure(figsize=(5, 3.75))
+gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
+                        top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
 [ax0, ax1] = gs0.subplots()
 
 im_extent = [y_range[0] - y_spacing*0.5, y_range[1] + y_spacing *
@@ -284,7 +223,7 @@ else:
     ax0.set_xlabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
     ax0.set_ylabel(r"$\mathit{z}\ (Å)$", color=palette["black"])
 
-cb = fig.colorbar(im, cax=ax1, orientation='vertical')
+cb = fig0.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
 if lbohr:
@@ -313,4 +252,4 @@ if lmax:
 if lbohr:
     filename += "_bohr"
 filename += ".png"
-fig.savefig(filename, dpi=1200)
+fig0.savefig(filename, dpi=1200)
