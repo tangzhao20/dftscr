@@ -171,7 +171,6 @@ if ltilt:
         toten_2d.append(toten_2d0)
 
 # ==================== calculate kts ====================
-# kts = np.zeros((ny, nx))
 if ltilt:
     kts = (toten_2d[icenter-1](y_new, x_new, grid=False) - 2*toten_2d[icenter](y_new, x_new, grid=False)
            + toten_2d[icenter+1](y_new, x_new, grid=False)) / z_spacing**2

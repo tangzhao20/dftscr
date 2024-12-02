@@ -147,7 +147,6 @@ else:
                     f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
 
 # ==================== calculate kts ====================
-# kts = np.zeros((nz-2, ny))
 kts = (toten[:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
 if lbohr:
     # convert k_ts from eV/A^2 to Ha/a0^2
