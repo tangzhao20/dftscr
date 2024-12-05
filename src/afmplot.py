@@ -121,8 +121,7 @@ else:
 
     scan_path = np.zeros((ny*nx, 2), int)  # index [iy, ix] of each point
     scan_path[:, 0] = np.repeat(range(ny), nx)
-    scan_path[:nx, 1] = range(ny)
-    scan_path[:, 1] = np.tile(np.concatenate([np.arange(ny), np.arange(ny-1, -1, -1)]), ny//2+1)[:ny*nx]
+    scan_path[:, 1] = np.tile(np.concatenate([np.arange(nx), np.arange(nx-1, -1, -1)]), ny//2+1)[:ny*nx]
 
     for iz in range(nz):
         istep = -1

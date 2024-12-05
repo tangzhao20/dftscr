@@ -358,8 +358,8 @@ for iz in range(nz):
             f2.write("local_component: s\n")
             f2.write("begin atom_coord\n")
             for ia in range(poscar1.Naint[i]):
-                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1] +
-                         movelist[ip][0][1]:18.12f}{apc1[k][2]+zlist[iz]:18.12f}\n")
+                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}" +
+                         f"{apc1[k][2]+zlist[iz]:18.12f}\n")
                 k = k+1
             f2.write("end atom_coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
@@ -395,8 +395,8 @@ for iz in range(nz):
         f4 = open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat", "w")
         for istep in range(1, steplist[ip]):
             for ia in range(poscar1.Natom):
-                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1] +
-                         movelist[ip][istep][1]:18.12f}{apc1[ia][2]+zlist[iz]:18.12f}\n")
+                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}" +
+                         f"{apc1[ia][2]+zlist[iz]:18.12f}\n")
             if not lfdet:
                 for ia in range(poscar2.Natom):
                     f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
