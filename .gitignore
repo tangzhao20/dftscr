@@ -11,8 +11,5 @@ __pycache__
 # Temporary files
 *.swp
 
-# Tests outputs
-tests/*/*.png
-
 # Virtual environments
 venv
