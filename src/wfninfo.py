@@ -155,12 +155,10 @@ f1.write("shift = "+str(shift)+"\n")
 f1.write("kpr = (shift(1)+kp)*h\n")
 sel_kp = []
 for irk in range(nwedge):
-    # if abs(kpr[irk][0])<1.55 and abs(kpr[irk][1])<1.55 and abs(kpr[irk][2])<1.55  and abs(abs(kpr[irk][0])+abs(kpr[irk][1])+abs(kpr[irk][2])-2.7)<0.05 and abs(abs(kpr[irk][0])-abs(kpr[irk][1]))>0.05:
     if abs(kpr[irk][0]) < 0.4 and abs(kpr[irk][1]) < 0.4 and abs(kpr[irk][2]) < 0.4:
-        # f1.write(f"[{kp_sort[irk][0]:2}{kp_sort[irk][1]:3}{kp_sort[irk][2]:3} ]  [{kpr_sort[irk][0]:5.2f}{kpr_sort[irk][1]:6.2f}{kpr_sort[irk][2]:6.2f} ]\n")
         sel_kp.append(irk)
-        f1.write(f"{irk:5d} [{kp[irk][0]:2}{kp[irk][1]:3}{kp[irk][2]:3} ]  [{
-                 kpr[irk][0]:5.2f}{kpr[irk][1]:6.2f}{kpr[irk][2]:6.2f} ]\n")
+        f1.write(f"{irk: 5d}[{kp[irk][0]: 2}{kp[irk][1]: 3}{kp[irk][2]: 3}]" +
+                 f"[{kpr[irk][0]: 5.2f}{kpr[irk][1]: 6.2f}{kpr[irk][2]: 6.2f}]\n")
 f1.write("\n")
 
 nstate = np.fromfile(f0, dtype=np.int32, count=1)[0]

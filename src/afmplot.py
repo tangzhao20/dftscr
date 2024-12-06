@@ -44,7 +44,6 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 parallel = 1
 k_spring = 0.8  # k in N/m
-k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 
 with open("afm.in", "r") as f0:
     for l in f0:
@@ -72,6 +71,7 @@ with open("afm.in", "r") as f0:
         else:
             print("Warning: keyword \""+word[0]+"\" is not defined.")
 
+k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
 z_spacing = z_spacing * bohr
@@ -150,29 +150,34 @@ else:
 
 # ==================== caclulate forces for tilt correction ====================
 if ltilt:
-    fx = np.zeros((ny, nx))
-    fx[:, 0] = (toten[icenter, :, 0] - toten[icenter, :, 1]) / x_spacing
-    fx[:, 1:nx-1] = (toten[icenter, :, 0:nx-2] - toten[icenter, :, 2:nx]) * 0.5 / x_spacing
-    fx[:, nx-1] = (toten[icenter, :, nx-2] - toten[icenter, :, nx-1]) / x_spacing
-
-    fy = np.zeros((ny, nx))
-    fy[0, :] = (toten[icenter, 0, :] - toten[icenter, 1, :]) / y_spacing
-    fy[1:ny-1, :] = (toten[icenter, 0:ny-2, :] - toten[icenter, 2:ny, :]) * 0.5 / y_spacing
-    fy[ny-1, :] = (toten[icenter, ny-2, :] - toten[icenter, ny-1, :]) / y_spacing
-
-    x_new = x_grid[np.newaxis, :] + fx / k_spring
-    y_new = y_grid[:, np.newaxis] + fy / k_spring
-
-    # create 2d map from toten
+    # interpolation from a 2d grid
     toten_2d = []
-    for iz in range(nz):
-        toten_2d0 = scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[iz])
+    for iz in range(3):
+        toten_2d0 = scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1])
         toten_2d.append(toten_2d0)
+
+    # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
+    # TODO: a converge condition has not been implemented yet
+    Niter = 100  # number of iterations
+    alpha = 0.2  # damping factor in the iterative solver
+    h = 0.2  # step size in the finite difference method, in units of A
+
+    x_init = x_grid[np.newaxis, :]
+    y_init = y_grid[:, np.newaxis]
+    x_new = np.tile(x_init, (ny, 1))
+    y_new = np.tile(y_init, (1, nx))
+    for iiter in range(Niter):
+        fx = (x_init - x_new) * k_spring
+        fy = (y_init - y_new) * k_spring
+        fx += (toten_2d[1](y_new, x_new-h*0.5, grid=False) - toten_2d[1](y_new, x_new+h*0.5, grid=False)) / h
+        fy += (toten_2d[1](y_new-h*0.5, x_new, grid=False) - toten_2d[1](y_new+h*0.5, x_new, grid=False)) / h
+        x_new += fx / k_spring * alpha
+        y_new += fy / k_spring * alpha
 
 # ==================== calculate kts ====================
 if ltilt:
-    kts = (toten_2d[icenter-1](y_new, x_new, grid=False) - 2*toten_2d[icenter](y_new, x_new, grid=False)
-           + toten_2d[icenter+1](y_new, x_new, grid=False)) / z_spacing**2
+    kts = (toten_2d[0](y_new, x_new, grid=False) - 2*toten_2d[1](y_new, x_new, grid=False)
+           + toten_2d[2](y_new, x_new, grid=False)) / z_spacing**2
 else:
     kts = (toten[icenter-1, :, :] - 2*toten[icenter, :, :] + toten[icenter+1, :, :]) / z_spacing**2
 
@@ -280,11 +285,12 @@ if ltilt:
     gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
     ax2 = gs1.subplots()
 
-    q = ax2.quiver(x_grid/funit, y_grid/funit, fx/k_spring/funit, fy/k_spring/funit,
-                   color=palette["darkblue"], linewidth=1, zorder=2)
+    q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
+                   scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
+    # print(np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5)
 
     if latom:
-        ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors="none", linewidths=1, zorder=3)
+        ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors="none", linewidths=1, zorder=2)
     ax2.set_xlim([x_range[0]/funit, x_range[1]/funit])
     ax2.set_ylim([y_range[0]/funit, y_range[1]/funit])
     if lbohr:
