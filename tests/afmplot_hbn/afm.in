@@ -1,10 +1,11 @@
+# Here is an example of afm.in.
 # All the unit for lengths are Bohr
 
-x_range -5.1 5.1
-# x_spacing 0.6
+x_range -5.16184549595 5.16184549595
+x_spacing 0.6072759407
 
-y_range -5.1 5.1
-# y_spacing 0.6
+y_range -5.10267172255 5.10267172255
+y_spacing 0.6003143203
 
 z_range 5.7 6.3
 # z_spacing 0.3
@@ -12,4 +13,4 @@ z_range 5.7 6.3
 parallel 4
 
 fdet true
-# spin true
+#spin true
