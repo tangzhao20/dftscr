@@ -103,10 +103,10 @@ if "posconvert.in" in files:
                 itype = poscar1.Ntype
             poscar1.add_atom(itype=itype, ap=ap, new_type=new_type)
         elif word[0] == "delete_atom":
-            ia = int(word[1])
+            ia = int(word[1]) - 1
             poscar1.delete_atom(ia=ia)
         elif word[0] == "replace_atom":
-            ia = int(word[1])
+            ia = int(word[1]) - 1
             new_type = word[2]
             lhead = True
             if len(word) >= 4 and word[2].lower() == "tail":
