@@ -44,6 +44,9 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 parallel = 1
 k_spring = 0.8  # k in N/m
+niter = 100  # number of iterations
+alpha = 0.1  # damping factor in the iterative solver
+h = 0.2  # step size in the finite difference method, in units of A
 
 with open("afm.in", "r") as f0:
     for l in f0:
@@ -66,6 +69,12 @@ with open("afm.in", "r") as f0:
             parallel = int(word[1])
         elif word[0] == "k_spring":
             k_spring = float(word[1])
+        elif word[0] == "niter":
+            niter = int(word[1])
+        elif word[0] == "alpha":
+            alpha = float(word[1])
+        elif word[0] == "h":
+            h = float(word[1])
         elif word[0] in ["fdet", "boundary", "spin"]:
             pass
         else:
@@ -153,20 +162,15 @@ if ltilt:
     # interpolation from a 2d grid
     toten_2d = []
     for iz in range(3):
-        toten_2d0 = scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1])
-        toten_2d.append(toten_2d0)
+        toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1]))  # bicubic
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
     # TODO: a converge condition has not been implemented yet
-    Niter = 100  # number of iterations
-    alpha = 0.2  # damping factor in the iterative solver
-    h = 0.2  # step size in the finite difference method, in units of A
-
-    x_init = x_grid[np.newaxis, :]
-    y_init = y_grid[:, np.newaxis]
-    x_new = np.tile(x_init, (ny, 1))
-    y_new = np.tile(y_init, (1, nx))
-    for iiter in range(Niter):
+    x_init = np.tile(x_grid[np.newaxis, :], (ny, 1))
+    y_init = np.tile(y_grid[:, np.newaxis], (nx, 1))
+    x_new = x_init
+    y_new = y_init
+    for iiter in range(niter):
         fx = (x_init - x_new) * k_spring
         fy = (y_init - y_new) * k_spring
         fx += (toten_2d[1](y_new, x_new-h*0.5, grid=False) - toten_2d[1](y_new, x_new+h*0.5, grid=False)) / h
@@ -285,7 +289,7 @@ if ltilt:
     gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
     ax2 = gs1.subplots()
 
-    q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
+    q = ax2.quiver(x_init/funit, y_init/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
                    scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
     # print(np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5)
 
@@ -317,3 +321,61 @@ if ltilt:
     filename += "_"+str(icenter+1)
     filename += ".png"
     fig1.savefig(filename, dpi=1200)
+
+
+# ==================== print test files ====================
+test_out = toten[icenter]
+
+fig2 = plt.figure(figsize=(5, 3.75))
+gs2 = fig2.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
+                        top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
+[ax3, ax4] = gs2.subplots()
+
+im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
+for ic in range(len(im_extent)):
+    im_extent[ic] = im_extent[ic]/funit
+im = ax3.imshow(test_out, interpolation='nearest', cmap="YlOrBr_r",
+                origin="lower", extent=im_extent, aspect='equal', zorder=1)
+
+if latom:
+    ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=1, zorder=3)
+ax3.set_xlim([x_range[0]/funit, x_range[1]/funit])
+ax3.set_ylim([y_range[0]/funit, y_range[1]/funit])
+if lbohr:
+    ax3.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
+    ax3.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
+else:
+    ax3.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
+    ax3.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
+
+cb2 = fig2.colorbar(im, cax=ax4, orientation='vertical')
+cb2.outline.set_linewidth(1)
+cb2.outline.set_color(palette["black"])
+if lbohr:
+    ax4.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
+else:
+    ax4.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
+
+ax3.tick_params(axis="x", bottom=True, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax3.tick_params(axis="y", left=True, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax4.tick_params(axis="x", bottom=False, right=False, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+ax4.tick_params(axis="y", left=False, right=True, direction="in",
+                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+for edge in ["bottom", "top", "left", "right"]:
+    ax3.spines[edge].set_color(palette["black"])
+    ax3.spines[edge].set_linewidth(1)
+    ax3.spines[edge].set_zorder(4)
+
+filename = "test"
+if ltilt:
+    filename += "_tilt"
+if latom:
+    filename += "_atom"
+if lbohr:
+    filename += "_bohr"
+filename += "_"+str(icenter+1)
+filename += ".png"
+fig2.savefig(filename, dpi=1200)
