@@ -166,10 +166,10 @@ if ltilt:
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
     # TODO: a converge condition has not been implemented yet
-    x_init = np.tile(x_grid[np.newaxis, :], (ny, 1))
-    y_init = np.tile(y_grid[:, np.newaxis], (nx, 1))
-    x_new = x_init
-    y_new = y_init
+    x_init = x_grid[np.newaxis, :]
+    y_init = y_grid[:, np.newaxis]
+    x_new = np.tile(x_init, (ny, 1))
+    y_new = np.tile(y_init, (1, nx))
     for iiter in range(niter):
         fx = (x_init - x_new) * k_spring
         fy = (y_init - y_new) * k_spring
@@ -289,7 +289,7 @@ if ltilt:
     gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
     ax2 = gs1.subplots()
 
-    q = ax2.quiver(x_init/funit, y_init/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
+    q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
                    scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
     # print(np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5)
 
@@ -354,7 +354,7 @@ cb2.outline.set_color(palette["black"])
 if lbohr:
     ax4.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
 else:
-    ax4.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
+    ax4.set_ylabel("Energy (eV)", color=palette["black"])
 
 ax3.tick_params(axis="x", bottom=True, right=False, direction="in",
                 color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
