@@ -105,6 +105,13 @@ if "posconvert.in" in files:
         elif word[0] == "delete_atom":
             ia = int(word[1])
             poscar1.delete_atom(ia=ia)
+        elif word[0] == "replace_atom":
+            ia = int(word[1])
+            new_type = word[2]
+            lhead = True
+            if len(word) >= 4 and word[2].lower() == "tail":
+                lhead = False
+            poscar1.replace_atom(ia=ia, new_type=new_type, add_to_head=lhead)
         else:
             print("Warning: in posconvert.in, keyword "+word[0]+" is not supported yet")
 
