@@ -33,6 +33,15 @@ lbohr = False
 if "bohr" in sys.argv:
     lbohr = True
     sys.argv.remove("bohr")
+ltilt = False
+if "tilt" in sys.argv:
+    ltilt = True
+    sys.argv.remove("tilt")
+icenter = 1
+for word in sys.argv:
+    if word.isnumeric():
+        icenter = int(word)-1
+        sys.argv.remove(word)
 
 # ==================== read the input file ====================
 x_spacing = 0.6
@@ -41,7 +50,9 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 parallel = 1
 k_spring = 0.8  # k in N/m
-k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
+niter = 100  # number of iterations
+alpha = 0.1  # damping factor in the iterative solver
+h = 0.2  # step size in the finite difference method, in units of A
 
 with open("afm.in", "r") as f0:
     for l in f0:
@@ -64,11 +75,18 @@ with open("afm.in", "r") as f0:
             parallel = int(word[1])
         elif word[0] == "k_spring":
             k_spring = float(word[1])
+        elif word[0] == "niter":
+            niter = int(word[1])
+        elif word[0] == "alpha":
+            alpha = float(word[1])
+        elif word[0] == "h":
+            h = float(word[1])
         elif word[0] in ["fdet", "boundary", "spin"]:
             pass
         else:
             print("Warning: keyword \""+word[0]+"\" is not defined.")
 
+k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
 z_spacing = z_spacing * bohr
@@ -80,6 +98,8 @@ z_range = [z_range[0] * bohr, z_range[1] * bohr]
 x = x_range[0]
 x_grid = np.arange(x_range[0], x_range[1]+1e-6, x_spacing)
 nx = len(x_grid)
+if nx > 1:
+    print("Warning: nx > 1")
 
 y = y_range[0]
 y_grid = np.arange(y_range[0], y_range[1]+1e-6, y_spacing)
@@ -145,8 +165,32 @@ else:
                 for ix in range(nx):
                     f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
 
+# ==================== caclulate forces for tilt correction ====================
+if ltilt:
+    # interpolation from a 2d grid
+    toten_1d = []
+    for iz in range(nz):
+        toten_1d.append(scipy.interpolate.UnivariateSpline(y_grid, toten[iz, :, 0], s=0))  # cubic spline
+
+    # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
+    # TODO: a converge condition has not been implemented yet
+    y_init = y_grid[np.newaxis, :]
+    y_new = np.tile(y_init, (nz, 1))
+    for iz in range(nz):
+        for iiter in range(niter):
+            fy = (y_grid - y_new[iz, :]) * k_spring
+            fy += (toten_1d[iz](y_new[iz, :] - h*0.5) - toten_1d[iz](y_new[iz, :] + h*0.5)) / h
+            y_new[iz, :] += fy / k_spring * alpha
+
 # ==================== calculate kts ====================
-kts = (toten[:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
+if ltilt:
+    kts = np.zeros((nz-2, ny))
+    for iz in range(1, nz-1):
+        kts[iz-1, :] = (toten_1d[iz-1](y_new[iz, :]) - 2*toten_1d[iz](y_new[iz, :])
+                        + toten_1d[iz+1](y_new[iz, :])) / z_spacing**2
+else:
+    kts = (toten[0:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
+
 if lbohr:
     # convert k_ts from eV/A^2 to Ha/a0^2
     kts = kts * bohr**2/Ha
@@ -154,7 +198,7 @@ if lbohr:
 # ==================== calculate maximums ====================
 if lmax:
     interp_func = scipy.interpolate.RectBivariateSpline(z_grid[1:nz-1], y_grid, kts, kx=3, ky=3)
-    z_max_list = np.linspace(z_range[0], z_range[1], 500)
+    z_max_list = np.linspace(z_grid[1], z_grid[nz-2], 500)
     y_max_list = []
     for z in z_max_list:
         def y_grid_1d(y): return -interp_func(z, y)[0]  # Negative for maximizing
@@ -199,12 +243,12 @@ gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
                         top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
 [ax0, ax1] = gs0.subplots()
 
-im_extent = [y_range[0] - y_spacing*0.5, y_range[1] + y_spacing *
-             0.5, z_range[0] - z_spacing*0.5, z_range[1] + z_spacing*0.5]
+im_extent = [y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5, z_grid[1]-z_spacing*0.5, z_grid[nz-2]+z_spacing*0.5]
 for ic in range(len(im_extent)):
     im_extent[ic] = im_extent[ic]/funit
 im = ax0.imshow(kts, interpolation='bicubic', cmap="rainbow", origin="lower", extent=im_extent, zorder=1)
-ax0.set_aspect((y_range[1]-y_range[0])/(z_range[1]-z_range[0]))
+
+ax0.set_aspect((y_range[1]-y_range[0])/(z_range[1]-z_range[0]-z_spacing*2))
 
 if latom:
     for ia in range(len(atom_y)):
@@ -213,7 +257,7 @@ if lmax:
     ax0.plot(y_max_list, z_max_list, color=palette["red"], linestyle="dotted", linewidth=1)
 
 ax0.set_xlim([y_range[0]/funit, y_range[1]/funit])
-ax0.set_ylim([z_range[0]/funit, z_range[1]/funit])
+ax0.set_ylim([z_grid[1]/funit, z_grid[nz-2]/funit])
 if lbohr:
     ax0.set_xlabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
     ax0.set_ylabel(r"$\mathit{z}\ (Bohr)$", color=palette["black"])
@@ -243,11 +287,55 @@ for edge in ["bottom", "top", "left", "right"]:
     ax0.spines[edge].set_zorder(4)
 
 filename = "afm_line"
+if ltilt:
+    filename += "_tilt"
 if latom:
     filename += "_atom"
 if lmax:
     filename += "_max"
 if lbohr:
     filename += "_bohr"
+filename += "_"+str(icenter+1)
 filename += ".png"
 fig0.savefig(filename, dpi=1200)
+
+# ==================== vector map for tilt corrections ====================
+if ltilt:
+    fig1 = plt.figure(figsize=(5, 3.75))
+    gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
+    ax2 = gs1.subplots()
+
+    # q = ax2.quiver(y_grid/funit, z_grid/funit, (y_new-y_init)/funit, np.zeros((nz,ny)), angles='xy',
+    #               scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
+    for iy in range(ny):
+        ax2.plot(y_new[:, iy], z_grid, color=palette["darkblue"], linewidth=1, zorder=3)
+
+    if latom:
+        for ia in range(len(atom_y)):
+            ax2.axvline(x=atom_y[ia], color=atom_color[ia], linestyle="dashdot", linewidth=1)
+    ax2.set_xlim([y_range[0]/funit, y_range[1]/funit])
+    ax2.set_ylim([z_range[0]/funit, z_range[1]/funit])
+    if lbohr:
+        ax2.set_xlabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
+        ax2.set_ylabel(r"$\mathit{z}\ (Bohr)$", color=palette["black"])
+    else:
+        ax2.set_xlabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
+        ax2.set_ylabel(r"$\mathit{z}\ (Å)$", color=palette["black"])
+
+    ax2.tick_params(axis="x", bottom=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax2.tick_params(axis="y", left=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    for edge in ["bottom", "top", "left", "right"]:
+        ax2.spines[edge].set_color(palette["black"])
+        ax2.spines[edge].set_linewidth(1)
+        ax2.spines[edge].set_zorder(4)
+
+    filename = "tilt"
+    if latom:
+        filename += "_atom"
+    if lbohr:
+        filename += "_bohr"
+    filename += "_"+str(icenter+1)
+    filename += ".png"
+    fig1.savefig(filename, dpi=1200)
