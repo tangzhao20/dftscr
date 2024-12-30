@@ -2,6 +2,8 @@
 
 # Plot the contour of kts vs y and z.
 
+# afmline.py (atom) (max) (bohr) (tilt) (force)
+
 # This script only works for a path on the y axis now.
 # In the afm.in, set x_range to two same numbers, for example:
 # x_range 0.0 0.0
@@ -37,6 +39,10 @@ ltilt = False
 if "tilt" in sys.argv:
     ltilt = True
     sys.argv.remove("tilt")
+lforce = False
+if "force" in sys.argv:
+    lforce = True
+    sys.argv.remove("force")
 icenter = 1
 for word in sys.argv:
     if word.isnumeric():
@@ -183,17 +189,31 @@ if ltilt:
             y_new[iz, :] += fy / k_spring * alpha
 
 # ==================== calculate kts ====================
-if ltilt:
-    kts = np.zeros((nz-2, ny))
-    for iz in range(1, nz-1):
-        kts[iz-1, :] = (toten_1d[iz-1](y_new[iz, :]) - 2*toten_1d[iz](y_new[iz, :])
-                        + toten_1d[iz+1](y_new[iz, :])) / z_spacing**2
+if lforce:
+    # in the plot of force, the variable kts is the force.
+    if ltilt:
+        kts = np.zeros((nz-2, ny))
+        for iz in range(1, nz-1):
+            kts[iz-1, :] = (toten_1d[iz-1](y_new[iz, :]) - toten_1d[iz+1](y_new[iz, :])) / (2*z_spacing)
+    else:
+        kts = (toten[0:nz-2, :, 0] - toten[2:nz, :, 0]) / (2*z_spacing)
+
 else:
-    kts = (toten[0:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
+    if ltilt:
+        kts = np.zeros((nz-2, ny))
+        for iz in range(1, nz-1):
+            kts[iz-1, :] = (toten_1d[iz-1](y_new[iz, :]) - 2*toten_1d[iz](y_new[iz, :])
+                            + toten_1d[iz+1](y_new[iz, :])) / z_spacing**2
+    else:
+        kts = (toten[0:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
 
 if lbohr:
-    # convert k_ts from eV/A^2 to Ha/a0^2
-    kts = kts * bohr**2/Ha
+    if force:
+        # convert k_ts from eV/A to Ha/a0
+        kts = kts * bohr/Ha
+    else:
+        # convert k_ts from eV/A^2 to Ha/a0^2
+        kts = kts * bohr**2/Ha
 
 # ==================== calculate maximums ====================
 if lmax:
@@ -246,7 +266,12 @@ gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
 im_extent = [y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5, z_grid[1]-z_spacing*0.5, z_grid[nz-2]+z_spacing*0.5]
 for ic in range(len(im_extent)):
     im_extent[ic] = im_extent[ic]/funit
-im = ax0.imshow(kts, interpolation='bicubic', cmap="rainbow", origin="lower", extent=im_extent, zorder=1)
+if lforce:
+    norm = mpl.colors.TwoSlopeNorm(vmin=-0.21, vcenter=0, vmax=0.42)  # may depend on the system: use kts.max()
+    cmap = "seismic"
+    im = ax0.imshow(kts, interpolation='bicubic', cmap=cmap, origin="lower", norm=norm, extent=im_extent, zorder=1)
+else:
+    im = ax0.imshow(kts, interpolation='bicubic', cmap="rainbow", origin="lower", extent=im_extent, zorder=1)
 
 ax0.set_aspect((y_range[1]-y_range[0])/(z_range[1]-z_range[0]-z_spacing*2))
 
@@ -265,13 +290,23 @@ else:
     ax0.set_xlabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
     ax0.set_ylabel(r"$\mathit{z}\ (Å)$", color=palette["black"])
 
-cb = fig0.colorbar(im, cax=ax1, orientation='vertical')
+if lforce:
+    cb = fig0.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), cax=ax1, orientation='vertical', extend='both')
+else:
+    cb = fig0.colorbar(im, cax=ax1, orientation='vertical')
+
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
-if lbohr:
-    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
+if lforce:
+    if lbohr:
+        ax1.set_ylabel(r"$\mathit{F}\ (a.u.)$", color=palette["black"])
+    else:
+        ax1.set_ylabel(r"$\mathit{F}\ (eV/Å)$", color=palette["black"])
 else:
-    ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
+    if lbohr:
+        ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
+    else:
+        ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
 
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in",
                 color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
@@ -287,6 +322,8 @@ for edge in ["bottom", "top", "left", "right"]:
     ax0.spines[edge].set_zorder(4)
 
 filename = "afm_line"
+if lforce:
+    filename += "_force"
 if ltilt:
     filename += "_tilt"
 if latom:
