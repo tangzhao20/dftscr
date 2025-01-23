@@ -12,5 +12,10 @@ z_range 5.7 6.3
 
 parallel 4
 
+# k_spring 0.8  # default
+
+# niter 1
+# alpha 1.0
+
 fdet true
-#spin true
+# spin true

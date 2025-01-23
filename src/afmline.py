@@ -218,12 +218,15 @@ if lbohr:
 # ==================== calculate maximums ====================
 if lmax:
     interp_func = scipy.interpolate.RectBivariateSpline(z_grid[1:nz-1], y_grid, kts, kx=3, ky=3)
-    z_max_list = np.linspace(z_grid[1], z_grid[nz-2], 500)
+    z_max_list = np.linspace(z_grid[1], z_grid[nz-2], nz-2)
     y_max_list = []
     for z in z_max_list:
         def y_grid_1d(y): return -interp_func(z, y)[0]  # Negative for maximizing
         z_max_result = scipy.optimize.minimize_scalar(y_grid_1d, bounds=(y_range[0], y_range[1]), method='bounded')
         y_max_list.append(z_max_result.x[0])
+    print(" iz    z(A)    y(A)")
+    for iz in range(nz-2):
+        print(f"{iz+1:3d}{z_max_list[iz]:8.4f}{y_max_list[iz]:8.4f}")
 
 # ==================== construct the atomic structure ====================
 palette = load_palette()
@@ -248,10 +251,12 @@ if latom:
 
     atom_y = []
     atom_color = []
+    atom_name = []
     for ia in range(len(apc)):
         if apc[ia][2] > zmax - 1.0 and abs(apc[ia][0]) < 1.e-4:
             atom_y.append(apc[ia][1]/funit)
             atom_color.append(palette[color_dict[atom[ia]]])
+            atom_name.append(atom[ia])
 
 # ==================== creating the plot ====================
 mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")

@@ -19,6 +19,10 @@ Ha = rydberg*2.0
 electron = load_constant("electron")
 angstrom = load_constant("angstrom")
 
+ltilt = False
+if "tilt" in sys.argv:
+    ltilt = True
+    sys.argv.remove("tilt")
 latom = False
 if "atom" in sys.argv:
     latom = True
@@ -27,10 +31,10 @@ lbohr = False
 if "bohr" in sys.argv:
     lbohr = True
     sys.argv.remove("bohr")
-ltilt = False
-if "tilt" in sys.argv:
-    ltilt = True
-    sys.argv.remove("tilt")
+lverbose = False
+if "verbose" in sys.argv:
+    lverbose = True
+    sys.argv.remove("verbose")
 icenter = 1
 for word in sys.argv:
     if word.isnumeric():
@@ -241,7 +245,7 @@ im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r",
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom:
-    ax0.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=1, zorder=3)
+    ax0.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
 ax0.set_xlim([x_range[0]/funit, x_range[1]/funit])
 ax0.set_ylim([y_range[0]/funit, y_range[1]/funit])
 if lbohr:
@@ -291,10 +295,11 @@ if ltilt:
 
     q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
                    scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
-    # print(np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5)
+    if lverbose:
+        print("iz: "+str(icenter+1)+"    kmax: "+f"{np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5:8.4f} Å")
 
     if latom:
-        ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors="none", linewidths=1, zorder=2)
+        ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors=palette["black"], linewidths=0.25, zorder=2)
     ax2.set_xlim([x_range[0]/funit, x_range[1]/funit])
     ax2.set_ylim([y_range[0]/funit, y_range[1]/funit])
     if lbohr:
@@ -338,7 +343,7 @@ im = ax3.imshow(test_out, interpolation='nearest', cmap="YlOrBr_r",
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom:
-    ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=1, zorder=3)
+    ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
 ax3.set_xlim([x_range[0]/funit, x_range[1]/funit])
 ax3.set_ylim([y_range[0]/funit, y_range[1]/funit])
 if lbohr:

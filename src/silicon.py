@@ -27,7 +27,6 @@ if len(sys.argv) < 2:
     print(" python3 silicon.py r")
 r_max = float(sys.argv[1])
 N = math.ceil(r_max / (poscar0.lc[0][1]*2.0/3.0**0.5)) * 2
-print("supercell: "+str(N)+", "+str(N)+", "+str(N))
 poscar0.supercell([N, N, N])
 
 center = np.array([0.5, 0.5, 0.5]) @ np.array(poscar0.lc)  # center for Ndim = 3
@@ -102,5 +101,5 @@ poscar0.ap = (apc*(1/radius/2.0)).tolist()
 poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
 poscar0.Ndim = 0
 
-print(" radius "+str(r_max)+" A  Si "+str(poscar0.Naint[0])+" H "+str(poscar0.Naint[1]))
+print(f" radius {r_max} A  supercell {N}  Si {poscar0.Naint[0]} H {poscar0.Naint[1]}")
 poscar0.write_vasp("Si"+str(poscar0.Naint[0])+"H"+str(poscar0.Naint[1])+".vasp")

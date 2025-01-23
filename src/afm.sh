@@ -85,22 +85,41 @@ if [[ "$1" == "sbatch" ]]; then
 fi
 
 if [[ "$1" == "check" ]]; then
-    k=1
+    unfinished=0
     for (( i=1 ; i<=$Nz ; i++ )) do
         for (( j=1 ; j<=$parallel ; j++ )) do
             dirname="seq_${i}_${j}"
             cd $dirname
             if [[ ! -f "parsec.out" ]]; then
+                unfinished=$((unfinished+1))
                 echo "$dirname : parsec.out not found"
-                cd ..
-                continue
-            fi
-            line4=$(tail -n 4 parsec.out | head -n 1)
-            if [[ $line4 != " Current date/time:"* ]]; then
-                echo "$dirname : the calculation did not finish"
+            else
+                line4=$(tail -n 4 parsec.out | head -n 1)
+                if [[ $line4 != " Current date/time:"* ]]; then
+                    unfinished=$((unfinished+1))
+                    echo "$dirname : the calculation did not finish"
+                fi
             fi
             cd ..
-            k=$((k+1))
         done
     done
+    if [[ "$unfinished" -eq 0 ]]; then
+        echo "All calculations are done."
+    fi
+fi
+
+if [[ "$1" == "copy" ]]; then
+    if [[ -z "$2" ]]; then
+        echo "Error: Missing directory argument."
+        exit 1
+    elif [[ ! -d "$2" ]]; then
+        echo "Error: '$2' is not a valid directory."
+        exit 1
+    fi
+    cp $2/afm.in .
+    cp $2/parsec.in.head .
+    cp $2/job.sh .
+    cp $2/sample.parsec_st.dat .
+    cp $2/tip.xyz .
+    ln -s ../../pp/* .
 fi
