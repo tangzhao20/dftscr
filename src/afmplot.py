@@ -35,6 +35,10 @@ lverbose = False
 if "verbose" in sys.argv:
     lverbose = True
     sys.argv.remove("verbose")
+ltoten = False
+if "toten" in sys.argv:
+    ltoten = True
+    sys.argv.remove("toten")
 icenter = 1
 for word in sys.argv:
     if word.isnumeric():
@@ -328,59 +332,56 @@ if ltilt:
     fig1.savefig(filename, dpi=1200)
 
 
-# ==================== print test files ====================
-test_out = toten[icenter]
+# ==================== toten images ====================
+if ltoten:
+    fig2 = plt.figure(figsize=(5, 3.75))
+    gs2 = fig2.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
+                            top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
+    [ax3, ax4] = gs2.subplots()
 
-fig2 = plt.figure(figsize=(5, 3.75))
-gs2 = fig2.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
-                        top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
-[ax3, ax4] = gs2.subplots()
+    im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
+    for ic in range(len(im_extent)):
+        im_extent[ic] = im_extent[ic]/funit
+    im = ax3.imshow(toten[icenter], interpolation='nearest', cmap="YlOrBr_r",
+                    origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
-im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
-for ic in range(len(im_extent)):
-    im_extent[ic] = im_extent[ic]/funit
-im = ax3.imshow(test_out, interpolation='nearest', cmap="YlOrBr_r",
-                origin="lower", extent=im_extent, aspect='equal', zorder=1)
+    if latom:
+        ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
+    ax3.set_xlim([x_range[0]/funit, x_range[1]/funit])
+    ax3.set_ylim([y_range[0]/funit, y_range[1]/funit])
+    if lbohr:
+        ax3.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
+        ax3.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
+    else:
+        ax3.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
+        ax3.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
 
-if latom:
-    ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
-ax3.set_xlim([x_range[0]/funit, x_range[1]/funit])
-ax3.set_ylim([y_range[0]/funit, y_range[1]/funit])
-if lbohr:
-    ax3.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
-    ax3.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
-else:
-    ax3.set_xlabel(r"$\mathit{x}\ (Å)$", color=palette["black"])
-    ax3.set_ylabel(r"$\mathit{y}\ (Å)$", color=palette["black"])
+    cb2 = fig2.colorbar(im, cax=ax4, orientation='vertical')
+    cb2.outline.set_linewidth(1)
+    cb2.outline.set_color(palette["black"])
+    if lbohr:
+        ax4.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
+    else:
+        ax4.set_ylabel("Energy (eV)", color=palette["black"])
 
-cb2 = fig2.colorbar(im, cax=ax4, orientation='vertical')
-cb2.outline.set_linewidth(1)
-cb2.outline.set_color(palette["black"])
-if lbohr:
-    ax4.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
-else:
-    ax4.set_ylabel("Energy (eV)", color=palette["black"])
+    ax3.tick_params(axis="x", bottom=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax3.tick_params(axis="y", left=True, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax4.tick_params(axis="x", bottom=False, right=False, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    ax4.tick_params(axis="y", left=False, right=True, direction="in",
+                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
+    for edge in ["bottom", "top", "left", "right"]:
+        ax3.spines[edge].set_color(palette["black"])
+        ax3.spines[edge].set_linewidth(1)
+        ax3.spines[edge].set_zorder(4)
 
-ax3.tick_params(axis="x", bottom=True, right=False, direction="in",
-                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax3.tick_params(axis="y", left=True, right=False, direction="in",
-                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax4.tick_params(axis="x", bottom=False, right=False, direction="in",
-                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-ax4.tick_params(axis="y", left=False, right=True, direction="in",
-                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-for edge in ["bottom", "top", "left", "right"]:
-    ax3.spines[edge].set_color(palette["black"])
-    ax3.spines[edge].set_linewidth(1)
-    ax3.spines[edge].set_zorder(4)
-
-filename = "test"
-if ltilt:
-    filename += "_tilt"
-if latom:
-    filename += "_atom"
-if lbohr:
-    filename += "_bohr"
-filename += "_"+str(icenter+1)
-filename += ".png"
-fig2.savefig(filename, dpi=1200)
+    filename = "toten"
+    if latom:
+        filename += "_atom"
+    if lbohr:
+        filename += "_bohr"
+    filename += "_"+str(icenter+1)
+    filename += ".png"
+    fig2.savefig(filename, dpi=1200)
