@@ -206,27 +206,28 @@ class Eigenval:
 
         word = line[1].split()
         self.Ns = int(word[0])
-        if self.Ns == 2:
-            print("Error: Ns==2 is not supported for parsec. See eigenval.py")
-            sys.exit()
         self.Nb = int(word[1])
         Np = int(word[2])
-        ef = float(word[3])
+        ef = float(word[3]) * rydberg
         self.Nk = 0
         for ip in range(Np):
             word = line[ip+3].split()
             self.Nk += int(word[1])
 
-        il = 4+Np
-        for ik in range(self.Nk):
-            word = line[il].split()
-            self.kp.append([float(word[3]), float(word[4]), float(word[5])])
-            il += 1
-            eig0 = []
-            for ib in range(self.Nb):
-                eig0.append([float(line[il].split()[0])])
+        eig = np.zeros((self.Nk, self.Nb, self.Ns))
+        il = 4 + Np
+        for ispin in range(self.Ns):
+            for ik in range(self.Nk):
+                if ispin == 0:
+                    word = line[il].split()
+                    self.kp.append([float(word[3]), float(word[4]), float(word[5])])
                 il += 1
-            self.eig.append(eig0)
+                for ib in range(self.Nb):
+                    eig[ik][ib][ispin] = float(line[il].split()[0])
+                    il += 1
+        eig *= rydberg
+        self.eig = eig.tolist()
+        del eig
 
         # convert kp from 1/bohr to 1/A
         for ik in range(self.Nk):
@@ -234,20 +235,25 @@ class Eigenval:
                 self.kp[ik][ix] = self.kp[ik][ix]/bohr*0.5/pi
 
         self.eigshift(ef)
-        Nvb = []
-        for ik in range(self.Nk):
-            for ib in range(self.Nb):
-                if self.eig[ik][ib][0] > 1e-6:
-                    Nvb.append(ib)
-                    break
-        if max(Nvb) == min(Nvb):
+        Nvb = np.zeros((self.Ns, self.Nk), dtype=int)
+        for ispin in range(self.Ns):
+            for ik in range(self.Nk):
+                for ib in range(self.Nb):
+                    if self.eig[ik][ib][ispin] > 1e-6:
+                        Nvb[ispin][ik] = ib
+                        break
+        if (Nvb.max(axis=1) == Nvb.min(axis=1)).all():
             self.is_semic = True
-            self.Nvb = [max(Nvb)]
+            self.Nvb = Nvb.max(axis=1).tolist()
+            # Creates occ if a gap is detected
+            occ = np.zeros((self.Nk, self.Nb, self.Ns))
+            for ispin in range(self.Ns):
+                occ[:, 0:self.Nvb[ispin], ispin] = 1.0
+            self.occ = occ.tolist()
+            del occ
         else:
             self.is_semic = False
-        for ik in range(self.Nk):
-            for ib in range(self.Nb):
-                self.eig[ik][ib][0] *= rydberg
+        del Nvb
 
     def read_parsec_eigen(self):
         # Read the eigenvalues from eigen.dat.
@@ -355,19 +361,19 @@ class Eigenval:
 
     def semic(self):
         self.is_semic = True
-        for k in range(self.Nk):
-            for b in range(self.Nb):
-                for s in range(self.Ns):
-                    if self.occ[k][b][s] < 0.999 and self.occ[k][b][s] > 0.001:
+        for ik in range(self.Nk):
+            for ib in range(self.Nb):
+                for ispin in range(self.Ns):
+                    if self.occ[ik][ib][ispin] < 0.999 and self.occ[ik][ib][ispin] > 0.001:
                         self.is_semic = False
 
     def gap(self):
         self.Nvb = []
-        for s in range(self.Ns):
+        for ispin in range(self.Ns):
             self.Nvb.append(0)
-            for b in range(self.Nb):
-                if self.occ[0][b][s] < 0.5:
-                    self.Nvb[s] = b
+            for ib in range(self.Nb):
+                if self.occ[0][ib][ispin] < 0.5:
+                    self.Nvb[ispin] = ib
                     break
         self.vbm = -1e10
         self.vbm_k = 0
@@ -379,18 +385,18 @@ class Eigenval:
         self.edg = 1e10
         self.edg_k = 0
         self.edg_s = 0
-        for s in range(self.Ns):
-            for k in range(self.Nk):
-                if self.eig[k][self.Nvb[s]-1][s] > self.vbm:
-                    self.vbm = self.eig[k][self.Nvb[s]-1][s]
-                    self.vbm_k = k
-                    self.vbm_s = s
-                if self.eig[k][self.Nvb[s]][s] < self.cbm:
-                    self.cbm = self.eig[k][self.Nvb[s]][s]
-                    self.cbm_k = k
-                    self.cbm_s = s
-                if self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s] < self.edg:
-                    self.edg = self.eig[k][self.Nvb[s]][s]-self.eig[k][self.Nvb[s]-1][s]
-                    self.edg_k = k
-                    self.edg_s = s
+        for ispin in range(self.Ns):
+            for ik in range(self.Nk):
+                if self.eig[ik][self.Nvb[ispin]-1][ispin] > self.vbm:
+                    self.vbm = self.eig[ik][self.Nvb[ispin]-1][ispin]
+                    self.vbm_k = ik
+                    self.vbm_s = ispin
+                if self.eig[ik][self.Nvb[ispin]][ispin] < self.cbm:
+                    self.cbm = self.eig[ik][self.Nvb[ispin]][ispin]
+                    self.cbm_k = ik
+                    self.cbm_s = ispin
+                if self.eig[ik][self.Nvb[ispin]][ispin]-self.eig[ik][self.Nvb[ispin]-1][ispin] < self.edg:
+                    self.edg = self.eig[ik][self.Nvb[ispin]][ispin]-self.eig[ik][self.Nvb[ispin]-1][ispin]
+                    self.edg_k = ik
+                    self.edg_s = ispin
         self.eindg = self.cbm-self.vbm

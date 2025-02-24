@@ -151,6 +151,13 @@ elif package in package_name["parsec"]:
 
     kpoints1.read_kpathin()
 
+    if eigenval1.is_semic == True:
+        eigenval1.gap()
+        eigenval1.writegap(kpoints1)
+        eigenval1.eigshift(eigenval1.vbm)
+    else:
+        print("Metal band structure are not shifted")
+
     x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
     energy = eigenval1.eigtrans()
 
