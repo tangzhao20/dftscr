@@ -1,0 +1,101 @@
+#    formula   name   
+1    He        helium
+2    Ne        neon
+3    Ar        argon
+4    Kr        krypton
+5    Xe        xenon
+6    H2        hydrogen
+7    Li2       lithium dimer
+8    Na2       sodium dimer
+9    Na4       sodium tetramer
+10   Na6       sodium hexamer
+11   K2        potassium dimer
+12   Rb2       rubidium dimer
+13   N2        nitrogen
+14   P2        phosphorus dimer
+15   As2       arsenic dimer
+16   F2        fluorine
+17   Cl2       chlorine
+18   Br2       bromine
+19   I2        iodine
+20   CH4       methane
+21   C2H6      ethane
+22   C3H8      propane
+23   C4H10     butane
+24   C2H4      ethylene
+25   C2H2      acetylene
+26   C4        tetracarbon
+27   C3H6      cyclopropane
+28   C6H6      benzene
+29   C8H8      cyclooctatetraene
+30   C5H6      cyclopentadiene
+31   C2H3F     vinyl fluoride
+32   C2H3Cl    vinyl chloride
+33   C2H3Br    vinyl bromide
+34   C2H3I     vinyl iodide
+35   CF4       tetrafluoromethane
+36   CCl4      tetrachloromethane
+37   CBr4      tetrabromomethane
+38   CI4       tetraiodomethane
+39   SiH4      silane
+40   GeH4      germane
+41   Si2H6     disilane
+42   Si5H12    pentasilane
+43   LiH       lithium hydride
+44   KH        potassium hydride
+45   BH3       borane
+46   B2H6      diborane(6)
+47   NH3       ammonia
+48   HN3       hydrazoic acid
+49   PH3       phosphine
+50   AsH3      arsine
+51   SH2       hydrogen sulfide
+52   FH        hydrogen fluoride
+53   ClH       hydrogen chloride
+54   LiF       lithium fluoride
+55   F2Mg      magnesium fluoride
+56   TiF4      titanium tetrafluoride
+57   AlF3      aluminum fluoride
+58   BF        boron monofluoride
+59   SF4       sulfur tetrafluoride
+60   BrK       potassium bromide
+61   GaCl      gallium monochloride
+62   NaCl      sodium chloride
+63   MgCl2     magnesium chloride
+64   AlI3      aluminum iodide
+65   BN        boron nitride
+66   NCH       hydrogen cyanide
+67   PN        phosphorus mononitride
+68   H2NNH2    hydrazine
+69   H2CO      formaldehyde
+70   CH4O      methanol
+71   C2H6O     ethanol
+72   C2H4O     acetaldehyde
+73   C4H10O    ethoxy ethane
+74   CH2O2     formic acid
+75   HOOH      hydrogen peroxide
+76   H2O       water
+77   CO2       carbon dioxide
+78   CS2       carbon disulfide
+79   OCS       carbon oxide sulfide
+80   OCSe      carbon oxide selenide
+81   CO        carbon monoxide
+82   O3        ozone
+83   SO2       sulfur dioxide
+84   BeO       beryllium monoxide
+85   MgO       magnesium monoxide
+86   C7H8      toluene
+87   C8H10     ethylbenzene
+88   C6F6      hexafluorobenzene
+89   C6H5OH    phenol
+90   C6H5NH2   aniline
+91   C5H5N     pyridine
+92   C5H5N5O   guanine
+93   C5H5N5O   adenine
+94   C4H5N3O   cytosine
+95   C5H6N2O2  thymine
+96   C4H4N2O2  uracil
+97   CH4N2O    urea
+98   Ag2       silver dimer
+99   Cu2       copper dimer
+100  NCCu      copper cyanide
