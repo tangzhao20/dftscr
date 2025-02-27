@@ -1,4 +1,4 @@
-#    formula   name   
+#    formula   name
 1    He        helium
 2    Ne        neon
 3    Ar        argon
@@ -24,7 +24,7 @@
 23   C4H10     butane
 24   C2H4      ethylene
 25   C2H2      acetylene
-26   C4        tetracarbon
+26   C4        carbon tetramer
 27   C3H6      cyclopropane
 28   C6H6      benzene
 29   C8H8      cyclooctatetraene
@@ -44,41 +44,41 @@
 43   LiH       lithium hydride
 44   KH        potassium hydride
 45   BH3       borane
-46   B2H6      diborane(6)
+46   B2H6      diborane
 47   NH3       ammonia
 48   HN3       hydrazoic acid
 49   PH3       phosphine
 50   AsH3      arsine
-51   SH2       hydrogen sulfide
-52   FH        hydrogen fluoride
-53   ClH       hydrogen chloride
+51   H2S       hydrogen sulfide
+52   HF        hydrogen fluoride
+53   HCl       hydrogen chloride
 54   LiF       lithium fluoride
-55   F2Mg      magnesium fluoride
+55   MgF2      magnesium fluoride
 56   TiF4      titanium tetrafluoride
 57   AlF3      aluminum fluoride
 58   BF        boron monofluoride
 59   SF4       sulfur tetrafluoride
-60   BrK       potassium bromide
+60   KBr       potassium bromide
 61   GaCl      gallium monochloride
 62   NaCl      sodium chloride
 63   MgCl2     magnesium chloride
 64   AlI3      aluminum iodide
 65   BN        boron nitride
-66   NCH       hydrogen cyanide
+66   HCN       hydrogen cyanide
 67   PN        phosphorus mononitride
-68   H2NNH2    hydrazine
+68   N2H4      hydrazine
 69   H2CO      formaldehyde
-70   CH4O      methanol
-71   C2H6O     ethanol
-72   C2H4O     acetaldehyde
-73   C4H10O    ethoxy ethane
-74   CH2O2     formic acid
-75   HOOH      hydrogen peroxide
+70   CH3OH     methanol
+71   C2H5OH    ethanol
+72   CH3CHO    acetaldehyde
+73   C4H10O    diethyl ether
+74   HCOOH     formic acid
+75   H2O2      hydrogen peroxide
 76   H2O       water
 77   CO2       carbon dioxide
 78   CS2       carbon disulfide
-79   OCS       carbon oxide sulfide
-80   OCSe      carbon oxide selenide
+79   COS       carbonyl sulfide
+80   COSe      carbonyl selenide
 81   CO        carbon monoxide
 82   O3        ozone
 83   SO2       sulfur dioxide
@@ -91,11 +91,11 @@
 90   C6H5NH2   aniline
 91   C5H5N     pyridine
 92   C5H5N5O   guanine
-93   C5H5N5O   adenine
+93   C5H5N5    adenine
 94   C4H5N3O   cytosine
 95   C5H6N2O2  thymine
 96   C4H4N2O2  uracil
 97   CH4N2O    urea
 98   Ag2       silver dimer
 99   Cu2       copper dimer
-100  NCCu      copper cyanide
+100  CuCN      copper cyanide
