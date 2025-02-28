@@ -1,0 +1,19 @@
+# 12190-70-4.xyz
+boundary_sphere_radius  6.930799319872 ang
+grid_spacing  0.2
+output_all_states  .true.
+diag_tolerance  1.d-5
+convergence_criterion  1.d-4
+states_num  5019
+
+coordinate_unit  cartesian_ang
+correlation_type  PBE
+
+atom_types_num  1
+atom_type  Cu
+local_component  d
+begin atom_coord
+    0.0000000000    0.0000000000    0.0000000000
+    0.0000000000    0.0000000000    2.2197000000
+end atom_coord
+

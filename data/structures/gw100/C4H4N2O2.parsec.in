@@ -1,0 +1,44 @@
+# 66-22-8.xyz
+boundary_sphere_radius  7.867828308954 ang
+grid_spacing  0.3
+output_all_states  .true.
+diag_tolerance  1.d-5
+convergence_criterion  1.d-4
+states_num  2154
+
+coordinate_unit  cartesian_ang
+correlation_type  PBE
+
+atom_types_num  4
+atom_type  C
+local_component  s
+begin atom_coord
+    1.1438667000   -0.0000001000   -1.2038069000
+    1.7446080000   -0.0000000000    0.0097511000
+   -0.3090145000    0.0000000000   -1.2970091000
+   -0.3751368000    0.0000001000    1.2248796000
+end atom_coord
+
+atom_type  H
+local_component  s
+begin atom_coord
+    1.7181113000   -0.0000002000   -2.1244327000
+    2.8271212000   -0.0000001000    0.1298240000
+   -1.9701793000    0.0000002000   -0.0511160000
+    1.4813173000    0.0000001000    2.0806653000
+end atom_coord
+
+atom_type  N
+local_component  s
+begin atom_coord
+   -0.9523747000    0.0000001000   -0.0343227000
+    1.0223980000    0.0000001000    1.1766034000
+end atom_coord
+
+atom_type  O
+local_component  s
+begin atom_coord
+   -0.9725128000   -0.0000001000   -2.3249912000
+   -0.9991833000   -0.0000001000    2.2733353000
+end atom_coord
+

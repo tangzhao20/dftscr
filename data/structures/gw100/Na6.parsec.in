@@ -1,0 +1,23 @@
+# 39297-88-6.xyz
+boundary_sphere_radius  9.257659048009 ang
+grid_spacing  0.3
+output_all_states  .true.
+diag_tolerance  1.d-5
+convergence_criterion  1.d-4
+states_num  1749
+
+coordinate_unit  cartesian_ang
+correlation_type  PBE
+
+atom_types_num  1
+atom_type  Na
+local_component  p
+begin atom_coord
+   -2.4732949000   -1.7969539000   -0.2367313000
+   -2.4732949000    1.7969539000   -0.2367313000
+    0.9447146000   -2.9075325000   -0.2367313000
+    0.9447146000    2.9075325000   -0.2367313000
+    3.0571606000    0.0000000000   -0.2367313000
+    0.0000000000    0.0000000000    1.1836565000
+end atom_coord
+
