@@ -386,7 +386,7 @@ class Poscar:
 
         radius = np.max(np.linalg.norm(ap, axis=1))
         lc0 = 2.0 * (radius+5.0)  # vacuum is set to 5 A
-        self.lc = [[lc0, 0, 0], [0, lc0, 0], [0, 0, lc0]]
+        self.lc = [[lc0, 0.0, 0.0], [0.0, lc0, 0.0], [0.0, 0.0, lc0]]
 
         self.ap = (ap / lc0 + 0.5).tolist()
         del ap
