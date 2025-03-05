@@ -359,10 +359,10 @@ class Poscar:
         line = f0.readlines()
         f0.close()
 
-        radius = 0.0
         self.Natom = int(line[0].split()[0])
         lbohr = False
         word = line[1].split()
+        ap_list = []
         if len(word) >= 1 and word[0][0] in ["B", "b"]:
             lbohr = True
         if len(line) < self.Natom+2:
@@ -376,19 +376,20 @@ class Poscar:
                 self.Naint.append(1)
             else:
                 self.Naint[-1] += 1
-            ap0 = [float(word[1]), float(word[2]), float(word[3])]
-            self.ap.append(ap0)
-            radius = max(radius, abs(ap0[0]), abs(ap0[1]), abs(ap0[2]))
+            ap_list.append([float(word[1]), float(word[2]), float(word[3])])
 
-        lc0 = 2.0*radius+10.0
-        self.lc = [[lc0, 0, 0], [0, lc0, 0], [0, 0, lc0]]
-        for ia in range(self.Natom):
-            for ix in range(3):
-                self.ap[ia][ix] = self.ap[ia][ix]/lc0+0.5
+        ap = np.array(ap_list)
+        del ap_list
 
         if lbohr:
-            for ix in range(3):
-                self.lc[ix][ix] = self.lc[ix][ix]*bohr
+            ap = ap * bohr
+
+        radius = np.max(np.linalg.norm(ap, axis=1))
+        lc0 = 2.0 * (radius+5.0)  # vacuum is set to 5 A
+        self.lc = [[lc0, 0, 0], [0, lc0, 0], [0, 0, lc0]]
+
+        self.ap = (ap / lc0 + 0.5).tolist()
+        del ap
 
 ########################################################################
 
