@@ -26,7 +26,7 @@ sudo apt install python3-matplotlib python3-numpy python3-scipy python3-yaml
 
 For basic band structure plotting, use:  
 ```bash
-python bands.py package (E1) (E2)
+python3 bands.py package (E1) (E2)
 ```
 * If both `E1` and `E2` are provided, the energy range is [E1, E2] (in eV).  
 * If only `E1` is provided, the energy range is [-E1, E1] (in eV).  
@@ -40,7 +40,7 @@ python bands.py package (E1) (E2)
 
 To plot projected band structures:  
 ```bash
-python bands.py package atoms orbitals (E1) (E2)
+python3 bands.py package atoms orbitals (E1) (E2)
 ```
 **Supported formats:** VASP (vaspproj), QE (qeproj)  
 
@@ -49,7 +49,7 @@ python bands.py package atoms orbitals (E1) (E2)
 
 To plot band structures from Wannier90:  
 ```bash
-python bands.py wan (pad=*) (E1) (E2)
+python3 bands.py wan (pad=*) (E1) (E2)
 ```
 **Inputs:** nscf.in, ../bands/\*.xml, \*\_band.kpt, \*\_band.dat, kpath.in
 
@@ -58,7 +58,7 @@ python bands.py wan (pad=*) (E1) (E2)
 
 To convert the format of the atomic structure:  
 ```bash
-python posconvert.py package1 package2 (filename1)
+python3 posconvert.py package1 package2 (filename1)
 ```
 **Supported formats:** VASP, QE (.in or .xml), Paratec, PARSEC, .xyz  
 
@@ -78,7 +78,7 @@ If the optional input file posconvert.in exists, this code modifies the structur
 
 To convert the format of the *k*-point path:  
 ```bash
-python kconvert.py package1 package2 (N)
+python3 kconvert.py package1 package2 (N)
 ```
 **Supported formats:** VASP, QE, kpath.in
 
@@ -88,7 +88,7 @@ Examples of the kpath.in file can be found in the [data/kpaths](data/kpaths) dir
 
 A common use of this code is to create the *k*-point path for QE band structure calculations:  
 ```bash
-python kconvert.py kpathin qe (N)
+python3 kconvert.py kpathin qe (N)
 ```
 
 ## DOS plotting
@@ -96,7 +96,7 @@ python kconvert.py kpathin qe (N)
 
 To plot DOS:  
 ```bash
-python dos.py (v) package (E1) (E2)
+python3 dos.py (v) package (E1) (E2)
 ```
 * `v` indicates plot vertically   
 * `E1` and `E2` define the energy range, as described in the band structure section
@@ -108,7 +108,7 @@ python dos.py (v) package (E1) (E2)
 
 To plot projected DOS:  
 ```bash
-python dos.py (v) package atoms orbitals (E1) (E2)
+python3 dos.py (v) package atoms orbitals (E1) (E2)
 ```
 **Support format:** QE (qeproj)  
 
@@ -131,7 +131,7 @@ This script calculates distortion projection onto phonon modes and uses it as th
 
 This script reads the KS orbitals from the WAVECAR, and writes into separate files for the VESTA plot:  
 ```bash
-python wavecar.py ik ib ispin
+python3 wavecar.py ik ib ispin
 ```
 **Input:** WAVECAR, POSCAR
 
@@ -140,7 +140,7 @@ python wavecar.py ik ib ispin
 
 [silicon.py](src/silicon.py) creates the atomic structure of silicon nanocrystals, given the radius in angstrom:
 ```bash
-python silicon.py radius
+python3 silicon.py radius
 ```
 
 [sidef.py](src/sidef.py) prints information of atoms in a silicon nanocrystal:
@@ -168,7 +168,7 @@ python3 hbndef.py flake r (defect)
 
 [afm.py](src/afm.py) and [afm.sh](src/afm.sh) prepare the files and job directories for the AFM simulation. The Python code can be used to prepare the structure files by
 ```bash
-python afm.py (vasp)
+python3 afm.py (vasp)
 ```
 
 **Inputs:** afm.in, tip.xyz, sample.parsec\_st.dat, (\*\_POTRE.DAT)  
@@ -193,7 +193,7 @@ afm.sh sbatch
 
 After all the calculations are done, use the Python script [afmplot.py](src/afmplot.py) to make the plots:  
 ```bash
-python afmplot.py (iz) (atom) (tilt) (bohr)
+python3 afmplot.py (iz) (atom) (tilt) (bohr) (verbose) (toten)
 ```
 
 **Inputs:** afm.in, steps.dat, (toten.dat or seq\_\*\_\*/parsec.out)  

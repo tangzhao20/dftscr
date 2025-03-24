@@ -173,7 +173,6 @@ if ltilt:
         toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1]))  # bicubic
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
-    # TODO: a converge condition has not been implemented yet
     x_init = x_grid[np.newaxis, :]
     y_init = y_grid[:, np.newaxis]
     x_new = np.tile(x_init, (ny, 1))
@@ -183,8 +182,16 @@ if ltilt:
         fy = (y_init - y_new) * k_spring
         fx += (toten_2d[1](y_new, x_new-h*0.5, grid=False) - toten_2d[1](y_new, x_new+h*0.5, grid=False)) / h
         fy += (toten_2d[1](y_new-h*0.5, x_new, grid=False) - toten_2d[1](y_new+h*0.5, x_new, grid=False)) / h
-        x_new += fx / k_spring * alpha
-        y_new += fy / k_spring * alpha
+        x_incr = fx / k_spring
+        y_incr = fy / k_spring
+        x_new += x_incr * alpha
+        y_new += y_incr * alpha
+        if np.max(x_incr**2 + y_incr**2) < 1.e-7:
+            if lverbose:
+                print(" tilt correction converge at N = "+str(iiter))
+            break
+        if iiter == niter-1:
+            print(" tilt correction does not converge in Niter = "+str(niter))
 
 # ==================== calculate kts ====================
 if ltilt:
