@@ -56,8 +56,8 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 parallel = 1
 k_spring = 0.8  # k in N/m
-niter = 100  # number of iterations
-alpha = 0.1  # damping factor in the iterative solver
+niter = 1000  # number of iterations
+alpha = 0.2  # damping factor in the iterative solver
 h = 0.2  # step size in the finite difference method, in units of A
 
 with open("afm.in", "r") as f0:
@@ -186,7 +186,14 @@ if ltilt:
         for iiter in range(niter):
             fy = (y_grid - y_new[iz, :]) * k_spring
             fy += (toten_1d[iz](y_new[iz, :] - h*0.5) - toten_1d[iz](y_new[iz, :] + h*0.5)) / h
-            y_new[iz, :] += fy / k_spring * alpha
+            y_incr = fy / k_spring
+            y_new[iz, :] += y_incr * alpha
+            if np.max(y_incr) < 1.e-4:
+                print(f" iz: {iz:0d}    tilt correction converge at iiter = {iiter:0d}")
+                break
+            if iiter == niter-1:
+                print(f" iz: {iz:0d}    tilt correction does not converge in niter = {niter:0d}")
+
 
 # ==================== calculate kts ====================
 if lforce:

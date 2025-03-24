@@ -16,3 +16,6 @@ y_range -9.3 9.3
 parallel 8
 
 fdet True
+
+# niter 1000
+# alpha 0.2

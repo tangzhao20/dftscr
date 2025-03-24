@@ -52,8 +52,8 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 parallel = 1
 k_spring = 0.8  # k in N/m
-niter = 100  # number of iterations
-alpha = 0.1  # damping factor in the iterative solver
+niter = 1000  # number of iterations
+alpha = 0.2  # damping factor in the iterative solver
 h = 0.2  # step size in the finite difference method, in units of A
 
 with open("afm.in", "r") as f0:
@@ -186,12 +186,12 @@ if ltilt:
         y_incr = fy / k_spring
         x_new += x_incr * alpha
         y_new += y_incr * alpha
-        if np.max(x_incr**2 + y_incr**2) < 1.e-7:
+        if np.max(x_incr**2 + y_incr**2) < 1.e-8:
             if lverbose:
-                print(" tilt correction converge at N = "+str(iiter))
+                print(f" tilt correction converge at iiter = {iiter:0d}")
             break
         if iiter == niter-1:
-            print(" tilt correction does not converge in Niter = "+str(niter))
+            print(f" tilt correction does not converge in niter = {niter:0d}")
 
 # ==================== calculate kts ====================
 if ltilt:
@@ -307,7 +307,7 @@ if ltilt:
     q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
                    scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
     if lverbose:
-        print("iz: "+str(icenter+1)+"    kmax: "+f"{np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5:8.4f} Å")
+        print("iz: "+str(icenter+1)+"    Delta_max: "+f"{np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5:0.4f} Å")
 
     if latom:
         ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors=palette["black"], linewidths=0.25, zorder=2)
