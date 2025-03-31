@@ -202,3 +202,5 @@ python3 afmplot.py (iz) (atom) (tilt) (bohr) (verbose) (toten)
 
 In the first round, this code reads the total energies from seq\_\*\_\*/parsec.out files and writes to toten.dat. After that, the toten.dat will be read.  
 `iz` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `iz` should be set to 2 as default. Add the `atom` option to display the atom positions. Only the top layer within 1 Å is plotted. Add the `tilt` option to use the tilt correction. Add the `bohr` option to use the Bohr as the length unit.  
+
+An iterative tilt correction method is used in this code, which solves the lateral shift by $\mathit{\Delta}(x)=F(x+\mathit{\Delta}(x))/k$. You may set the maximum iteration number `niter` and the damping factor `alpha` in the input file `afm.in`. The conventional method uses a single-shot approximation $\mathit{\Delta}(x)=F(x)/k$, which can be employed by setting `niter 1` and `alpha 1` in the input.  
