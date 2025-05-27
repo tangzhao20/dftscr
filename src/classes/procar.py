@@ -7,17 +7,16 @@ class Procar:
     # Nk
     # Nb
     # Na
-    # Nlm
-    # proj[k][b][a][orb]
-    # orb_name[orb]
+    # Norb
+    # proj[Nk][Nb][Na][Norb]
+    # orb_name[Norb]
 
     def __init__(self):
         self.Nk = 0
         self.Nb = 0
         self.Na = 0
-        self.Nlm = 0
+        self.Norb = 0
         self.proj = []
-        self.orb = []
         self.orb_name = []
 
     def read_vasp(self, filename="PROCAR"):
@@ -31,9 +30,9 @@ class Procar:
         self.Na = int(word[11])
 
         word = line[7].split()
-        self.Nlm = len(word)-2
+        self.Norb = len(word)-2
 
-        print("Na "+str(self.Na)+" Nk "+str(self.Nk)+" Nb "+str(self.Nb)+" Nlm "+str(self.Nlm))
+        print("Na "+str(self.Na)+" Nk "+str(self.Nk)+" Nb "+str(self.Nb)+" Norb "+str(self.Norb))
 
         self.proj = []
         a = -1
@@ -55,7 +54,7 @@ class Procar:
                     print("atom number mismatch on line "+str(il+1))
                     sys.exit()
                 proj2 = []
-                for lm in range(self.Nlm):
+                for lm in range(self.Norb):
                     proj2.append(float(word[lm+1]))
                 proj1.append(proj2)
                 if a < self.Na-1:
@@ -66,13 +65,13 @@ class Procar:
                     if b == self.Nb-1:
                         self.proj.append(proj0)
 
-        if self.Nlm == 9:
+        if self.Norb == 9:
             self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
-        elif self.Nlm == 16:
+        elif self.Norb == 16:
             self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz",
                              "x2-y2", "fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
         else:
-            print("Nlm="+str(self.Nlm)+" is not support yet")
+            print("Norb = "+str(self.Norb)+" is not support yet")
             sys.exit()
 
         del proj0
@@ -97,12 +96,12 @@ class Procar:
             if word[0] == "state":
                 ia = int(word[4])-1
                 if len(atommap) == 0 or ia != atommap[-1]:
-                    ilm = 0
+                    iorb = 0
                 else:
-                    ilm += 1
-                lmmap.append(ilm)
+                    iorb += 1
+                lmmap.append(iorb)
                 atommap.append(ia)
-                self.Nlm = max(ilm+1, self.Nlm)
+                self.Norb = max(iorb+1, self.Norb)
                 self.Na = max(ia+1, self.Na)
             elif word[0] == "nkstot":
                 self.Nk = int(word[2])
@@ -116,7 +115,7 @@ class Procar:
                         for ib in range(self.Nb):
                             proj1 = []
                             for ia in range(self.Na):
-                                proj1.append([0.0]*self.Nlm)
+                                proj1.append([0.0]*self.Norb)
                             proj0.append(proj1)
                             del proj1
                         self.proj.append(proj0)
@@ -135,15 +134,15 @@ class Procar:
                 for ii in range(0, len(number), 2):
                     # proj[k][b][a][orb]
                     self.proj[ik][ib][atommap[int(number[ii+1])-1]][lmmap[int(number[ii+1])-1]] = float(number[ii])
-        if self.Nlm == 4:
+        if self.Norb == 4:
             self.orb_name = ["s", "pz", "px", "py"]
-        elif self.Nlm == 9:
+        elif self.Norb == 9:
             self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2", "dxy"]
-        elif self.Nlm == 16:
+        elif self.Norb == 16:
             self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2",
                              "dxy", "fz3", "fxz2", "fyz2", "fzx2", "fxyz", "fx3", "fy3x2"]
         else:
-            print("Nlm="+str(self.Nlm)+" is not support yet")
+            print("Norb = "+str(self.Norb)+" is not support yet")
             sys.exit()
 
     def plot(self, atom_flag, orb_flag, fac):
@@ -153,7 +152,7 @@ class Procar:
             for k in range(self.Nk):
                 plot_proj1 = 0.0
                 for a in range(self.Na):
-                    for i in range(self.Nlm):
+                    for i in range(self.Norb):
                         if atom_flag[a] and orb_flag[i] == 1:
                             plot_proj1 += self.proj[k][b][a][i]
                 plot_proj0.append(plot_proj1*fac)
@@ -163,7 +162,7 @@ class Procar:
     def read_orb_list(self, orb_list):
         orb_list0 = orb_list.split("+")
         orb_list1 = []
-        orb_flag = [0]*self.Nlm
+        orb_flag = [0]*self.Norb
         for j in orb_list0:
             if j in self.orb_name:
                 orb_list1.append(j)

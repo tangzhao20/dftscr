@@ -93,11 +93,11 @@ class Doscar:
                 self.dos[1].append(float(word[2]))
 
     def readpdos_qe(self):
-        # pdos[Ns][Nepdos][Na][Nlm]
+        # pdos[Ns][Nepdos][Na][Norb]
         # x_pdos[Nepdos]
         # atomtype[Ntype]
         # Naint[Ntype]
-        # orb_name[Nlm]
+        # orb_name[Norb]
 
         if self.Ns == 2:
             print("QE pdos has not been supported for spin polarized system yet.")
@@ -113,15 +113,15 @@ class Doscar:
                 system = fileinfo.group(1)
                 iatom = fileinfo.group(2)
                 atomtype = fileinfo.group(3)
-                iorbit = fileinfo.group(4)
-                orbittype = fileinfo.group(5)
-                filelist.append([filename, int(iatom), atomtype, int(iorbit)])
+                iorb = fileinfo.group(4)
+                orb_info = fileinfo.group(5)
+                filelist.append([filename, int(iatom), atomtype, int(iorb)])
         if len(filelist) == 0:
             print("Error: No valid pdos file found.")
             sys.exit()
         filelist = sorted(filelist, key=lambda x: (x[1], x[3]))
         self.Na = max(filelist, key=lambda x: x[1])[1]
-        self.Nlm = max(filelist, key=lambda x: x[3])[3]**2
+        self.Norb = max(filelist, key=lambda x: x[3])[3]**2
 
         # Read energies and Nepdos from the first file
         f = filelist[0]
@@ -137,11 +137,11 @@ class Doscar:
         self.Nepdos = len(self.energy_pdos)
 
         self.pdos = []
-        self.pdos = np.arange(self.Ns*self.Nepdos*self.Na*self.Nlm)
-        self.pdos = np.reshape(self.pdos, (self.Ns, self.Nepdos, self.Na, self.Nlm)).tolist()
+        self.pdos = np.arange(self.Ns*self.Nepdos*self.Na*self.Norb)
+        self.pdos = np.reshape(self.pdos, (self.Ns, self.Nepdos, self.Na, self.Norb)).tolist()
 
         for f in filelist:
-            # f=[filename, iatom, atomtype, iorbit]
+            # f=[filename, iatom, atomtype, iorb]
             f0 = open(f[0], "r")
             line = f0.readlines()
             f0.close()
@@ -185,7 +185,7 @@ class Doscar:
         for ie in range(self.Nepdos):
             pdos_out0 = 0.0
             for ia in range(self.Na):
-                for im in range(self.Nlm):
+                for im in range(self.Norb):
                     if atom_flag[ia] and orb_flag[im] == 1:
                         pdos_out0 += self.pdos[0][ie][ia][im]
             pdos_out.append(pdos_out0)
@@ -194,7 +194,7 @@ class Doscar:
     def read_orb_list(self, orb_list):
         orb_list0 = orb_list.split("+")
         orb_list1 = []
-        orb_flag = [0]*self.Nlm
+        orb_flag = [0]*self.Norb
         for j in orb_list0:
             if j in self.orb_name:
                 orb_list1.append(j)
