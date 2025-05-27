@@ -35,34 +35,34 @@ class Procar:
         print("Na "+str(self.Na)+" Nk "+str(self.Nk)+" Nb "+str(self.Nb)+" Norb "+str(self.Norb))
 
         self.proj = []
-        a = -1
+        ia = -1
         for il in range(len(line)):
             word = line[il].split()
             if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
             if word[0] == "k-point":
-                k = int(word[1])
+                ik = int(word[1])
                 proj0 = []
                 # word=line[].split()
             elif word[0] == "band":
                 proj1 = []
-                b = int(word[1])
+                ib = int(word[1])
             elif word[0] == "ion":
-                a = 0
-            elif a >= 0 and a < self.Na:
-                if int(word[0]) != a+1:
+                ia = 0
+            elif ia >= 0 and ia < self.Na:
+                if int(word[0]) != ia+1:
                     print("atom number mismatch on line "+str(il+1))
                     sys.exit()
                 proj2 = []
                 for lm in range(self.Norb):
                     proj2.append(float(word[lm+1]))
                 proj1.append(proj2)
-                if a < self.Na-1:
-                    a = a+1
+                if ia < self.Na-1:
+                    ia = ia+1
                 else:
-                    a = -1
+                    ia = -1
                     proj0.append(proj1)
-                    if b == self.Nb-1:
+                    if ib == self.Nb-1:
                         self.proj.append(proj0)
 
         if self.Norb == 9:
@@ -147,73 +147,71 @@ class Procar:
 
     def plot(self, atom_flag, orb_flag, fac):
         plot_proj = []
-        for b in range(self.Nb):
+        for ib in range(self.Nb):
             plot_proj0 = []
-            for k in range(self.Nk):
+            for ik in range(self.Nk):
                 plot_proj1 = 0.0
-                for a in range(self.Na):
-                    for i in range(self.Norb):
-                        if atom_flag[a] and orb_flag[i] == 1:
-                            plot_proj1 += self.proj[k][b][a][i]
+                for ia in range(self.Na):
+                    for iorb in range(self.Norb):
+                        if atom_flag[ia] and orb_flag[iorb] == 1:
+                            plot_proj1 += self.proj[ik][ib][ia][iorb]
                 plot_proj0.append(plot_proj1*fac)
             plot_proj.append(plot_proj0)
         return plot_proj
 
-    def read_orb_list(self, orb_list):
-        orb_list0 = orb_list.split("+")
-        orb_list1 = []
+    def read_orb_list(self, orb_string):
+        orb_list = []
         orb_flag = [0]*self.Norb
-        for j in orb_list0:
-            if j in self.orb_name:
-                orb_list1.append(j)
-            elif j == "p":
-                orb_list1 += ["px", "py", "pz"]
-            elif j == "d":
-                orb_list1 += ["dxy", "dyz", "dz2", "dxz", "x2-y2"]
-            elif j == "f":
-                orb_list1 += ["fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
-            elif j == "dx2-y2":
-                orb_list1.append("x2-y2")
-            elif j == "all":
-                orb_list1 += self.orb_name
+        for orb in orb_string.split("+"):
+            if orb in self.orb_name:
+                orb_list.append(orb)
+            elif orb == "p":
+                orb_list += ["px", "py", "pz"]
+            elif orb == "d":
+                orb_list += ["dxy", "dyz", "dz2", "dxz", "x2-y2"]
+            elif orb == "f":
+                orb_list += ["fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
+            elif orb == "dx2-y2":
+                orb_list.append("x2-y2")
+            elif orb == "all":
+                orb_list += self.orb_name
             else:
-                print("projector "+j+" does not exist")
+                print("projector "+orb+" does not exist")
 
-        for j in orb_list1:
-            if j in self.orb_name:
-                orb_flag[self.orb_name.index(j)] = 1
+        for orb in orb_list:
+            if orb in self.orb_name:
+                orb_flag[self.orb_name.index(orb)] = 1
             else:
-                print("projector "+j+" does not exist")
+                print("projector "+orb+" does not exist")
 
         return orb_flag
 
-    def read_atom_list(self, atom_list, poscar1):
+    def read_atom_list(self, atom_string, poscar1):
         atom_flag = []
-        if atom_list == "all":
-            for a in range(self.Na):
+        if atom_string == "all":
+            for ia in range(self.Na):
                 atom_flag.append(1)
         else:
-            for a in range(self.Na):
+            for ia in range(self.Na):
                 atom_flag.append(0)
-            atom_list0 = atom_list.split(",")
-            for i in range(len(atom_list0)):
-                Fatom_valid = False
-                Iatom0 = 0
-                Iatom1 = 0
-                for j in range(len(poscar1.atomtype)):
-                    Iatom1 = Iatom1+poscar1.Naint[j]
-                    if atom_list0[i] == poscar1.atomtype[j]:
-                        for a in range(Iatom0, Iatom1):
-                            atom_flag[a] = 1
-                        Fatom_valid = True
-                    Iatom0 = Iatom1
-                if Fatom_valid == False:
-                    atom_list1 = atom_list0[i].split("-")
-                    if len(atom_list1) == 1:
-                        atom_flag[int(atom_list1[0])-1] = 1
-                        Fatom_valid = True
+            for atom_section in atom_string.split(","):
+                is_valid_atom = False
+                ia_start = 0
+                ia_end = 0
+                for itype in range(len(poscar1.atomtype)):
+                    ia_end = ia_end + poscar1.Naint[itype]
+                    if atom_section == poscar1.atomtype[itype]:
+                        for ia in range(ia_start, ia_end):
+                            atom_flag[ia] = 1
+                        is_valid_atom = True
+                    ia_start = ia_end
+                if is_valid_atom == False:
+                    atom_list = atom_section.split("-")
+                    if len(atom_list) == 1:
+                        atom_flag[int(atom_list[0])-1] = 1
+                        is_valid_atom = True
                     else:
-                        for j in range(int(atom_list1[0])-1, int(atom_list1[1])):
-                            atom_flag[j] = 1
-                        Fatom_valid = True
+                        for ia in range(int(atom_list[0])-1, int(atom_list[1])):
+                            atom_flag[ia] = 1
+                        is_valid_atom = True
         return atom_flag

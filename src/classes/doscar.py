@@ -104,8 +104,7 @@ class Doscar:
             sys.exit()
 
         files = os.listdir()
-        pdoslist = [s for s in files if ".pdos_atm#" in s]
-        filelist = []
+        file_list = []
         for f in files:
             fileinfo = re.search(r"(.+?)\.pdos_atm#(\d+)\((.+?)\)_wfc#(\d+)\((.+?)\)", f)
             if fileinfo:
@@ -115,16 +114,16 @@ class Doscar:
                 atomtype = fileinfo.group(3)
                 iorb = fileinfo.group(4)
                 orb_info = fileinfo.group(5)
-                filelist.append([filename, int(iatom), atomtype, int(iorb)])
-        if len(filelist) == 0:
+                file_list.append([filename, int(iatom), atomtype, int(iorb)])
+        if len(file_list) == 0:
             print("Error: No valid pdos file found.")
             sys.exit()
-        filelist = sorted(filelist, key=lambda x: (x[1], x[3]))
-        self.Na = max(filelist, key=lambda x: x[1])[1]
-        self.Norb = max(filelist, key=lambda x: x[3])[3]**2
+        file_list = sorted(file_list, key=lambda x: (x[1], x[3]))
+        self.Na = max(file_list, key=lambda x: x[1])[1]
+        self.Norb = max(file_list, key=lambda x: x[3])[3]**2
 
         # Read energies and Nepdos from the first file
-        f = filelist[0]
+        f = file_list[0]
         f0 = open(f[0], "r")
         line = f0.readlines()
         f0.close()
@@ -140,7 +139,7 @@ class Doscar:
         self.pdos = np.arange(self.Ns*self.Nepdos*self.Na*self.Norb)
         self.pdos = np.reshape(self.pdos, (self.Ns, self.Nepdos, self.Na, self.Norb)).tolist()
 
-        for f in filelist:
+        for f in file_list:
             # f=[filename, iatom, atomtype, iorb]
             f0 = open(f[0], "r")
             line = f0.readlines()
@@ -159,7 +158,7 @@ class Doscar:
         # build atom list atomtype[Ntype] and Naint[Ntype]
         self.atomtype = []
         self.Naint = []
-        for f in filelist:
+        for f in file_list:
             if f[3] == 1:
                 if len(self.atomtype) == 0 or self.atomtype[-1] != f[2]:
                     self.atomtype.append(f[2])
