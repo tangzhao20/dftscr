@@ -213,7 +213,7 @@ if package in package_name["vaspproj"]+package_name["qeproj"]:
 
     atom_list = sys.argv[2]
     del sys.argv[2]
-    atom_flag = procar1.read_atom_list(atom_list, poscar1)
+    atom_flag = poscar1.read_atom_list(atom_list)
     orb_list = sys.argv[2]
     del sys.argv[2]
     orb_flag = procar1.read_orb_list(orb_list)
@@ -252,8 +252,8 @@ for ip in range(len(xticks)):
                 ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[linecolor[ispin]],
                             label=spinlabel[ispin], linewidth=1, zorder=3-ispin)
             else:
-                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]],
-                            color=palette[linecolor[ispin]], linewidth=1, zorder=3-ispin)
+                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[linecolor[ispin]],
+                            linewidth=1, zorder=3-ispin)
 
 outputname = "bs.png"
 
@@ -283,20 +283,21 @@ f3.close()
 
 if lproj:
     dot_size = 50.0
-    proj_plot_size = procar1.plot(atom_flag, orb_flag, dot_size)
+    proj_plot_size = procar1.plot(atom_flag, orb_flag) * dot_size
+    ispin = 0
     for ip in range(len(xticks)):
         for ib in range(eigenval1.Nb):
-            ax[ip].scatter(x[ip], energy[0][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ib]
-                           [ixl[ip]:ixr[ip]], c=palette["orange"], zorder=2)
+            ax[ip].scatter(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ispin, ib, ixl[ip]:ixr[ip]],
+                           c=palette["orange"], zorder=2)
     outputname = "proj_"+atom_list+"_"+orb_list+".png"
 
     f2 = open("proj_"+atom_list+"_"+orb_list+".dat", "w")
-    f2.write("#k-point energy(eV) pointsize\n")
+    f2.write("#k-point energy(eV) size\n")
     for ib in range(eigenval1.Nb):
         for ip in range(len(x)):
             ik0 = 0
             for ik in range(len(x[ip])):
-                f2.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(proj_plot_size[ib][ik0])+"\n")
+                f2.write(str(x[ip][ik])+" "+str(energy[ispin][ib][ik0])+" "+str(proj_plot_size[ispin, ib, ik0])+"\n")
                 ik0 += 1
         f2.write("\n")
     f2.close()

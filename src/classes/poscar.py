@@ -794,3 +794,26 @@ class Poscar:
             for iaint in range(self.Naint[itype]):
                 atom.append(self.atomtype[itype])
         return atom
+
+    def read_atom_list(self, atom_string):
+        atom_flag = np.zeros(self.Natom, dtype=bool)
+        if atom_string == "all":
+            atom_flag[:] = True
+        else:
+            for atom_section in atom_string.split(","):
+                is_atom_name = False
+                ia_start = 0
+                ia_end = 0
+                for itype in range(len(self.atomtype)):
+                    ia_end = ia_end + self.Naint[itype]
+                    if atom_section == self.atomtype[itype]:
+                        atom_flag[ia_start: ia_end] = True
+                        is_atom_name = True
+                    ia_start = ia_end
+                if is_atom_name == False:
+                    atom_list = atom_section.replace("~", "-").split("-")
+                    if len(atom_list) == 1:
+                        atom_flag[int(atom_list[0])-1] = True
+                    else:
+                        atom_flag[int(atom_list[0]) - 1: int(atom_list[1])] = True
+        return atom_flag
