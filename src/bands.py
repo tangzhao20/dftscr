@@ -29,7 +29,6 @@ kpoints1 = KpointsBand()
 
 if package in package_name["vasp"]+package_name["vaspproj"]:
     # Input: EIGENVAL, KPOINTS, POSCAR, (DOSCAR)
-    # TODO: test VASP
 
     poscar1.read_vasp()
     rlc = poscar1.rlc()
@@ -199,9 +198,6 @@ if fsecond:
 lproj = False
 if package in package_name["vaspproj"]+package_name["qeproj"]:
     lproj = True
-    if eigenval1.Ns == 2:
-        print("Spin polarized projected band structure not supported yet.\n")
-        sys.exit()
 
     procar1 = Procar()
     if package in package_name["vaspproj"]:
@@ -234,8 +230,8 @@ mpl.rcParams.update({'font.size': 14})
 
 # band structure plot
 
-spinlabel = ["spin up", "spin down"]
-linecolor = ["darkblue", "orange"]
+spin_label = ["spin up", "spin down"]
+line_color = ["darkblue", "orange"]
 
 fig = plt.figure(figsize=(5, 3.75))
 gs0 = fig.add_gridspec(1, len(xticks), wspace=0.0, hspace=0.00, left=0.14, right=0.98,
@@ -249,10 +245,10 @@ for ip in range(len(xticks)):
     for ispin in range(eigenval1.Ns):
         for ib in range(eigenval1.Nb):
             if eigenval1.Ns == 2 and ib == 0:
-                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[linecolor[ispin]],
-                            label=spinlabel[ispin], linewidth=1, zorder=3-ispin)
+                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[line_color[ispin]],
+                            label=spin_label[ispin], linewidth=1, zorder=3-ispin)
             else:
-                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[linecolor[ispin]],
+                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[line_color[ispin]],
                             linewidth=1, zorder=3-ispin)
 
 outputname = "bs.png"
@@ -282,24 +278,29 @@ f3.close()
 # projection plot
 
 if lproj:
+    if eigenval1.Ns == 1:
+        proj_color = ["orange"]
+    else:
+        proj_color = ["blue", "beige"]
     dot_size = 50.0
     proj_plot_size = procar1.plot(atom_flag, orb_flag) * dot_size
-    ispin = 0
-    for ip in range(len(xticks)):
-        for ib in range(eigenval1.Nb):
-            ax[ip].scatter(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ispin, ib, ixl[ip]:ixr[ip]],
-                           c=palette["orange"], zorder=2)
+    for ispin in range(eigenval1.Ns):
+        for ip in range(len(xticks)):
+            for ib in range(eigenval1.Nb):
+                ax[ip].scatter(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ispin, ib, ixl[ip]:ixr[ip]],
+                               c=palette[proj_color[ispin]], zorder=2.5-ispin)
     outputname = "proj_"+atom_list+"_"+orb_list+".png"
 
     f2 = open("proj_"+atom_list+"_"+orb_list+".dat", "w")
-    f2.write("#k-point energy(eV) size\n")
-    for ib in range(eigenval1.Nb):
-        for ip in range(len(x)):
-            ik0 = 0
-            for ik in range(len(x[ip])):
-                f2.write(str(x[ip][ik])+" "+str(energy[ispin][ib][ik0])+" "+str(proj_plot_size[ispin, ib, ik0])+"\n")
-                ik0 += 1
-        f2.write("\n")
+    f2.write("#ispin x_kpath energy(eV) size\n")
+    for ispin in range(eigenval1.Ns):
+        for ib in range(eigenval1.Nb):
+            for ip in range(len(x)):
+                ik0 = 0
+                for ik in range(len(x[ip])):
+                    f2.write(f"{ispin}  {x[ip][ik]}  {energy[ispin][ib][ik0]}  {proj_plot_size[ispin, ib, ik0]}\n")
+                    ik0 += 1
+            f2.write("\n")
     f2.close()
 
 # second band structure plot (for wannier)

@@ -31,6 +31,10 @@ class Procar:
         self.Nb = int(word[7])
         self.Na = int(word[11])
 
+        if len(line) > (((self.Na+5)*self.Nb+3)*self.Nk+1)*1.5:
+            # the file length should be (((Na+5)Nb+3)Nk+1)Ns+1
+            self.Ns = 2
+
         word = line[7].split()
         self.Norb = len(word)-2
 
