@@ -214,6 +214,8 @@ if package in package_name["vaspproj"]+package_name["qeproj"]:
     del sys.argv[2]
     orb_flag = procar1.read_orb_list(orb_list)
 
+# The following plotting section should be generalized, not code-specific
+
 if len(sys.argv) >= 4:
     ymax = float(sys.argv[3])
     ymin = float(sys.argv[2])

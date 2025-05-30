@@ -9,7 +9,7 @@ class Procar:
     # Nb
     # Na
     # Norb
-    # proj[Ns][Nk][Nb][Na][Norb]  # numpy
+    # proj[Ns, Nk, Nb, Na, Norb]  # numpy
     # orb_name[Norb]
 
     def __init__(self):
@@ -43,8 +43,8 @@ class Procar:
 
         self.proj = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb))
         ispin = -1
-        for il in range(len(line)):
-            word = line[il].split()
+        for this_line in line:
+            word = this_line.split()
             if len(word) == 0 or word[0][0] == "!":
                 continue
             if len(word) >= 9 and word[0] == "#" and word[2] == "k-points:":
@@ -75,55 +75,67 @@ class Procar:
         line = f0.readlines()
         f0.close()
 
-        lmmap = []
-        atommap = []
-        fread = False
-        ffirstk = True
-        for il in range(len(line)):
-            word = line[il].split()
+        l_map = []
+        m_map = []
+        orb_map = []
+        atom_map = []
+        is_proj = False
+        is_first_k = True
+        for this_line in line:
+            word = this_line.split()
             if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
             if word[0] == "state":
-                ia = int(word[4])-1
-                if len(atommap) == 0 or ia != atommap[-1]:
-                    iorb = 0
-                else:
-                    iorb += 1
-                lmmap.append(iorb)
-                atommap.append(ia)
-                self.Norb = max(iorb+1, self.Norb)
-                self.Na = max(ia+1, self.Na)
+                match = re.search(r"atom\s+(\d+).*l=(\d+)\s+m=\s*(\d+)", this_line)
+                ia = int(match.group(1)) - 1
+                il = int(match.group(2))
+                im = int(match.group(3))
+                l_map.append(il)
+                m_map.append(im)
+                orb_map.append(il**2+im-1)
+                atom_map.append(ia)
+            elif word[0] == "natomwfc":
+                Nproj = int(word[2])
             elif word[0] == "nkstot":
                 self.Nk = int(word[2])
             elif word[0] == "nbnd":
                 self.Nb = int(word[2])
             elif word[0] == "k":
-                if ffirstk:
-                    ffirstk = False
-                    for ik in range(self.Nk):
-                        proj0 = []
-                        for ib in range(self.Nb):
-                            proj1 = []
-                            for ia in range(self.Na):
-                                proj1.append([0.0]*self.Norb)
-                            proj0.append(proj1)
-                            del proj1
-                        self.proj.append(proj0)
-                        del proj0
+                k_point = np.array(word[2:5], dtype=float)
+                if is_first_k:
+                    is_first_k = False
+                    self.Na = max(atom_map) + 1
+                    first_k_point = k_point.copy()
+                    self.Norb = (max(l_map)+1)**2
+                    proj0 = np.zeros((self.Nk, self.Nb, self.Na, self.Norb))
                     ik = -1
                 ik += 1
                 ib = -1
             elif word[0] == "psi":
                 ib += 1
-                fread = True
+                is_proj = True
             elif word[0] == "|psi|^2":
-                fread = False
+                is_proj = False
+            elif len(word) >= 2 and word[0] == "spin" and word[1] == "down":
+                self.Ns = 2
 
-            if fread:
-                number = re.findall(r"[-+]?(?:\d*\.*\d+)", line[il])  # find all numbers
+            if is_proj:
+                number = re.findall(r"[-+]?(?:\d*\.*\d+)", this_line)  # find all numbers
                 for ii in range(0, len(number), 2):
-                    # proj[k][b][a][orb]
-                    self.proj[ik][ib][atommap[int(number[ii+1])-1]][lmmap[int(number[ii+1])-1]] = float(number[ii])
+                    # proj0[k][b][a][orb]
+                    proj0[ik, ib, atom_map[int(number[ii+1])-1], orb_map[int(number[ii+1])-1]] += float(number[ii])
+
+        self.Nk = self.Nk // self.Ns
+        print("Ns: "+str(self.Ns)+"  Na: "+str(self.Na)+"  Nk: "+str(self.Nk) +
+              "  Nb: "+str(self.Nb)+"  Norb: "+str(self.Norb))
+        if self.Ns == 1:
+            self.proj = proj0[np.newaxis, :, :, :, :]
+        else:
+            self.proj = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb))
+            self.proj[0, :, :, :, :] = proj0[:self.Nk, :, :, :]
+            self.proj[1, :, :, :, :] = proj0[self.Nk:, :, :, :]
+            del proj0
+
         if self.Norb == 4:
             self.orb_name = ["s", "pz", "px", "py"]
         elif self.Norb == 9:
