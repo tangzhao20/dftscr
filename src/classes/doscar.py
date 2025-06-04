@@ -19,7 +19,7 @@ class Doscar:
         self.Nedos = 0
         self.energy = []
         self.dos = [[]]
-        self.Lpdos = False
+        self.has_pdos = False
 
     def __str__(self):
         str_out = "DOSCAR:\n"
@@ -168,27 +168,31 @@ class Doscar:
 
         # Only s and p orbitals are supported now
         self.orb_name = ["s", "pz", "px", "py"]
-        self.Lpdos = True
+        self.has_pdos = True
 
 #######################################################################
 
     def energyshift(self, ezero):
         for ie in range(self.Nedos):
             self.energy[ie] = self.energy[ie] - ezero
-        if self.Lpdos:
+        if self.has_pdos:
             for ie in range(self.Nepdos):
                 self.energy_pdos[ie] = self.energy_pdos[ie] - ezero
 
-    def plot_pdos(self, atom_flag, orb_flag):
-        pdos_out = []
+    def plot(self, atom_flag, orb_flag):
+        # plot_proj[Ns][Ne]  # numpy
+        plot_pdos = self.pdos[:, :, atom_flag, :][:, :, :, orb_flag].sum(axis=(2, 3))
+        return plot_pdos
+
+        plot_pdos = []
         for ie in range(self.Nepdos):
             pdos_out0 = 0.0
             for ia in range(self.Na):
                 for im in range(self.Norb):
                     if atom_flag[ia] and orb_flag[im] == 1:
                         pdos_out0 += self.pdos[0][ie][ia][im]
-            pdos_out.append(pdos_out0)
-        return pdos_out
+            plot_pdos.append(pdos_out0)
+        return plot_pdos
 
     def read_orb_list(self, orb_list):
         orb_list0 = orb_list.split("+")

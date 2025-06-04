@@ -10,9 +10,10 @@
 
 import sys
 import os
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from classes import Doscar
+from classes import Doscar, Poscar, Procar
 from load_data import load_package_name, load_palette
 
 fvertical = False
@@ -32,7 +33,7 @@ package = sys.argv[1]
 package_name = load_package_name()
 
 doscar0 = Doscar()
-if package in package_name["vasp"]:
+if package in package_name["vasp"]+package_name["vaspproj"]:
     doscar0.read_vasp()
 elif package in package_name["qe"]+package_name["qeproj"]:
     # find a *.dos file
@@ -53,33 +54,47 @@ else:
     print("python dos.py (v) package (Emin) (Emax)")
     sys.exit()
 
-lproj = False
-if package in package_name["qeproj"]:
-    lproj = True
-    doscar0.readpdos_qe()
-    if doscar0.Ns == 2:
-        print("Spin polarized projected band structure not supported yet.\n")
-        sys.exit()
-
-    # Input: *.pdos_atm#*(*)_wfc#*(*)
-    doscar0.readpdos_qe()
-
-    atom_list = sys.argv[2]
-    del sys.argv[2]
-    atom_flag = doscar0.read_atom_list(atom_list)
-    orb_list = sys.argv[2]
-    del sys.argv[2]
-    orb_flag = doscar0.read_orb_list(orb_list)
-
-if len(sys.argv) >= 4:
-    xmax = float(sys.argv[3])
-    xmin = float(sys.argv[2])
-elif len(sys.argv) == 3:
-    xmax = float(sys.argv[2])
-    xmin = -float(sys.argv[2])
+is_proj = False
+input_shift = 0
+if package in package_name["vaspproj"]+package_name["qeproj"]:
+    is_proj = True
+    input_shift = 2
+if len(sys.argv) >= 4 + input_shift:
+    xmax = float(sys.argv[3 + input_shift])
+    xmin = float(sys.argv[2 + input_shift])
+elif len(sys.argv) == 3 + input_shift:
+    xmax = float(sys.argv[2 + input_shift])
+    xmin = -float(sys.argv[2 + input_shift])
 else:
     xmax = 5.0
     xmin = -5.0
+
+if package in package_name["vaspproj"]+package_name["qeproj"]:
+    poscar0 = Poscar()
+    procar0 = Procar()
+    if package in package_name["vaspproj"]:
+        sigma = 0.05
+        poscar0.read_vasp()
+        procar0.read_vasp()
+        doscar0.Nepdos = 1000
+        doscar0.energy_pdos = np.linspace(xmin+doscar0.ef, xmax+doscar0.ef, doscar0.Nepdos)
+        doscar0.pdos = procar0.calculate_pdos(doscar0.energy_pdos, sigma)
+        doscar0.has_pdos = True
+
+    if package in package_name["qeproj"]:
+        # qe support is broken in this commit
+        # procar and poscar should be initialized here
+        doscar0.readpdos_qe()
+
+    atom_list = sys.argv[2]
+    del sys.argv[2]
+    atom_flag = poscar0.read_atom_list(atom_list)
+
+    orb_list = sys.argv[2]
+    del sys.argv[2]
+    orb_flag = procar0.read_orb_list(orb_list)
+
+# The following plotting section should be generalized, not code-specific
 
 doscar0.energyshift(doscar0.ef)
 
@@ -109,9 +124,14 @@ if fvertical == False:
 
     ax0.axvline(linewidth=1, color=palette["gray"], zorder=0)
     ax0.plot(doscar0.energy, doscar0.dos[0], color=palette["darkblue"], linewidth=1, zorder=3)
-    if package in package_name["qeproj"]:
-        pdos = doscar0.plot_pdos(atom_flag, orb_flag)
-        ax0.plot(doscar0.energy_pdos, pdos, color=palette["orange"], linewidth=1, zorder=3.5)
+
+    if is_proj:
+        pdos = doscar0.plot(atom_flag, orb_flag)
+        if doscar0.Ns == 1:
+            ax0.plot(doscar0.energy_pdos, pdos[0, :], color=palette["orange"], linewidth=1, zorder=3.5)
+        else:
+            ax0.plot(doscar0.energy_pdos, pdos[0, :], color=palette["blue"], linewidth=1, zorder=3.5)
+            ax1.plot(doscar0.energy_pdos, pdos[1, :], color=palette["beige"], linewidth=1, zorder=3.5)
         filename_out = "dos_"+atom_list+"_"+orb_list+".png"
 
     ax0.set_xlim([xmin, xmax])
@@ -131,7 +151,7 @@ else:  # vertical
     ax0.axhline(linewidth=1, color=palette["gray"], zorder=0)
     ax0.plot(doscar0.dos[0], doscar0.energy, color=palette["darkblue"], linewidth=1, zorder=3)
     if package in package_name["qeproj"]:
-        pdos = doscar0.plot_pdos(atom_flag, orb_flag)
+        pdos = doscar0.plot(atom_flag, orb_flag)
         ax0.plot(pdos, doscar0.energy_pdos, color=palette["orange"], linewidth=1, zorder=3.5)
         filename_out = "dos_v_"+atom_list+"_"+orb_list+".png"
 

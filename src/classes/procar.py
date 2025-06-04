@@ -9,6 +9,7 @@ class Procar:
     # Nb
     # Na
     # Norb
+    # weight[Nk]
     # proj[Ns, Nk, Nb, Na, Norb]  # numpy
     # orb_name[Norb]
 
@@ -42,6 +43,8 @@ class Procar:
               "  Nb: "+str(self.Nb)+"  Norb: "+str(self.Norb))
 
         self.proj = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb))
+        self.weight = np.zeros((self.Nk))
+        self.eig = np.zeros((self.Ns, self.Nk, self.Nb))
         ispin = -1
         for this_line in line:
             word = this_line.split()
@@ -51,8 +54,10 @@ class Procar:
                 ispin += 1
             elif word[0] == "k-point":
                 ik = int(word[1]) - 1
+                self.weight[ik] = float(word[8])
             elif word[0] == "band":
                 ib = int(word[1]) - 1
+                self.eig[ispin, ik, ib] = float(word[4])
             elif word[0].isdigit():
                 ia = int(word[0]) - 1
                 for iorb in range(self.Norb):
@@ -178,3 +183,18 @@ class Procar:
                 print("projector "+orb+" does not exist")
 
         return orb_flag
+
+    def calculate_pdos(self, e_pdos, sigma):
+        # pdos[Ns, Ne, Na, Norb]
+        # sigma is the gaussian smearing parameter in eV
+        Ne = len(e_pdos)
+        pdos = np.zeros((self.Ns, Ne, self.Na, self.Norb))
+
+        gaussian_coeff = (1 / (sigma * np.sqrt(2*np.pi)))
+        for ispin in range(self.Ns):
+            for ik in range(self.Nk):
+                for ib in range(self.Nb):
+                    smearing = gaussian_coeff * np.exp(-0.5*((e_pdos-self.eig[ispin, ik, ib])/sigma)**2)
+                    pdos[ispin, :, :, :] += smearing[:, None, None] * \
+                        self.proj[ispin, ik, ib, None, :, :] * self.weight[ik]
+        return pdos

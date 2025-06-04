@@ -195,9 +195,9 @@ if fsecond:
             ix2l.append(ix2r[-1])
         ix2r.append(ix2l[-1]+Nx2[-1])
 
-lproj = False
+is_proj = False
 if package in package_name["vaspproj"]+package_name["qeproj"]:
-    lproj = True
+    is_proj = True
 
     procar1 = Procar()
     if package in package_name["vaspproj"]:
@@ -279,7 +279,7 @@ f3.close()
 
 # projection plot
 
-if lproj:
+if is_proj:
     if eigenval1.Ns == 1:
         proj_color = ["orange"]
     else:
