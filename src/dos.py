@@ -59,6 +59,7 @@ input_shift = 0
 if package in package_name["vaspproj"]+package_name["qeproj"]:
     is_proj = True
     input_shift = 2
+
 if len(sys.argv) >= 4 + input_shift:
     xmax = float(sys.argv[3 + input_shift])
     xmin = float(sys.argv[2 + input_shift])
@@ -69,7 +70,7 @@ else:
     xmax = 5.0
     xmin = -5.0
 
-if package in package_name["vaspproj"]+package_name["qeproj"]:
+if is_proj:
     poscar0 = Poscar()
     procar0 = Procar()
     if package in package_name["vaspproj"]:
@@ -94,6 +95,8 @@ if package in package_name["vaspproj"]+package_name["qeproj"]:
     del sys.argv[2]
     orb_flag = procar0.read_orb_list(orb_list)
 
+    pdos = doscar0.plot(atom_flag, orb_flag)
+
 # The following plotting section should be generalized, not code-specific
 
 doscar0.energyshift(doscar0.ef)
@@ -113,96 +116,86 @@ palette = load_palette()
 mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
+if doscar0.Ns == 1:
+    color_dos = ["darkblue"]
+    color_pdos = ["orange"]
+else:
+    color_dos = ["darkblue", "orange"]
+    color_pdos = ["blue", "beige"]
+
 if fvertical == False:
     fig = plt.figure(figsize=(5, 3.75))
-    if doscar0.Ns == 1:
-        gs0 = fig.add_gridspec(1, 1, wspace=0.0, hspace=0.00, left=0.14, right=0.96, top=0.97, bottom=0.12)
-        ax0 = gs0.subplots()
-    else:
-        gs0 = fig.add_gridspec(2, 1, wspace=0.0, hspace=0.00, left=0.14, right=0.96, top=0.97, bottom=0.12)
-        (ax0, ax1) = gs0.subplots()
+    gs0 = fig.add_gridspec(doscar0.Ns, 1, wspace=0.0, hspace=0.00, left=0.14, right=0.96, top=0.97, bottom=0.12)
+    ax = []
+    for ispin in range(doscar0.Ns):
+        ax.append(fig.add_subplot(gs0[ispin]))
 
-    ax0.axvline(linewidth=1, color=palette["gray"], zorder=0)
-    ax0.plot(doscar0.energy, doscar0.dos[0], color=palette["darkblue"], linewidth=1, zorder=3)
+    for ispin in range(doscar0.Ns):
+        ax[ispin].axvline(linewidth=1, color=palette["gray"], zorder=0)
+        ax[ispin].plot(doscar0.energy, doscar0.dos[ispin], color=palette[color_dos[ispin]], linewidth=1, zorder=3)
 
     if is_proj:
-        pdos = doscar0.plot(atom_flag, orb_flag)
-        if doscar0.Ns == 1:
-            ax0.plot(doscar0.energy_pdos, pdos[0, :], color=palette["orange"], linewidth=1, zorder=3.5)
-        else:
-            ax0.plot(doscar0.energy_pdos, pdos[0, :], color=palette["blue"], linewidth=1, zorder=3.5)
-            ax1.plot(doscar0.energy_pdos, pdos[1, :], color=palette["beige"], linewidth=1, zorder=3.5)
+        for ispin in range(doscar0.Ns):
+            ax[ispin].plot(doscar0.energy_pdos, pdos[ispin, :], color=palette[color_pdos[ispin]],
+                           linewidth=1, zorder=3.5)
         filename_out = "dos_"+atom_list+"_"+orb_list+".png"
 
-    ax0.set_xlim([xmin, xmax])
-    ax0.set_ylim([0, dosmax*1.1])
-    ax0.tick_params(axis="x", bottom=True, top=True, direction="in",
-                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+    ax[0].set_ylim([0, dosmax*1.1])
+    if doscar0.Ns == 2:
+        ax[1].set_ylim([dosmax*1.1, 0])
+    for ispin in range(doscar0.Ns):
+        ax[ispin].set_xlim([xmin, xmax])
+        ax[ispin].tick_params(axis="x", bottom=True, top=True, direction="in",
+                              color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+        ax[ispin].tick_params(axis="y", left=True, right=True, direction="in",
+                              color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+
+    if doscar0.Ns == 1:
+        ax[0].set_ylabel("DOS (eV⁻¹)", color=palette["black"])
+        ax[0].set_xlabel("Energy (eV)", color=palette["black"], labelpad=-1)
+    else:
+        ax[0].set_xticklabels([])
+        ax[0].set_ylabel("DOS (eV⁻¹)", color=palette["black"], y=0.0)
+        ax[1].set_xlabel("Energy (eV)", color=palette["black"], labelpad=-1)
 
 else:  # vertical
     fig = plt.figure(figsize=(1, 3.75))
-    if doscar0.Ns == 1:
-        gs0 = fig.add_gridspec(1, 1, wspace=0.0, hspace=0.00, left=0.03, right=0.97, top=0.97, bottom=0.07)
-        ax0 = gs0.subplots()
-    else:
-        gs0 = fig.add_gridspec(1, 2, wspace=0.0, hspace=0.00, left=0.03, right=0.97, top=0.97, bottom=0.07)
-        (ax1, ax0) = gs0.subplots()
+    gs0 = fig.add_gridspec(1, doscar0.Ns, wspace=0.0, hspace=0.00, left=0.03, right=0.97, top=0.97, bottom=0.07)
+    ax = []
+    for ispin in range(doscar0.Ns):
+        ax.append(fig.add_subplot(gs0[doscar0.Ns-ispin-1]))
 
-    ax0.axhline(linewidth=1, color=palette["gray"], zorder=0)
-    ax0.plot(doscar0.dos[0], doscar0.energy, color=palette["darkblue"], linewidth=1, zorder=3)
-    if package in package_name["qeproj"]:
-        pdos = doscar0.plot(atom_flag, orb_flag)
-        ax0.plot(pdos, doscar0.energy_pdos, color=palette["orange"], linewidth=1, zorder=3.5)
+    for ispin in range(doscar0.Ns):
+        ax[ispin].axhline(linewidth=1, color=palette["gray"], zorder=0)
+        ax[ispin].plot(doscar0.dos[ispin], doscar0.energy, color=palette[color_dos[ispin]], linewidth=1, zorder=3)
+
+    if is_proj:
+        for ispin in range(doscar0.Ns):
+            ax[ispin].plot(pdos[ispin, :], doscar0.energy_pdos, color=palette[color_pdos[ispin]],
+                           linewidth=1, zorder=3.5)
         filename_out = "dos_v_"+atom_list+"_"+orb_list+".png"
 
-    ax0.set_xlim([0, dosmax*1.1])
-    ax0.set_ylim([xmin, xmax])
-    ax0.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
+    ax[0].set_xlim([0, dosmax*1.1])
+    if doscar0.Ns == 2:
+        ax[1].set_xlim([dosmax*1.1, 0])
+    for ispin in range(doscar0.Ns):
+        ax[ispin].set_ylim([xmin, xmax])
+        ax[ispin].tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
+        ax[ispin].tick_params(axis="y", left=True, right=True, direction="in",
+                              color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+        ax[ispin].set_yticklabels([])
 
-ax0.tick_params(axis="y", left=True, right=True, direction="in",
-                color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
-for edge in ["bottom", "top", "left", "right"]:
-    ax0.spines[edge].set_color(palette["black"])
-    ax0.spines[edge].set_linewidth(1)
-    ax0.spines[edge].set_zorder(4)
-
-if fvertical == False:
-    if doscar0.Ns == 1:
-        ax0.set_xlabel("Energy (eV)", color=palette["black"], labelpad=-1)
-        ax0.set_ylabel("DOS (eV⁻¹)", color=palette["black"])
-
-    elif doscar0.Ns == 2:
-        ax0.set_xticklabels([])
-        ax1.axvline(linewidth=1, color=palette["gray"], zorder=0)
-        ax1.plot(doscar0.energy, doscar0.dos[1], color=palette["orange"], linewidth=1, zorder=3)
-        ax1.set_xlim([xmin, xmax])
-        ax1.set_ylim([dosmax*1.1, 0.0])
-        ax1.set_xlabel("Energy (eV)", color=palette["black"], labelpad=-1)
-        ax0.set_ylabel("DOS (eV⁻¹)", color=palette["black"], y=0.0)
-        ax1.tick_params(axis="x", bottom=True, top=True, direction="in",
-                        color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
-else:  # vertical
-    ax0.set_yticklabels([])
     if doscar0.Ns == 1:
         # put "DOS" as ticklabel to align with the K point labels in bs
-        ax0.set_xticks([dosmax*0.55], ["DOS"], color=palette["black"])
-
+        ax[0].set_xticks([dosmax*0.55], ["DOS"], color=palette["black"])
     elif doscar0.Ns == 2:
-        ax0.set_xticks([0.0], ["DOS"], color=palette["black"])
-        ax1.set_xticks([], [])
-        ax1.set_yticklabels([])
-        ax1.axhline(linewidth=1, color=palette["gray"], zorder=0)
-        ax1.plot(doscar0.dos[1], doscar0.energy, color=palette["orange"], linewidth=1, zorder=3)
-        ax1.set_xlim([dosmax*1.1, 0.0])
-        ax1.set_ylim([xmin, xmax])
-        ax1.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
+        ax[0].set_xticks([0.0], ["DOS"], color=palette["black"])
+        ax[1].set_xticks([], [])
 
-if doscar0.Ns == 2:
-    ax1.tick_params(axis="y", left=True, right=True, direction="in",
-                    color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+for ispin in range(doscar0.Ns):
     for edge in ["bottom", "top", "left", "right"]:
-        ax1.spines[edge].set_color(palette["black"])
-        ax1.spines[edge].set_linewidth(1)
-        ax1.spines[edge].set_zorder(4)
+        ax[ispin].spines[edge].set_color(palette["black"])
+        ax[ispin].spines[edge].set_linewidth(1)
+        ax[ispin].spines[edge].set_zorder(4)
 
 fig.savefig(filename_out, dpi=1200)
