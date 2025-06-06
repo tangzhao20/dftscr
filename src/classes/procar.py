@@ -186,15 +186,13 @@ class Procar:
 
     def calculate_pdos(self, e_pdos, sigma):
         # pdos[Ns, Ne, Na, Norb]
-        # sigma is the gaussian smearing parameter in eV
-        Ne = len(e_pdos)
-        pdos = np.zeros((self.Ns, Ne, self.Na, self.Norb))
 
         gaussian_coeff = (1 / (sigma * np.sqrt(2*np.pi)))
-        for ispin in range(self.Ns):
-            for ik in range(self.Nk):
-                for ib in range(self.Nb):
-                    smearing = gaussian_coeff * np.exp(-0.5*((e_pdos-self.eig[ispin, ik, ib])/sigma)**2)
-                    pdos[ispin, :, :, :] += smearing[:, None, None] * \
-                        self.proj[ispin, ik, ib, None, :, :] * self.weight[ik]
+        delta = (e_pdos[None, :, None, None] - self.eig[:, None, :, :]) / sigma  # [Ns, Ne, Na, Norb]
+        smearing = gaussian_coeff * np.exp(-0.5 * delta**2)
+
+        weighted_proj = self.proj * self.weight[None, :, None, None, None]
+
+        pdos = np.einsum('sekb,skbao->seao', smearing, weighted_proj)
+
         return pdos
