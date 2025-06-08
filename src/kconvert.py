@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-# create nscf k-point path for QE band structure calculations
+# Convert a package1 to package2 k-path format
 # python kconvert.py package1 package2 (N)
-
-# input: kpath.in
 
 import sys
 import os
