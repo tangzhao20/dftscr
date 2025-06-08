@@ -771,6 +771,11 @@ class Poscar:
         else:
             self.add_atom(self.Ntype, ap, new_type)
 
+    def new_lc(self, lc_new):
+        apc = np.array(self.cartesian())
+        self.ap = (apc @ np.linalg.inv(lc_new)).tolist()
+        self.lc = lc_new
+
     def rlc(self):
         pi = load_constant("pi")
         return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
