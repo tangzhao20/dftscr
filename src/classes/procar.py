@@ -54,7 +54,7 @@ class Procar:
                 ispin += 1
             elif word[0] == "k-point":
                 ik = int(word[1]) - 1
-                self.weight[ik] = float(word[8])
+                self.weight[ik] = float(word[-1])
             elif word[0] == "band":
                 ib = int(word[1]) - 1
                 self.eig[ispin, ik, ib] = float(word[4])
