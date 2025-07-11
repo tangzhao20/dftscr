@@ -425,10 +425,6 @@ class Poscar:
     def write_qe(self, filename="qe_st.dat"):
         mass = load_atom_mass()
 
-        kgrid = [1]*3
-        for ix in range(self.Ndim):
-            kgrid[ix] = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
-
         f2 = open(filename, "w")
         f2.write("CELL_PARAMETERS angstrom\n")
         for ix1 in range(3):
@@ -448,8 +444,10 @@ class Poscar:
             if ik == self.Naint[ij]:
                 ij = ij + 1
                 ik = 0
+
+        k_grid = self.k_grid()
         f2.write("K_POINTS automatic\n")
-        f2.write(f"  {kgrid[0]:d}  {kgrid[1]:d}  {kgrid[2]:d} 0 0 0\n")
+        f2.write(f"  {k_grid[0]:d}  {k_grid[1]:d}  {k_grid[2]:d} 0 0 0\n")
         f2.close()
 
     def write_prt(self, filename="prt_st.dat"):
@@ -518,9 +516,9 @@ class Poscar:
 
             f2.write("kpoint_method mp\n\n")
             f2.write("begin monkhorst_pack_grid\n")
+            k_grid = self.k_grid()
             for ix in range(self.Ndim):
-                kgrid = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
-                f2.write(f"  {kgrid:d}")
+                f2.write(f"  {k_grid[ix]:d}")
             f2.write("\nend monkhorst_pack_grid\n\n")
             f2.write("begin monkhorst_pack_shift\n")
             f2.write("0.0  0.0  0.0\n")
@@ -822,3 +820,9 @@ class Poscar:
                     else:
                         atom_flag[int(atom_list[0]) - 1: int(atom_list[1])] = True
         return atom_flag
+
+    def k_grid(self):
+        grid = [1]*self.Ndim
+        for ix in range(self.Ndim):
+            grid[ix] = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
+        return grid
