@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
-# rotate the structure around the z-axis
+"""
+Set the lattice vectors based on an input file
 
-# posnewlc.py
-
-# input: posnewlc.in
+Usage: python3 posnewlc.py
+Input: posnewlc.in
+Output: POSCAR.new
+"""
 
 from classes import Poscar
 import sys

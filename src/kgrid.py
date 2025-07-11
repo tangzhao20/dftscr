@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
-# rotate the structure around the z-axis
+"""
+Generate k-grid in KPOINTS from POSCAR.
 
-# posnewlc.py
+Usage: python3 kgrid.py
+Input: POSCAR
+Output: KPOINTS
+"""
 
 from classes import Poscar
 import sys
