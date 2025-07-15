@@ -4,14 +4,20 @@ import re
 
 
 class Procar:
-    # Ns
-    # Nk
-    # Nb
-    # Na
-    # Norb
-    # weight[Nk]
-    # proj[Ns, Nk, Nb, Na, Norb]  # numpy
-    # orb_name[Norb]
+    """
+    Parses and analyzes orbital-projected data.
+
+    Attributes:
+        Ns (int): The number of spin components (1 for non-spin-polarized, 2 for spin-polarized).
+        Nk (int): The number of k-points.
+        Nb (int): The number of bands.
+        Na (int): The number of atoms in the system.
+        Norb (int): The number of orbital projectors.
+        proj[Ns, Nk, Nb, Na, Norb] (numpy.ndarray): The core projection data stored in a 5D array.
+        weight[Nk] (numpy.ndarray): The weight of each k-point.
+        eig[Ns, Nk, Nb] (numpy.ndarray): The eigenvalues (band energies) for each state.
+        orb_name[Norb] (list of str): A list containing the names of the orbitals (e.g., 's', 'py', 'px', 'dxy', etc.).
+    """
 
     def __init__(self):
         self.Ns = 1
@@ -188,7 +194,7 @@ class Procar:
         # pdos[Ns, Ne, Na, Norb]
 
         gaussian_coeff = (1 / (sigma * np.sqrt(2*np.pi)))
-        delta = (e_pdos[None, :, None, None] - self.eig[:, None, :, :]) / sigma  # [Ns, Ne, Na, Norb]
+        delta = (e_pdos[None, :, None, None] - self.eig[:, None, :, :]) / sigma  # [Ns, Ne, Nk, Nb]
         smearing = gaussian_coeff * np.exp(-0.5 * delta**2)
 
         weighted_proj = self.proj * self.weight[None, :, None, None, None]
