@@ -1,101 +1,101 @@
-#    formula   name
-1    He        helium
-2    Ne        neon
-3    Ar        argon
-4    Kr        krypton
-5    Xe        xenon
-6    H2        hydrogen
-7    Li2       lithium dimer
-8    Na2       sodium dimer
-9    Na4       sodium tetramer
-10   Na6       sodium hexamer
-11   K2        potassium dimer
-12   Rb2       rubidium dimer
-13   N2        nitrogen
-14   P2        phosphorus dimer
-15   As2       arsenic dimer
-16   F2        fluorine
-17   Cl2       chlorine
-18   Br2       bromine
-19   I2        iodine
-20   CH4       methane
-21   C2H6      ethane
-22   C3H8      propane
-23   C4H10     butane
-24   C2H4      ethylene
-25   C2H2      acetylene
-26   C4        carbon tetramer
-27   C3H6      cyclopropane
-28   C6H6      benzene
-29   C8H8      cyclooctatetraene
-30   C5H6      cyclopentadiene
-31   C2H3F     vinyl fluoride
-32   C2H3Cl    vinyl chloride
-33   C2H3Br    vinyl bromide
-34   C2H3I     vinyl iodide
-35   CF4       tetrafluoromethane
-36   CCl4      tetrachloromethane
-37   CBr4      tetrabromomethane
-38   CI4       tetraiodomethane
-39   SiH4      silane
-40   GeH4      germane
-41   Si2H6     disilane
-42   Si5H12    pentasilane
-43   LiH       lithium hydride
-44   KH        potassium hydride
-45   BH3       borane
-46   B2H6      diborane
-47   NH3       ammonia
-48   HN3       hydrazoic acid
-49   PH3       phosphine
-50   AsH3      arsine
-51   H2S       hydrogen sulfide
-52   HF        hydrogen fluoride
-53   HCl       hydrogen chloride
-54   LiF       lithium fluoride
-55   MgF2      magnesium fluoride
-56   TiF4      titanium tetrafluoride
-57   AlF3      aluminum fluoride
-58   BF        boron monofluoride
-59   SF4       sulfur tetrafluoride
-60   KBr       potassium bromide
-61   GaCl      gallium monochloride
-62   NaCl      sodium chloride
-63   MgCl2     magnesium chloride
-64   AlI3      aluminum iodide
-65   BN        boron nitride
-66   HCN       hydrogen cyanide
-67   PN        phosphorus mononitride
-68   N2H4      hydrazine
-69   H2CO      formaldehyde
-70   CH3OH     methanol
-71   C2H5OH    ethanol
-72   CH3CHO    acetaldehyde
-73   C4H10O    diethyl ether
-74   HCOOH     formic acid
-75   H2O2      hydrogen peroxide
-76   H2O       water
-77   CO2       carbon dioxide
-78   CS2       carbon disulfide
-79   COS       carbonyl sulfide
-80   COSe      carbonyl selenide
-81   CO        carbon monoxide
-82   O3        ozone
-83   SO2       sulfur dioxide
-84   BeO       beryllium monoxide
-85   MgO       magnesium monoxide
-86   C7H8      toluene
-87   C8H10     ethylbenzene
-88   C6F6      hexafluorobenzene
-89   C6H5OH    phenol
-90   C6H5NH2   aniline
-91   C5H5N     pyridine
-92   C5H5N5O   guanine
-93   C5H5N5    adenine
-94   C4H5N3O   cytosine
-95   C5H6N2O2  thymine
-96   C4H4N2O2  uracil
-97   CH4N2O    urea
-98   Ag2       silver dimer
-99   Cu2       copper dimer
-100  CuCN      copper cyanide
+#    formula   xyz         name
+1    He        7440-59-7   helium
+2    Ne        7440-01-9   neon
+3    Ar        7440-37-1   argon
+4    Kr        7439-90-9   krypton
+5    Xe        7440-63-3   xenon
+6    H2        1333-74-0   hydrogen
+7    Li2       14452-59-6  lithium dimer
+8    Na2       25681-79-2  sodium dimer
+9    Na4       39297-86-4  sodium tetramer
+10   Na6       39297-88-6  sodium hexamer
+11   K2        25681-80-5  potassium dimer
+12   Rb2       25681-81-6  rubidium dimer
+13   N2        7727-37-9   nitrogen
+14   P2        12185-09-0  phosphorus dimer
+15   As2       23878-46-8  arsenic dimer
+16   F2        7782-41-4   fluorine
+17   Cl2       7782-50-5   chlorine
+18   Br2       7726-95-6   bromine
+19   I2        7553-56-2   iodine
+20   CH4       74-82-8     methane
+21   C2H6      74-84-0     ethane
+22   C3H8      74-98-6     propane
+23   C4H10     106-97-8    butane
+24   C2H4      74-85-1     ethylene
+25   C2H2      74-86-2     acetylene
+26   C4        12184-80-4  carbon tetramer
+27   C3H6      75-19-4     cyclopropane
+28   C6H6      71-43-2     benzene
+29   C8H8      629-20-9    cyclooctatetraene
+30   C5H6      542-92-7    cyclopentadiene
+31   C2H3F     75-02-5     vinyl fluoride
+32   C2H3Cl    75-01-4     vinyl chloride
+33   C2H3Br    593-60-2v2  vinyl bromide
+34   C2H3I     593-66-8    vinyl iodide
+35   CF4       75-73-0     tetrafluoromethane
+36   CCl4      56-23-5     tetrachloromethane
+37   CBr4      558-13-4    tetrabromomethane
+38   CI4       507-25-5    tetraiodomethane
+39   SiH4      7803-62-5   silane
+40   GeH4      7782-65-2   germane
+41   Si2H6     1590-87-0   disilane
+42   Si5H12    14868-53-2  pentasilane
+43   LiH       7580-67-8   lithium hydride
+44   KH        7693-26-7   potassium hydride
+45   BH3       13283-31-3  borane
+46   B2H6      19287-45-7  diborane
+47   NH3       7664-41-7   ammonia
+48   HN3       7782-79-8   hydrazoic acid
+49   PH3       7803-51-2   phosphine
+50   AsH3      7784-42-1   arsine
+51   H2S       7783-06-4   hydrogen sulfide
+52   HF        7664-39-3   hydrogen fluoride
+53   HCl       7647-01-0   hydrogen chloride
+54   LiF       7789-24-4   lithium fluoride
+55   MgF2      7783-40-6   magnesium fluoride
+56   TiF4      7783-63-3   titanium tetrafluoride
+57   AlF3      7784-18-1   aluminum fluoride
+58   BF        13768-60-0  boron monofluoride
+59   SF4       7783-60-0   sulfur tetrafluoride
+60   KBr       7758-02-3   potassium bromide
+61   GaCl      17108-85-9  gallium monochloride
+62   NaCl      7647-14-5   sodium chloride
+63   MgCl2     7786-30-3   magnesium chloride
+64   AlI3      7784-23-8   aluminum iodide
+65   BN        10043-11-5  boron nitride
+66   HCN       74-90-8     hydrogen cyanide
+67   PN        17739-47-8  phosphorus mononitride
+68   N2H4      302-01-2    hydrazine
+69   H2CO      50-00-0     formaldehyde
+70   CH3OH     67-56-1     methanol
+71   C2H5OH    64-17-5     ethanol
+72   CH3CHO    75-07-0     acetaldehyde
+73   C4H10O    60-29-7     diethyl ether
+74   HCOOH     64-18-6     formic acid
+75   H2O2      7722-84-1   hydrogen peroxide
+76   H2O       7732-18-5   water
+77   CO2       124-38-9    carbon dioxide
+78   CS2       75-15-0     carbon disulfide
+79   COS       463-58-1    carbonyl sulfide
+80   COSe      1603-84-5   carbonyl selenide
+81   CO        630-08-0    carbon monoxide
+82   O3        10028-15-6  ozone
+83   SO2       7446-09-5   sulfur dioxide
+84   BeO       1304-56-9   beryllium monoxide
+85   MgO       1309-48-4   magnesium monoxide
+86   C7H8      108-88-3    toluene
+87   C8H10     100-41-4    ethylbenzene
+88   C6F6      392-56-3    hexafluorobenzene
+89   C6H5OH    108-95-2v2  phenol
+90   C6H5NH2   62-53-3     aniline
+91   C5H5N     110-86-1    pyridine
+92   C5H5N5O   73-40-5     guanine
+93   C5H5N5    73-24-5     adenine
+94   C4H5N3O   71-30-7     cytosine
+95   C5H6N2O2  65-71-4     thymine
+96   C4H4N2O2  66-22-8     uracil
+97   CH4N2O    57-13-6     urea
+98   Ag2       12187-06-3  silver dimer
+99   Cu2       12190-70-4  copper dimer
+100  CuCN      544-92-3    copper cyanide
