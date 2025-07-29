@@ -7,27 +7,31 @@ from load_data import load_constant, load_atom_mass
 
 
 class Poscar:
-    # title
-    # lc[3][3]
-    # Natom
-    # Ntype
-    # atomtype[Ntype]
-    # Naint[Ntype]
-    # ap[Natom][3]
-    # f_seldyn
-    # seldyn[Natom][3] (if f_seldyn)
-    # Ndim # 3 for bulks, 2 for slabs, and 0 for molecules
+    """
+    This class handles I/O and manipulation of crsytal structures.
+
+    Attributes:
+        title (str): system description.
+        Ndim (int): dimensionality (3=bulk, 2=slab, 0=molecule).
+        lc[3][3] (list of float): lattice vectors (in Angstroms).
+        Natom (int): total number of atoms.
+        Ntype (int): number of atom types.
+        atomtype[Ntype] (list of str): atom type symbols.
+        Naint[Ntype] (list of int): number of atoms per type.
+        ap[Natom][3] (list of float): atomic positions in fractional coordinates.
+        seldyn[Natom][3] (list of bool): optional selective dynamics flags; None if not present.
+    """
 
     def __init__(self):
         self.title = "SYSTEM"
+        self.Ndim = 3
         self.lc = []
         self.Natom = 0
         self.Ntype = 0
-        self.f_seldyn = False
         self.atomtype = []
         self.Naint = []
         self.ap = []
-        self.Ndim = 3
+        self.seldyn = None
 
     def __str__(self):
         str_out = "POSCAR:\n"
@@ -65,20 +69,16 @@ class Poscar:
             self.Natom = self.Natom+self.Naint[i]
         word = line[7].split()
         if word[0][0].lower() == 's':
-            self.f_seldyn = True
+            self.seldyn = []
             lineoff = lineoff+1
-        else:
-            self.f_seldyn = False
         word = line[7+lineoff].split()
         if word[0][0].lower() != 'd':
             print("Only atomic position 'Direct' supported")
             sys.exit()
-        if self.f_seldyn:
-            self.seldyn = []
         for i in range(self.Natom):
             word = line[i+lineoff+8].split()
             self.ap.append([float(word[0]), float(word[1]), float(word[2])])
-            if self.f_seldyn:
+            if self.seldyn is not None:
                 self.seldyn.append([bool(word[3]), bool(word[4]), bool(word[5])])
         self.movetobox()
         del line
@@ -407,13 +407,13 @@ class Poscar:
         for i in range(self.Ntype):
             f1.write(str(self.Naint[i])+"  ")
         f1.write('\n')
-        if self.f_seldyn:
+        if self.seldyn is not None:
             f1.write('Selective dynamics\n')
         f1.write('Direct\n')
         for i in range(self.Natom):
             for j in range(3):
                 f1.write(f"{self.ap[i][j]:18.12f}")
-            if self.f_seldyn:
+            if self.seldyn is not None:
                 for j in range(3):
                     if self.seldyn[i][j]:
                         f1.write(" T")
