@@ -80,7 +80,7 @@ class Poscar:
             self.ap.append([float(word[0]), float(word[1]), float(word[2])])
             if self.seldyn is not None:
                 self.seldyn.append([bool(word[3]), bool(word[4]), bool(word[5])])
-        self.movetobox()
+        self.wrap_to_cell()
         del line
         del word
 
@@ -146,7 +146,7 @@ class Poscar:
             for j in range(3):
                 self.lc[i][j] = self.lc[i][j]*factor
 
-        self.movetobox()
+        self.wrap_to_cell()
 
     def read_xml(self, filename=""):
 
@@ -239,7 +239,7 @@ class Poscar:
             for j in range(3):
                 self.lc[i][j] = self.lc[i][j]*factor
 
-        self.movetobox()
+        self.wrap_to_cell()
 
     def read_parsec(self, filename=""):
 
@@ -603,7 +603,7 @@ class Poscar:
 
 ########################################################################
 
-    def movetobox(self):
+    def wrap_to_cell(self):
         tol = 1e-8
         ap = np.array(self.ap)
         ap = ap-ap//1.0
@@ -628,7 +628,7 @@ class Poscar:
             disp = np.array(disp)@np.array(rlc)
         self.ap = (np.array(self.ap)+disp).tolist()
         if lbox:
-            self.movetobox()
+            self.wrap_to_cell()
 
     def rotate(self, theta):
         # rotate the structure around the z-axis (in degree)
@@ -643,7 +643,7 @@ class Poscar:
         ap = np.array(self.ap)
         ap[:, 2] = 1.0-ap[:, 2]
         self.ap = ap.tolist()
-        self.movetobox()
+        self.wrap_to_cell()
 
     def supercell(self, N):
         # N should be a list of 3 integers
@@ -670,7 +670,7 @@ class Poscar:
             self.Naint[itype] = self.Naint[itype]*N_total
         self.Natom = self.Natom*N_total
 
-        self.movetobox()
+        self.wrap_to_cell()
 
     def vacuum(self, z_vac):
         # Add a vacuum layer to the structure
@@ -682,7 +682,7 @@ class Poscar:
 
         a3_new = self.lc[2][2] + z_vac
 
-        self.movetobox()
+        self.wrap_to_cell()
 
         ia = 0
         ap_new = []

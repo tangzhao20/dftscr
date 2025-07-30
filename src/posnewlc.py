@@ -24,6 +24,6 @@ for l in line:
     lc_new.append([float(word[0]), float(word[1]), float(word[2])])
 poscar1.new_lc(lc_new)
 
-poscar1.movetobox()
+poscar1.wrap_to_cell()
 
 poscar1.write_vasp()

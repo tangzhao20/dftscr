@@ -73,8 +73,8 @@ if "posconvert.in" in files:
         word = l.split()
         if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
             continue
-        if word[0] == "movetobox":
-            poscar1.movetobox()
+        if word[0] == "wrap_to_cell":
+            poscar1.wrap_to_cell()
         elif word[0] == "move":
             lcart = False
             if "cart" in word:

@@ -29,7 +29,7 @@ def moveatoms(poscar1, poscar2, factor):
             else:
                 newap = poscar2.ap[i][j]
             poscar1.ap[i][j] = poscar1.ap[i][j]*(1.0-factor)+newap*factor
-    poscar1.movetobox()
+    poscar1.wrap_to_cell()
 
 
 def displacement(poscar1, poscar2):
