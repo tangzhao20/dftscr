@@ -48,7 +48,7 @@ for i in range(N):
     pos.append(general_q(poscar_0, poscar_1))
 
 # Q = Displacement of the central factor
-#    pos.append(poscar_1.lc[2][2]*poscar_1.ap[35][2])
+#    pos.append(poscar_1.lc[2, 2]*poscar_1.ap[35][2])
 
     del poscar_1
 

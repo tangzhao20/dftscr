@@ -24,7 +24,7 @@ hbn_structure = os.path.join(this_dir, "..", "data", "structures", "hbn.vasp")
 poscar0 = Poscar()
 poscar0.read_vasp(hbn_structure)
 poscar0.Ndim = 2
-bond_b_n = poscar0.lc[1][1]*2.0/3.0
+bond_b_n = poscar0.lc[1, 1]*2.0/3.0
 bond_b_h = 1.20
 bond_n_h = 1.02
 # TODO: Here B-H bond and N-H bond are taken from wikipedia, with no reference.
@@ -46,7 +46,7 @@ if "flake" in sys.argv:
             break
         except ValueError:
             pass
-    N = math.ceil(r_max / poscar0.lc[1][1]) * 2
+    N = math.ceil(r_max / poscar0.lc[1, 1]) * 2
     print("supercell: "+str(N)+", "+str(N)+", 1")
     poscar0.supercell([N, N, 1])
 else:
@@ -66,7 +66,7 @@ ldef = False
 if len(sys.argv) >= 2:  # contains a defect
     ldef = True
 
-center = np.array([0.5, 0.5, 0.0]) @ np.array(poscar0.lc)  # center for Ndim = 2
+center = np.array([0.5, 0.5, 0.0]) @ poscar0.lc  # center for Ndim = 2
 apc = np.array(poscar0.cartesian())
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
@@ -117,7 +117,7 @@ if lflake:
                 poscar0.delete_atom(ia0)
                 apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(1)]*(bond_b_n-bond_n_h))
 
-    ap_h = ((np.array(apc_h) @ np.linalg.inv(np.array(poscar0.lc))) + np.array([0.0, 0.0, 0.5])).tolist()
+    ap_h = ((np.array(apc_h) @ np.linalg.inv(poscar0.lc)) + np.array([0.0, 0.0, 0.5])).tolist()
     new_type = "H"
     for ia in range(len(apc_h)):
         poscar0.add_atom(2, ap_h[ia], new_type=new_type, add_to_head=False)
@@ -130,7 +130,7 @@ if lflake:
     apc = apc - center + np.array([radius, radius, radius])
     center = np.array([radius, radius, radius])
     poscar0.ap = (apc*(1/radius/2.0)).tolist()
-    poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
+    poscar0.lc = np.eye(3) * radius * 2.0
     poscar0.Ndim = 0
 
 if ldef:  # create a defect

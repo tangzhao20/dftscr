@@ -3,7 +3,7 @@ from load_data import load_atom_mass
 
 
 def match(poscar1, poscar2):
-    if np.linalg.norm(np.array(poscar1.lc)-np.array(poscar2.lc)) > 1e-6:
+    if np.linalg.norm(poscar1.lc-poscar2.lc) > 1e-6:
         print("Lattice vectors don't match.")
         return False
     if poscar1.Natom != poscar2.Natom or poscar1.Ntype != poscar2.Ntype:
@@ -37,7 +37,7 @@ def displacement(poscar1, poscar2):
     # disp[Na][3]
     disp = np.array(poscar2.ap)-np.array(poscar1.ap)
     disp = (disp+0.5) % 1-0.5
-    disp = disp@np.array(poscar1.lc)
+    disp = disp @ poscar1.lc
     disp = disp.tolist()
     return disp
 

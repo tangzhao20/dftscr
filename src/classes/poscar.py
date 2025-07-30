@@ -13,7 +13,7 @@ class Poscar:
     Attributes:
         title (str): system description.
         Ndim (int): dimensionality (3=bulk, 2=slab, 0=molecule).
-        lc[3][3] (list of float): lattice vectors (in Angstroms).
+        lc[3, 3] (numpy.ndarray): lattice vectors (in Angstroms).
         Natom (int): total number of atoms.
         Ntype (int): number of atom types.
         atomtype[Ntype] (list of str): atom type symbols.
@@ -25,7 +25,7 @@ class Poscar:
     def __init__(self):
         self.title = "SYSTEM"
         self.Ndim = 3
-        self.lc = []
+        self.lc = np.zeros((3, 3))
         self.Natom = 0
         self.Ntype = 0
         self.atomtype = []
@@ -55,10 +55,14 @@ class Poscar:
 
         lineoff = 0
         self.title = line[0].rstrip('\n')
+
         factor = float(line[1].split()[0])
-        for i in range(2, 5):
-            word = line[i].split()
-            self.lc.append([float(word[0])*factor, float(word[1])*factor, float(word[2])*factor])
+        for il in range(3):
+            word = line[il+2].split()
+            for ix in range(3):
+                self.lc[il, ix] = float(word[ix])
+        self.lc = self.lc * factor
+
         word = line[5].split()
         self.Ntype = len(word)
         for i in range(self.Ntype):
@@ -96,7 +100,8 @@ class Poscar:
             elif "relax.in" in files:
                 filename = "relax.in"
             else:
-                print("Error: In read_qe, use input files scf.in, nscf.in, or relax.in, or specify the input file name.")
+                print("Error: In read_qe, use input files scf.in, nscf.in, or relax.in,\n")
+                print("       or specify the input file name.")
                 sys.exit()
 
         bohr = load_constant("bohr")
@@ -121,7 +126,8 @@ class Poscar:
                     sys.exit()
                 for il in range(3):
                     wordlc = line[l+il+1].split()
-                    self.lc.append([float(wordlc[0]), float(wordlc[1]), float(wordlc[2])])
+                    for ix in range(3):
+                        self.lc[il, ix] = float(wordlc[ix])
                 continue
             elif len(word) >= 2 and word[0] == "ATOMIC_POSITIONS":
                 Fat = True
@@ -142,9 +148,7 @@ class Poscar:
                 else:
                     self.Naint[-1] += 1
 
-        for i in range(3):
-            for j in range(3):
-                self.lc[i][j] = self.lc[i][j]*factor
+        self.lc = self.lc * factor
 
         self.wrap_to_cell()
 
@@ -166,8 +170,10 @@ class Poscar:
         tree = ET.parse(filename)
         cell = tree.getroot().find("output").find("atomic_structure").find("cell")
 
-        for ix in range(3):
-            self.lc.append([float(lc1) for lc1 in cell.find("a"+str(ix+1)).text.split()])
+        for ix0 in range(3):
+            lc1 = cell.find("a"+str(ix0+1)).text.split()
+            for ix1 in range(3):
+                self.lc[ix0, ix1] = float(lc1[ix1])
         atoms = tree.getroot().find("output").find("atomic_structure").find("atomic_positions").findall("atom")
 
         for atom in atoms:
@@ -180,10 +186,8 @@ class Poscar:
             self.ap.append([float(ap) for ap in atom.text.split()])
 
         # convert Cartesian to direct
-        self.ap = (np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
-        for ix in range(3):
-            for iy in range(3):
-                self.lc[ix][iy] = self.lc[ix][iy]*bohr
+        self.ap = (np.array(self.ap)@np.linalg.inv(self.lc)).tolist()
+        self.lc = self.lc * bohr
 
         self.Natom = len(self.ap)
         self.Ntype = len(self.atomtype)
@@ -202,6 +206,7 @@ class Poscar:
         Flc = False
         Fat = False
 
+        ix0 = 0
         for l in range(len(line)):
             word = line[l].split()
             if len(word) >= 2 and word[0] == "begin" and word[1] == "latticevecs":
@@ -219,7 +224,9 @@ class Poscar:
 
             if Flc == True:
                 if len(word) >= 4 and word[0] == "coord":
-                    self.lc.append([float(word[1]), float(word[2]), float(word[3])])
+                    for ix1 in range(3):
+                        self.lc[ix0, ix1] = float(word[ix1+1])
+                    ix0 += 1
                 elif len(word) >= 2 and word[0] == "volume":
                     volume = float(word[1])
             elif Fat == True:
@@ -234,10 +241,7 @@ class Poscar:
 
         detlc = self.volume()
         factor = (volume/detlc)**(1.0/3.0)*bohr
-
-        for i in range(3):
-            for j in range(3):
-                self.lc[i][j] = self.lc[i][j]*factor
+        self.lc = self.lc * factor
 
         self.wrap_to_cell()
 
@@ -267,7 +271,6 @@ class Poscar:
 
         Fat = False
         Flc = False
-        self.lc = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
         factor_lc = bohr
         for il in range(len(line)):
             word = line[il].replace(":", " ").replace("=", " ").split()
@@ -275,7 +278,7 @@ class Poscar:
                 continue
             if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "atom_coord":
                 Fat = True
-                rlc = np.linalg.inv(np.array(self.lc)).tolist()
+                rlc = np.linalg.inv(self.lc).tolist()
                 continue
             if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "atom_coord":
                 Fat = False
@@ -292,11 +295,9 @@ class Poscar:
                 if len(word) < 3 or word[2].lower() != "ang":
                     alat = alat * bohr
                 if self.Ndim == 0:
-                    self.lc[0][0] = alat
-                    self.lc[1][1] = alat
-                    self.lc[2][2] = alat
+                    np.fill_diagonal(self.lc, alat)
                 elif self.Ndim == 2:
-                    self.lc[2][2] = alat
+                    self.lc[2, 2] = alat
             if word[0].lower() == "lattice_vector_scale":
                 factor_lc = float(word[1])
                 if len(word) < 3 or word[2].lower() != "ang":
@@ -318,7 +319,7 @@ class Poscar:
                     factor_ap = bohr
             if Flc:
                 for ix in range(3):
-                    self.lc[ilc][ix] = float(word[ix]) * factor_lc
+                    self.lc[ilc, ix] = float(word[ix]) * factor_lc
                 ilc += 1
             if Fat:
                 ap = []
@@ -328,7 +329,7 @@ class Poscar:
                 self.Naint[-1] += 1
                 self.Natom += 1
         if lcart:
-            self.ap = (np.array(self.ap)@np.linalg.inv(np.array(self.lc))).tolist()
+            self.ap = (np.array(self.ap)@np.linalg.inv(self.lc)).tolist()
         if self.Ndim == 0:
             shift = [0.5, 0.5, 0.5]
         elif self.Ndim == 2:
@@ -386,7 +387,7 @@ class Poscar:
 
         radius = np.max(np.linalg.norm(ap, axis=1))
         lc0 = 2.0 * (radius+5.0)  # vacuum is set to 5 A
-        self.lc = [[lc0, 0.0, 0.0], [0.0, lc0, 0.0], [0.0, 0.0, lc0]]
+        np.fill_diagonal(self.lc, lc0)
 
         self.ap = (ap / lc0 + 0.5).tolist()
         del ap
@@ -397,9 +398,9 @@ class Poscar:
         f1 = open(filename, "w")
         f1.write(self.title+'\n')
         f1.write('1.0\n')
-        for i in range(3):
-            for j in range(3):
-                f1.write(f"{self.lc[i][j]:21.12f}")
+        for ix0 in range(3):
+            for ix1 in range(3):
+                f1.write(f"{self.lc[ix0, ix1]:21.12f}")
             f1.write('\n')
         for i in range(self.Ntype):
             f1.write(self.atomtype[i]+"   ")
@@ -427,9 +428,9 @@ class Poscar:
 
         f2 = open(filename, "w")
         f2.write("CELL_PARAMETERS angstrom\n")
-        for ix1 in range(3):
-            for ix2 in range(3):
-                f2.write(f"{self.lc[ix1][ix2]:18.12f}")
+        for ix0 in range(3):
+            for ix1 in range(3):
+                f2.write(f"{self.lc[ix0, ix1]:18.12f}")
             f2.write("\n")
 
         f2.write("ATOMIC_SPECIES\n")
@@ -458,8 +459,11 @@ class Poscar:
 
         f2 = open(filename, "w")
         f2.write("begin latticevecs\n")
-        for i in range(3):
-            f2.write(f"coord{self.lc[i][0]:18.12f}{self.lc[i][1]:18.12f}{self.lc[i][2]:18.12f}\n")
+        for ix0 in range(3):
+            f2.write("coord")
+            for ix1 in range(3):
+                f2.write(f"{self.lc[ix0, ix1]:18.12f}")
+            f2.write("\n")
         f2.write(f"volume {volume:24.16f}\nend latticevecs\n\nbegin coordinates\n")
         k = 0
         for i in range(self.Ntype):
@@ -482,21 +486,21 @@ class Poscar:
             funit = 1.0
 
         if self.Ndim == 0:
-            radius = max(self.lc[0][0], self.lc[1][1], self.lc[2][2])*0.5/funit
+            radius = max(self.lc[0, 0], self.lc[1, 1], self.lc[2, 2])*0.5/funit
             if lbohr:
                 f2.write(f"boundary_sphere_radius {radius:.12g}\n\n")
             else:
                 f2.write(f"boundary_sphere_radius {radius:.12g} ang\n\n")
         elif self.Ndim == 1:
             f2.write("boundary_conditions wire\n")
-            radius = max(self.lc[1][1], self.lc[2][2])*0.5/funit
+            radius = max(self.lc[1, 1], self.lc[2, 2])*0.5/funit
             if lbohr:
                 f2.write(f"boundary_sphere_radius {radius:.12g}\n\n")
             else:
                 f2.write(f"boundary_sphere_radius {radius:.12g} ang\n\n")
         elif self.Ndim == 2:
             f2.write("boundary_conditions slab\n")
-            radius = self.lc[2][2]*0.5/funit
+            radius = self.lc[2, 2]*0.5/funit
             if lbohr:
                 f2.write(f"boundary_sphere_radius {radius:.12g}\n\n")
             else:
@@ -508,9 +512,9 @@ class Poscar:
             if not lbohr:
                 f2.write("lattice_vector_scale 1.0 ang\n")
             f2.write("begin cell_shape\n")
-            for ix1 in range(self.Ndim):
-                for ix2 in range(3):
-                    f2.write(f"{self.lc[ix1][ix2]/funit:18.12f}")
+            for ix0 in range(self.Ndim):
+                for ix1 in range(3):
+                    f2.write(f"{self.lc[ix0, ix1]/funit:18.12f}")
                 f2.write("\n")
             f2.write("end cell_shape\n\n")
 
@@ -560,8 +564,10 @@ class Poscar:
     def write_wannier90(self, filename="wannier90_st.dat"):
         f2 = open(filename, "w")
         f2.write("Begin Unit_Cell_Cart\n")
-        for i in range(3):
-            f2.write(f"{self.lc[i][0]:18.12f}{self.lc[i][1]:18.12f}{self.lc[i][2]:18.12f}\n")
+        for ix0 in range(3):
+            for ix1 in range(3):
+                f2.write(f"{self.lc[ix0, ix1]:18.12f}")
+            f2.write("\n")
         f2.write("End Unit_Cell_Cart\n\n")
 
         f2.write("Begin Projections\n")
@@ -636,7 +642,7 @@ class Poscar:
         c = math.cos(t)
         s = math.sin(t)
         M = np.array([[c, s, 0], [-s, c, 0], [0, 0, 1]])
-        self.lc = (np.array(self.lc)@M).tolist()
+        self.lc = self.lc @ M
 
     def flip(self):
         # flip the z coordinate of the structure
@@ -650,7 +656,7 @@ class Poscar:
         N_total = N[0]*N[1]*N[2]
 
         M = np.array([[N[0], 0, 0], [0, N[1], 0], [0, 0, N[2]]])
-        self.lc = (M@np.array(self.lc)).tolist()
+        self.lc = M @ self.lc
 
         shift = np.zeros((N_total, 3))
         i = 0
@@ -680,7 +686,7 @@ class Poscar:
             print("Error: z_vac <= 0")
             sys.exit()
 
-        a3_new = self.lc[2][2] + z_vac
+        a3_new = self.lc[2, 2] + z_vac
 
         self.wrap_to_cell()
 
@@ -699,9 +705,9 @@ class Poscar:
                 self.add_atom(itype, ap)
 
         for ia in range(self.Natom):
-            self.ap[ia][2] = (self.ap[ia][2] - 0.5) * self.lc[2][2] / a3_new + 0.5
+            self.ap[ia][2] = (self.ap[ia][2] - 0.5) * self.lc[2, 2] / a3_new + 0.5
 
-        self.lc[2][2] = a3_new
+        self.lc[2, 2] = a3_new
 
     def add_atom(self, itype, ap, new_type=None, add_to_head=False):
         # If new_type is defined, a new atom type will be inserted.
@@ -789,7 +795,7 @@ class Poscar:
                 shift = [0.0, 0.0, -0.5]
             elif self.Ndim == 0:
                 shift = [-0.5, -0.5, -0.5]
-        return ((np.array(self.ap) + np.array(shift)) @ np.array(self.lc) * factor).tolist()
+        return ((np.array(self.ap) + np.array(shift)) @ self.lc * factor).tolist()
 
     def atom_list(self):
         atom = []
@@ -822,7 +828,7 @@ class Poscar:
         return atom_flag
 
     def k_grid(self):
-        grid = [1]*self.Ndim
+        grid = [1] * 3
         for ix in range(self.Ndim):
             grid[ix] = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
         return grid

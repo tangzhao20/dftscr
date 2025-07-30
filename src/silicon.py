@@ -19,17 +19,17 @@ this_dir, this_filename = os.path.split(__file__)
 silicon_structure = os.path.join(this_dir, "..", "data", "structures", "silicon.vasp")
 poscar0 = Poscar()
 poscar0.read_vasp(silicon_structure)
-bond_si_si = poscar0.lc[0][1]*3.0**0.5/2.0
+bond_si_si = poscar0.lc[0, 1] * 3.0**0.5/2.0
 bond_si_h = 1.46  # need a reference
 
 if len(sys.argv) < 2:
     print("Need input:")
     print(" python3 silicon.py r")
 r_max = float(sys.argv[1])
-N = math.ceil(r_max / (poscar0.lc[0][1]*2.0/3.0**0.5)) * 2
+N = math.ceil(r_max / (poscar0.lc[0, 1] * 2.0/3.0**0.5)) * 2
 poscar0.supercell([N, N, N])
 
-center = np.array([0.5, 0.5, 0.5]) @ np.array(poscar0.lc)  # center for Ndim = 3
+center = np.array([0.5, 0.5, 0.5]) @ poscar0.lc  # center for Ndim = 3
 apc = np.array(poscar0.cartesian())
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
@@ -85,7 +85,7 @@ for ia0 in range(N**3-1, -1, -1):
             poscar0.delete_atom(ia0)
             apc_h.append(apc_si1[ia0] + neighbor_si1[in_range.index(1)]*(bond_si_si-bond_si_h))
 
-ap_h = (np.array(apc_h) @ np.linalg.inv(np.array(poscar0.lc))).tolist()
+ap_h = (np.array(apc_h) @ np.linalg.inv(poscar0.lc)).tolist()
 new_type = "H"
 for ia in range(len(apc_h)):
     poscar0.add_atom(1, ap_h[ia], new_type=new_type, add_to_head=False)
@@ -98,7 +98,7 @@ radius = r_max + 5
 apc = apc - center + np.array([radius, radius, radius])
 center = np.array([radius, radius, radius])
 poscar0.ap = (apc*(1/radius/2.0)).tolist()
-poscar0.lc = [[radius*2.0, 0.0, 0.0], [0.0, radius*2.0, 0.0], [0.0, 0.0, radius*2.0]]
+poscar0.lc = np.eye(3) * radius * 2.0
 poscar0.Ndim = 0
 
 print(f" radius {r_max} A  supercell {N}  Si {poscar0.Naint[0]} H {poscar0.Naint[1]}")

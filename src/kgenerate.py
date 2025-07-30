@@ -30,8 +30,8 @@ if latt == "orcc":
     print("  a3 = (  0,    0,  c)")
     print("  where a < b")
 
-    a = poscar0.lc[0][0] * 2.0
-    b = - poscar0.lc[0][1] * 2.0
+    a = poscar0.lc[0, 0] * 2.0
+    b = - poscar0.lc[0, 1] * 2.0
     if a >= b:
         print("Error: a < b is required")
         sys.exit()

@@ -328,7 +328,7 @@ class Eigenval:
 
     def kc2kd(self, lc):
         # convert kc from Cartesian to direct
-        self.kp = (np.array(self.kp)@(np.array(lc).T)).tolist()
+        self.kp = (np.array(self.kp)@(lc.T)).tolist()
 
     def eigtrans(self):
         eigout = []

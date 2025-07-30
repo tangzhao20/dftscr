@@ -20,16 +20,7 @@ poscar1.read_parsec(filename1)
 
 mtx, ops = load_symops()
 
-# Here I use the direct coordinate, since this package assume cubic cell
-# for cluster structures in the format of parsec.
-
-ap = []
-for ia in range(poscar1.Natom):
-    ap0 = [0.0]*3
-    for ix1 in range(3):
-        for ix2 in range(3):
-            ap0[ix2] += poscar1.lc[ix1][ix2]*(poscar1.ap[ia][ix1]-0.5)
-    ap.append(ap0)
+apc = poscar1.cartesian()
 
 symlist = []
 for isym in range(48):
@@ -38,14 +29,14 @@ for isym in range(48):
     for it in range(poscar1.Ntype):
         anew0 = [-1]*poscar1.Naint[it]
         for ia1 in range(poscar1.Naint[it]):
-            ap1 = ap[sumt+ia1]
+            apc1 = apc[sumt+ia1]
             for ia2 in range(poscar1.Naint[it]):
-                ap2 = ap[sumt+ia2]
-                ap2_0 = [0.0]*3
+                apc2 = apc[sumt+ia2]
+                apc2_0 = [0.0]*3
                 for ix1 in range(3):
                     for ix2 in range(3):
-                        ap2_0[ix2] += mtx[isym][ix1][ix2]*ap2[ix1]
-                if v3matchpp(ap1, ap2_0):
+                        apc2_0[ix2] += mtx[isym][ix1][ix2]*apc2[ix1]
+                if v3matchpp(apc1, apc2_0):
                     anew0[ia1] = ia2+sumt
                     break
         sumt += poscar1.Naint[it]

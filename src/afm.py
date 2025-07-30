@@ -273,17 +273,17 @@ if lfdet:
     if poscar2.Ndim == 2:
         f2.write("boundary_conditions slab\n")
         f2.write("begin cell_shape\n")
-        for ix1 in range(2):
-            for ix2 in range(3):
-                f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
+        for ix0 in range(2):
+            for ix1 in range(3):
+                f2.write(f"{poscar2.lc[ix0, ix1]/bohr:18.12f}")
             f2.write("\n")
         f2.write("end cell_shape\n\n")
 
         f2.write("kpoint_method mp\n\n")
         f2.write("begin monkhorst_pack_grid\n")
+        k_grid = poscar0.k_grid()
         for ix in range(2):
-            kgrid = math.floor(30.0/(poscar2.lc[ix][0]**2+poscar2.lc[ix][1]**2+poscar2.lc[ix][2]**2)**0.5)+1
-            f2.write(f"  {kgrid:d}")
+            f2.write(f"  {k_grid[ix]:d}")
         f2.write("\nend monkhorst_pack_grid\n\n")
         f2.write("begin monkhorst_pack_shift\n")
         f2.write("0.0  0.0  0.0\n")
@@ -327,17 +327,17 @@ for iz in range(nz):
         if poscar2.Ndim == 2:
             f2.write("boundary_conditions slab\n")
             f2.write("begin cell_shape\n")
-            for ix1 in range(2):
-                for ix2 in range(3):
-                    f2.write(f"{poscar2.lc[ix1][ix2]/bohr:18.12f}")
+            for ix0 in range(2):
+                for ix1 in range(3):
+                    f2.write(f"{poscar2.lc[ix0, ix1]/bohr:18.12f}")
                 f2.write("\n")
             f2.write("end cell_shape\n\n")
 
             f2.write("kpoint_method mp\n\n")
             f2.write("begin monkhorst_pack_grid\n")
-            for ix in range(poscar2.Ndim):
-                kgrid = math.ceil(30.0/(np.linalg.norm(poscar2.lc[ix])))
-                f2.write(f"  {kgrid:d}")
+            k_grid = poscar2.k_grid()
+            for ix in range(2):
+                f2.write(f"  {k_grid[ix]:d}")
             f2.write("\nend monkhorst_pack_grid\n\n")
             f2.write("begin monkhorst_pack_shift\n")
             f2.write("0.0  0.0  0.0\n")

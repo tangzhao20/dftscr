@@ -36,9 +36,9 @@ print(f"Applying strain along the {str_dir} axis.")
 
 lc_save = [0.0]*3
 for ix1 in range(3):
-    lc_save[ix1] = poscar0.lc[ix1][ix0]
+    lc_save[ix1] = poscar0.lc[ix1, ix0]
 
 for i in range(0, 2*N+1):
     for ix1 in range(3):
-        poscar0.lc[ix1][ix0] = (1+strain_list[i]) * lc_save[ix1]
+        poscar0.lc[ix1, ix0] = (1+strain_list[i]) * lc_save[ix1]
     poscar0.write_vasp("POSCAR_"+str(i))
