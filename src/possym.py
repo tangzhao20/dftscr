@@ -4,9 +4,10 @@
 
 import sys
 import os
+import numpy as np
 from classes import Poscar
 from load_data import load_symops
-from v3math import v3matchpp, v3dpp
+
 
 # The structure is read from parsec format
 lname = "parsec.in"
@@ -24,34 +25,28 @@ apc = poscar1.cartesian()
 
 symlist = []
 for isym in range(48):
-    anew = []
-    sumt = 0
+    atom_match = []
+    apc_new = apc @ mtx[isym, :, :].T
+    sum_type = 0
     for it in range(poscar1.Ntype):
-        anew0 = [-1]*poscar1.Naint[it]
+        atom_match0 = [-1]*poscar1.Naint[it]
         for ia1 in range(poscar1.Naint[it]):
-            apc1 = apc[sumt+ia1]
             for ia2 in range(poscar1.Naint[it]):
-                apc2 = apc[sumt+ia2]
-                apc2_0 = [0.0]*3
-                for ix1 in range(3):
-                    for ix2 in range(3):
-                        apc2_0[ix2] += mtx[isym][ix1][ix2]*apc2[ix1]
-                if v3matchpp(apc1, apc2_0):
-                    anew0[ia1] = ia2+sumt
+                if np.allclose(apc[sum_type+ia1, :], apc_new[sum_type+ia2, :]):
+                    atom_match0[ia1] = ia2+sum_type
                     break
-        sumt += poscar1.Naint[it]
-        anew.append(anew0)
+        sum_type += poscar1.Naint[it]
+        atom_match = atom_match + atom_match0
     lwrite = True
-    for anew_t in anew:
-        for anew_a in anew_t:
-            if anew_a == -1:
-                lwrite = False
-                break
-        if lwrite == False:
-            break
-    if lwrite:
-        # print(isym+1,ops[isym],mtx[isym])
+    if -1 not in atom_match:
         symlist.append(isym)
+
 print(symlist)
 for isym in symlist:
-    print(str(isym)+" "+ops[isym]+" " + str(mtx[isym]))
+    print(f"{isym:2d} {ops[isym]:9s} ", end="")
+    for ix1 in range(3):
+        for ix2 in range(3):
+            mtx_out = int(round(mtx[isym, ix1, ix2]))
+            print(f"{mtx_out:2d} ", end="")
+        print(" ", end="")
+    print("")

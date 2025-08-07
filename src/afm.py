@@ -158,34 +158,17 @@ apc1 = poscar1.cartesian(factor=1.0/bohr)
 apc2 = poscar2.cartesian(factor=1.0/bohr)
 
 # move the tip atom to (0,0,0)
-zmin = 1e6
-for ia in range(poscar1.Natom):
-    if zmin > apc1[ia][2]:
-        zmin = apc1[ia][2]
-        itip = ia
-apmin = apc1[itip].copy()
-# write poscar1.ap in Cartesian coordinate in Bohr
-for ia in range(poscar1.Natom):
-    for ix in range(3):
-        apc1[ia][ix] = apc1[ia][ix]-apmin[ix]
+itip = np.argmin(apc1[:, 2])
+apc1 = apc1 - apc1[itip, :]
 
 # move the sample top to z=0
-zmax = -1e6
-for ia in range(poscar2.Natom):
-    if apc2[ia][2] > zmax:
-        zmax = apc2[ia][2]
+zmax = np.max(apc2[:, 2])
 
 # instead of the very top atom, we select the medium of atoms with in 1 A under the top
-z_toplist = []
-for ia in range(poscar2.Natom):
-    if apc2[ia][2] > zmax-1.0/bohr:
-        z_toplist.append(apc2[ia][2])
-z_toplist.sort()
-ia_mid = len(z_toplist) // 2
-zmax = (z_toplist[ia_mid] + z_toplist[~ia_mid]) / 2
-
-for ia in range(poscar2.Natom):
-    apc2[ia][2] = apc2[ia][2]-zmax
+z_toplist = np.sort(apc2[apc2[:, 2] > (zmax - 1.0 / bohr), 2])
+imid = len(z_toplist) // 2
+zmid = (z_toplist[imid] + z_toplist[~imid]) / 2
+apc2[:, 2] -= zmid
 
 # ================================================================
 # calculate the step numbers. Need to minus 1 in the parsec.in file
@@ -226,38 +209,28 @@ for iy in range(ny):
 # If the boundary is not set, calculate it
 if boundary < 0:
     if poscar2.Ndim == 0:
-        for a in apc1:
-            for ix in range(2):
-                for iy in range(2):
-                    boundary = max(boundary, (a[0]+x_range[ix])**2+(a[1]+y_range[iy])**2+(a[2]+z_range[1])**2)
-        for a in apc2:
-            boundary = max(boundary, a[0]**2+a[1]**2+a[2]**2)
-        boundary = boundary**0.5 + vacuum
+        for ix0 in range(2):
+            for ix1 in range(2):
+                offset = np.array([x_range[ix0], y_range[ix1], z_range[1]])
+                boundary = max(boundary, np.linalg.norm(apc1+offset, axis=1).max())
+        boundary = max(boundary, np.linalg.norm(apc2, axis=1).max())
+        boundary += vacuum
 
     elif poscar2.Ndim == 2:
-        boundary_min = 1e6
-        boundary_max = -1e6
-        for a in apc1:
-            boundary_max = max(boundary_max, a[2]+z_range[1])
-        for a in apc2:
-            boundary_min = min(boundary_min, a[2])
+        boundary_max = apc1[:, 2].max() + z_range[1]
+        boundary_min = apc2[:, 2].min()
         # Move the atoms to centralize the sample-tip structure
-        z_move = 0.5*(boundary_max+boundary_min)
-        for ia in range(poscar1.Natom):
-            apc1[ia][2] -= z_move
-        for ia in range(poscar2.Natom):
-            apc2[ia][2] -= z_move
-        boundary = 0.5*(boundary_max-boundary_min) + vacuum
+        z_move = 0.5 * (boundary_max + boundary_min)
+        apc1[:, 2] -= z_move
+        apc2[:, 2] -= z_move
+        boundary = 0.5 * (boundary_max - boundary_min) + vacuum
+
 else:  # Calculate the z_move, make the bottom at 10 bohr from boundary
     if poscar2.Ndim == 2:
-        boundary_min = 1e6
-        for a in apc2:
-            boundary_min = min(boundary_min, a[2])
+        boundary_min = apc2[:, 2].min()
         z_move = boundary_min - (-boundary + vacuum)
-        for ia in range(poscar1.Natom):
-            apc1[ia][2] -= z_move
-        for ia in range(poscar2.Natom):
-            apc2[ia][2] -= z_move
+        apc1[:, 2] -= z_move
+        apc2[:, 2] -= z_move
 
 
 # if FDET, we do a calculation for a sample potential file
@@ -281,7 +254,7 @@ if lfdet:
 
         f2.write("kpoint_method mp\n\n")
         f2.write("begin monkhorst_pack_grid\n")
-        k_grid = poscar0.k_grid()
+        k_grid = poscar2.k_grid()
         for ix in range(2):
             f2.write(f"  {k_grid[ix]:d}")
         f2.write("\nend monkhorst_pack_grid\n\n")
@@ -300,7 +273,7 @@ if lfdet:
         f2.write("local_component s\n")
         f2.write("begin atom_coord\n")
         for ia in range(poscar2.Naint[i]):
-            f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
+            f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
             k = k+1
         f2.write("end atom_coord\n\n")
     f2.write("#------------- end sample ------------\n\n")
@@ -358,8 +331,8 @@ for iz in range(nz):
             f2.write("local_component: s\n")
             f2.write("begin atom_coord\n")
             for ia in range(poscar1.Naint[i]):
-                f2.write(f"{apc1[k][0]+movelist[ip][0][0]:18.12f}{apc1[k][1]+movelist[ip][0][1]:18.12f}" +
-                         f"{apc1[k][2]+zlist[iz]:18.12f}\n")
+                f2.write(f"{apc1[k, 0]+movelist[ip][0][0]:18.12f}{apc1[k, 1]+movelist[ip][0][1]:18.12f}" +
+                         f"{apc1[k, 2]+zlist[iz]:18.12f}\n")
                 k = k+1
             f2.write("end atom_coord\n\n")
         f2.write("#-------------- end tip --------------\n\n")
@@ -380,7 +353,7 @@ for iz in range(nz):
                 f2.write("begin atom_coord\n")
 
             for ia in range(poscar2.Naint[i]):
-                f2.write(f"{apc2[k][0]:18.12f}{apc2[k][1]:18.12f}{apc2[k][2]:18.12f}\n")
+                f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
                 k = k+1
 
             if lfdet:
@@ -395,11 +368,11 @@ for iz in range(nz):
         f4 = open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat", "w")
         for istep in range(1, steplist[ip]):
             for ia in range(poscar1.Natom):
-                f4.write(f"{apc1[ia][0]+movelist[ip][istep][0]:18.12f}{apc1[ia][1]+movelist[ip][istep][1]:18.12f}" +
-                         f"{apc1[ia][2]+zlist[iz]:18.12f}\n")
+                f4.write(f"{apc1[ia, 0]+movelist[ip][istep][0]:18.12f}{apc1[ia, 1]+movelist[ip][istep][1]:18.12f}" +
+                         f"{apc1[ia, 2]+zlist[iz]:18.12f}\n")
             if not lfdet:
                 for ia in range(poscar2.Natom):
-                    f4.write(f"{apc2[ia][0]:18.12f}{apc2[ia][1]:18.12f}{apc2[ia][2]:18.12f}\n")
+                    f4.write(f"{apc2[ia, 0]:18.12f}{apc2[ia, 1]:18.12f}{apc2[ia, 2]:18.12f}\n")
             f4.write("\n")
         f4.close()
 
@@ -416,14 +389,15 @@ if lvasp:
         shift = [0.5, 0.5, 0.5]
     elif poscar2.Ndim == 2:
         shift = [0.0, 0.0, 0.5]
-    ap1 = ((np.array(apc1) + np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2]))
-           * bohr @ np.array(rlc3) / (2*pi) + shift).tolist()
+    shift = np.array(shift)
+    offset = np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2])
+    ap1 = (apc1 + offset) * bohr @ rlc3 / (2*pi) + shift
     if lfdet:
         ia = 0
         for itype in range(poscar1.Ntype):
             for iaint in range(poscar1.Naint[itype]):
-                poscar3.add_atom(itype=itype, ap=ap1[ia], new_type=poscar1.atomtype[itype])
+                poscar3.add_atom(itype=itype, ap=ap1[ia, :], new_type=poscar1.atomtype[itype])
                 ia += 1
     else:
-        poscar3.ap[0:poscar1.Natom] = ap1
+        poscar3.ap[:poscar1.Natom, :] = ap1
     poscar3.write_vasp("afm.vasp")

@@ -221,18 +221,16 @@ if latom:
     apc = poscar1.cartesian()
     atom = poscar1.atom_list()
 
-    zmax = -1e6
-    for ia in range(len(apc)):
-        zmax = max(zmax, apc[ia][2])
+    zmax = apc[:, 2].max()
 
     atom_x = []
     atom_y = []
     atom_color = []
     edge_color = []
     for ia in range(len(apc)):
-        if apc[ia][2] > zmax-1.0:
-            atom_x.append(apc[ia][0]/funit)
-            atom_y.append(apc[ia][1]/funit)
+        if apc[ia, 2] > zmax-1.0:
+            atom_x.append(apc[ia, 0]/funit)
+            atom_y.append(apc[ia, 1]/funit)
             atom_color.append(palette[color_dict[atom[ia]]])
             if color_dict[atom[ia]].startswith("dark") or color_dict[atom[ia]] == "black":
                 edge_color.append(palette["white"])

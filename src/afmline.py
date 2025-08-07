@@ -179,7 +179,6 @@ if ltilt:
         toten_1d.append(scipy.interpolate.UnivariateSpline(y_grid, toten[iz, :, 0], s=0))  # cubic spline
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
-    # TODO: a converge condition has not been implemented yet
     y_init = y_grid[np.newaxis, :]
     y_new = np.tile(y_init, (nz, 1))
     for iz in range(nz):
@@ -252,16 +251,14 @@ if latom:
     apc = poscar1.cartesian()
     atom = poscar1.atom_list()
 
-    zmax = -1e6
-    for ia in range(len(apc)):
-        zmax = max(zmax, apc[ia][2])
+    zmax = np.max(apc[:, 2])
 
     atom_y = []
     atom_color = []
     atom_name = []
     for ia in range(len(apc)):
-        if apc[ia][2] > zmax - 1.0 and abs(apc[ia][0]) < 1.e-4:
-            atom_y.append(apc[ia][1]/funit)
+        if apc[ia, 2] > zmax - 1.0 and abs(apc[ia, 0]) < 1.e-4:
+            atom_y.append(apc[ia, 1]/funit)
             atom_color.append(palette[color_dict[atom[ia]]])
             atom_name.append(atom[ia])
 

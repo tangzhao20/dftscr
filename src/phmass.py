@@ -41,7 +41,7 @@ overlap = [0.0]*Nb
 for ib in range(Nb):
     for ia in range(Na):
         for j in range(3):
-            overlap[ib] += ph_eigvec[ib][ia][j]*disp[ia][j]
+            overlap[ib] += ph_eigvec[ib][ia][j]*disp[ia, j]
     overlap[ib] = abs(overlap[ib])
 
 freq_out = 0.0

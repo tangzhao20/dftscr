@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 
 def load_package_name():
@@ -43,17 +44,19 @@ def load_symops():
     f0 = open(data_path, "r")
     line = f0.readlines()
     f0.close()
-    mtx = []
+
+    mtx = np.zeros((48, 3, 3))
     name = []
+    isym = 0
     for l in line:
         word = l.split()
         if len(word) == 0 or word[0][0] in {"#", "!"}:
             continue
-        mtx0 = []
-        for ix in range(3):
-            mtx0.append([int(word[ix*3+3]), int(word[ix*3+4]), int(word[ix*3+5])])
-        mtx.append(mtx0)
+        for ix1 in range(3):
+            for ix2 in range(3):
+                mtx[isym, ix1, ix2] = float(word[ix1*3+ix2+3])
         name.append(word[2])
+        isym += 1
     return mtx, name
 
 

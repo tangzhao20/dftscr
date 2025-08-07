@@ -30,7 +30,7 @@ N = math.ceil(r_max / (poscar0.lc[0, 1] * 2.0/3.0**0.5)) * 2
 poscar0.supercell([N, N, N])
 
 center = np.array([0.5, 0.5, 0.5]) @ poscar0.lc  # center for Ndim = 3
-apc = np.array(poscar0.cartesian())
+apc = poscar0.cartesian()
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
 apc_si1 = apc[:N**3]
@@ -91,13 +91,13 @@ for ia in range(len(apc_h)):
     poscar0.add_atom(1, ap_h[ia], new_type=new_type, add_to_head=False)
     new_type = None
 
-apc = np.array(poscar0.cartesian())
+apc = poscar0.cartesian()
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
 radius = r_max + 5
 apc = apc - center + np.array([radius, radius, radius])
 center = np.array([radius, radius, radius])
-poscar0.ap = (apc*(1/radius/2.0)).tolist()
+poscar0.ap = apc * (1/radius/2.0)
 poscar0.lc = np.eye(3) * radius * 2.0
 poscar0.Ndim = 0
 

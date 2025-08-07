@@ -25,7 +25,7 @@ ia2 = int(sys.argv[2])
 poscar1 = Poscar()
 poscar1.read_vasp(filename=filename1)
 
-apc = np.array(poscar1.cartesian())
+apc = poscar1.cartesian()
 
 dis = np.linalg.norm(apc[ia1, :] - apc[ia2, :])
 

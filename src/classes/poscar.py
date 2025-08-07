@@ -18,7 +18,7 @@ class Poscar:
         Ntype (int): number of atom types.
         atomtype[Ntype] (list of str): atom type symbols.
         Naint[Ntype] (list of int): number of atoms per type.
-        ap[Natom][3] (list of float): atomic positions in fractional coordinates.
+        ap[Natom, 3] (numpy.ndarray): atomic positions in fractional coordinates.
         seldyn[Natom][3] (list of bool): optional selective dynamics flags; None if not present.
     """
 
@@ -30,7 +30,7 @@ class Poscar:
         self.Ntype = 0
         self.atomtype = []
         self.Naint = []
-        self.ap = []
+        self.ap = np.empty((0, 3))
         self.seldyn = None
 
     def __str__(self):
@@ -70,7 +70,7 @@ class Poscar:
         word = line[6].split()
         for i in range(self.Ntype):
             self.Naint.append(int(word[i]))
-            self.Natom = self.Natom+self.Naint[i]
+        self.Natom = sum(self.Naint)
         word = line[7].split()
         if word[0][0].lower() == 's':
             self.seldyn = []
@@ -79,9 +79,11 @@ class Poscar:
         if word[0][0].lower() != 'd':
             print("Only atomic position 'Direct' supported")
             sys.exit()
-        for i in range(self.Natom):
-            word = line[i+lineoff+8].split()
-            self.ap.append([float(word[0]), float(word[1]), float(word[2])])
+        self.ap = np.zeros((self.Natom, 3))
+        for ia in range(self.Natom):
+            word = line[ia+lineoff+8].split()
+            for ix in range(3):
+                self.ap[ia, ix] = float(word[ix])
             if self.seldyn is not None:
                 self.seldyn.append([bool(word[3]), bool(word[4]), bool(word[5])])
         self.wrap_to_cell()
@@ -111,7 +113,7 @@ class Poscar:
         f1.close()
 
         Fat = False
-
+        ap = []
         for l in range(len(line)):
             word = line[l].split()
             if len(word) >= 2 and word[0] == "CELL_PARAMETERS":
@@ -135,7 +137,7 @@ class Poscar:
 
             if Fat == True:
                 try:
-                    self.ap.append([float(word[1]), float(word[2]), float(word[3])])
+                    ap.append([float(word[1]), float(word[2]), float(word[3])])
                 except:
                     Fat = False
                     continue
@@ -149,6 +151,7 @@ class Poscar:
                     self.Naint[-1] += 1
 
         self.lc = self.lc * factor
+        self.ap = np.array(ap)
 
         self.wrap_to_cell()
 
@@ -176,6 +179,7 @@ class Poscar:
                 self.lc[ix0, ix1] = float(lc1[ix1])
         atoms = tree.getroot().find("output").find("atomic_structure").find("atomic_positions").findall("atom")
 
+        ap = []
         for atom in atoms:
             atom_name = atom.get("name")
             if len(self.atomtype) == 0 or self.atomtype[-1] != atom_name:
@@ -183,10 +187,10 @@ class Poscar:
                 self.Naint.append(1)
             else:
                 self.Naint[-1] += 1
-            self.ap.append([float(ap) for ap in atom.text.split()])
+            ap.append([float(ap0) for ap0 in atom.text.split()])
 
         # convert Cartesian to direct
-        self.ap = (np.array(self.ap)@np.linalg.inv(self.lc)).tolist()
+        self.ap = np.array(ap) @ np.linalg.inv(self.lc)
         self.lc = self.lc * bohr
 
         self.Natom = len(self.ap)
@@ -207,6 +211,7 @@ class Poscar:
         Fat = False
 
         ix0 = 0
+        ap = []
         for l in range(len(line)):
             word = line[l].split()
             if len(word) >= 2 and word[0] == "begin" and word[1] == "latticevecs":
@@ -235,9 +240,11 @@ class Poscar:
                     self.atomtype.append(word[1])
                     self.Naint.append(0)
                 elif len(word) >= 4 and word[0] == "coord":
-                    self.ap.append([float(word[1]), float(word[2]), float(word[3])])
+                    ap.append([float(word[1]), float(word[2]), float(word[3])])
                     self.Naint[-1] += 1
-                    self.Natom += 1
+
+        self.ap = np.array(ap)
+        self.Natom = len(self.ap)
 
         detlc = self.volume()
         factor = (volume/detlc)**(1.0/3.0)*bohr
@@ -272,13 +279,13 @@ class Poscar:
         Fat = False
         Flc = False
         factor_lc = bohr
+        ap = []
         for il in range(len(line)):
             word = line[il].replace(":", " ").replace("=", " ").split()
             if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
             if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "atom_coord":
                 Fat = True
-                rlc = np.linalg.inv(self.lc).tolist()
                 continue
             if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "atom_coord":
                 Fat = False
@@ -292,8 +299,6 @@ class Poscar:
                 continue
             if word[0].lower() == "boundary_sphere_radius":
                 alat = float(word[1]) * 2.0  # in Bohr here
-                if len(word) < 3 or word[2].lower() != "ang":
-                    alat = alat * bohr
                 if self.Ndim == 0:
                     np.fill_diagonal(self.lc, alat)
                 elif self.Ndim == 2:
@@ -318,27 +323,26 @@ class Poscar:
                     lcart = True
                     factor_ap = bohr
             if Flc:
-                for ix in range(3):
-                    self.lc[ilc, ix] = float(word[ix]) * factor_lc
+                for ix in range(self.Ndim):
+                    self.lc[ilc, ix] = float(word[ix])
                 ilc += 1
             if Fat:
-                ap = []
-                for ix in range(3):
-                    ap.append(float(word[ix])*factor_ap)
-                self.ap.append(ap)
+                ap.append([float(word[0]), float(word[1]), float(word[2])])
                 self.Naint[-1] += 1
                 self.Natom += 1
+
+        self.lc = self.lc * factor_lc
+        self.ap = np.array(ap) * factor_ap
+
         if lcart:
-            self.ap = (np.array(self.ap)@np.linalg.inv(self.lc)).tolist()
+            self.ap = self.ap @ np.linalg.inv(self.lc)
         if self.Ndim == 0:
-            shift = [0.5, 0.5, 0.5]
+            shift = np.array([0.5, 0.5, 0.5])
         elif self.Ndim == 2:
-            shift = [0.0, 0.0, 0.5]
+            shift = np.array([0.0, 0.0, 0.5])
         else:  # bulk
-            shift = [0.0, 0.0, 0.0]
-        for ia in range(self.Natom):
-            for ix in range(3):
-                self.ap[ia][ix] += shift[ix]
+            shift = np.array([0.0, 0.0, 0.0])
+        self.ap += shift
 
     def read_xyz(self, filename=""):
 
@@ -363,7 +367,7 @@ class Poscar:
         self.Natom = int(line[0].split()[0])
         lbohr = False
         word = line[1].split()
-        ap_list = []
+        ap = []
         if len(word) >= 1 and word[0][0] in ["B", "b"]:
             lbohr = True
         if len(line) < self.Natom+2:
@@ -377,20 +381,18 @@ class Poscar:
                 self.Naint.append(1)
             else:
                 self.Naint[-1] += 1
-            ap_list.append([float(word[1]), float(word[2]), float(word[3])])
+            ap.append([float(word[1]), float(word[2]), float(word[3])])
 
-        ap = np.array(ap_list)
-        del ap_list
+        self.ap = np.array(ap)
 
         if lbohr:
-            ap = ap * bohr
+            self.ap = self.ap * bohr
 
-        radius = np.max(np.linalg.norm(ap, axis=1))
+        radius = np.max(np.linalg.norm(self.ap, axis=1))
         lc0 = 2.0 * (radius+5.0)  # vacuum is set to 5 A
         np.fill_diagonal(self.lc, lc0)
 
-        self.ap = (ap / lc0 + 0.5).tolist()
-        del ap
+        self.ap = self.ap / lc0 + 0.5
 
 ########################################################################
 
@@ -411,12 +413,12 @@ class Poscar:
         if self.seldyn is not None:
             f1.write('Selective dynamics\n')
         f1.write('Direct\n')
-        for i in range(self.Natom):
-            for j in range(3):
-                f1.write(f"{self.ap[i][j]:18.12f}")
+        for ia in range(self.Natom):
+            for ix in range(3):
+                f1.write(f"{self.ap[ia, ix]:18.12f}")
             if self.seldyn is not None:
-                for j in range(3):
-                    if self.seldyn[i][j]:
+                for ix in range(3):
+                    if self.seldyn[ia][ix]:
                         f1.write(" T")
                     else:
                         f1.write(" F")
@@ -436,15 +438,19 @@ class Poscar:
         f2.write("ATOMIC_SPECIES\n")
         for i in range(self.Ntype):
             f2.write("  " + self.atomtype[i] + "  " + str(mass[self.atomtype[i]]) + "  " + self.atomtype[i] + ".upf\n")
+
         f2.write("ATOMIC_POSITIONS crystal\n")
-        ij = 0
-        ik = 0
-        for i in range(self.Natom):
-            f2.write(f"  {self.atomtype[ij]:2s}{self.ap[i][0]:18.12f}{self.ap[i][1]:18.12f}{self.ap[i][2]:18.12f}\n")
-            ik = ik + 1
-            if ik == self.Naint[ij]:
-                ij = ij + 1
-                ik = 0
+        itype = 0
+        iaint = 0
+        for ia in range(self.Natom):
+            f2.write(f"  {self.atomtype[itype]:2s}")
+            for ix in range(3):
+                f2.write(f"{self.ap[ia, ix]:18.12f}")
+            f2.write("\n")
+            iaint = iaint + 1
+            if iaint == self.Naint[itype]:
+                itype = itype + 1
+                iaint = 0
 
         k_grid = self.k_grid()
         f2.write("K_POINTS automatic\n")
@@ -465,12 +471,15 @@ class Poscar:
                 f2.write(f"{self.lc[ix0, ix1]:18.12f}")
             f2.write("\n")
         f2.write(f"volume {volume:24.16f}\nend latticevecs\n\nbegin coordinates\n")
-        k = 0
-        for i in range(self.Ntype):
-            f2.write("newtype "+self.atomtype[i]+"\n")
-            for j in range(self.Naint[i]):
-                f2.write(f"coord{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
-                k = k+1
+        ia = 0
+        for itype in range(self.Ntype):
+            f2.write("newtype "+self.atomtype[itype]+"\n")
+            for _ in range(self.Naint[itype]):
+                f2.write("coord")
+                for ix in range(3):
+                    f2.write(f"{self.ap[ia, ix]:18.12f}")
+                f2.write("\n")
+                ia += 1
         f2.write("end coordinates\n\n")
         f2.close()
 
@@ -537,9 +546,9 @@ class Poscar:
             apc = self.cartesian(factor=1.0/funit)
         else:
             f2.write("coordinate_unit lattice_vectors\n\n")
-        k = 0
-        for i in range(self.Ntype):
-            f2.write("atom_type " + self.atomtype[i] + "\n")
+        ia = 0
+        for itype in range(self.Ntype):
+            f2.write("atom_type " + self.atomtype[itype] + "\n")
             # f2.write("Pseudopotential_Format: \n")
             # f2.write("Core_Cutoff_Radius: \n")
             f2.write("local_component s\n")  # to be modified
@@ -550,13 +559,17 @@ class Poscar:
 
             f2.write("begin atom_coord\n")
             if lcartesian:
-                for ia in range(self.Naint[i]):
-                    f2.write(f"{apc[k][0]:18.12f}{apc[k][1]:18.12f}{apc[k][2]:18.12f}\n")
-                    k = k + 1
+                for _ in range(self.Naint[itype]):
+                    for ix in range(3):
+                        f2.write(f"{apc[ia, ix]:18.12f}")
+                    f2.write("\n")
+                    ia += 1
             else:
-                for ia in range(self.Naint[i]):
-                    f2.write(f"{self.ap[k][0]:18.12f}{self.ap[k][1]:18.12f}{self.ap[k][2]:18.12f}\n")
-                    k = k + 1
+                for _ in range(self.Naint[itype]):
+                    for ix in range(3):
+                        f2.write(f"{self.ap[ia, ix]:18.12f}")
+                    f2.write("\n")
+                    ia += 1
             f2.write("end atom_coord\n\n")
 
         f2.close()
@@ -577,14 +590,14 @@ class Poscar:
         f2.write("End Projections\n\n")
 
         f2.write("Begin Atoms_Frac\n")
-        ij = 0
-        ik = 0
-        for i in range(self.Natom):
-            f2.write(f"  {self.atomtype[ij]:2s}{self.ap[i][0]:18.12f}{self.ap[i][1]:18.12f}{self.ap[i][2]:18.12f}\n")
-            ik = ik+1
-            if ik == self.Naint[ij]:
-                ij = ij+1
-                ik = 0
+        ia = 0
+        for itype in range(self.Ntype):
+            for _ in range(self.Naint[itype]):
+                f2.write(f"  {self.atomtype[itype]:2s}")
+                for ix in range(3):
+                    f2.write("{self.ap[ia, ix]:18.12f}")
+                f2.write("\n")
+                ia += 1
         f2.write("End Atoms_Frac\n\n")
         f2.close()
 
@@ -594,16 +607,15 @@ class Poscar:
 
         f2 = open(filename, "w")
         f2.write(str(self.Natom) + "\n\n")
-        it1 = 0
-        it2 = 0
+        ia = 0
         apc = self.cartesian()
-        for ia in range(self.Natom):
-            # write only 10 digits after the decimal point to eliminate small residuals
-            f2.write(f"  {self.atomtype[it1]:2s}{apc[ia][0]:18.12f}{apc[ia][1]:18.12f}{apc[ia][2]:18.12f}\n")
-            it2 = it2 + 1
-            if it2 == self.Naint[it1]:
-                it1 = it1 + 1
-                it2 = 0
+        for itype in range(self.Ntype):
+            for _ in range(self.Naint[itype]):
+                f2.write(f"  {self.atomtype[itype]:2s}")
+                for ix in range(3):
+                    f2.write(f"{apc[ia, ix]:18.12f}")
+                f2.write("\n")
+                ia += 1
 
         f2.close()
 
@@ -611,10 +623,8 @@ class Poscar:
 
     def wrap_to_cell(self):
         tol = 1e-8
-        ap = np.array(self.ap)
-        ap = ap-ap//1.0
-        ap[(ap < tol) | (ap > 1.0-tol)] = 0.0
-        self.ap = ap.tolist()
+        self.ap = self.ap - self.ap//1.0
+        self.ap[(self.ap < tol) | (self.ap > 1.0-tol)] = 0.0
 
     def move(self, disp, lcart=False, lbox=True):
         # move atoms by a set of vectors
@@ -631,8 +641,8 @@ class Poscar:
         if lcart:
             # if the disp is in cartesian, convert it to direct
             rlc = self.rlc()
-            disp = np.array(disp)@np.array(rlc)
-        self.ap = (np.array(self.ap)+disp).tolist()
+            disp = np.array(disp) @ rlc
+        self.ap = self.ap + disp
         if lbox:
             self.wrap_to_cell()
 
@@ -646,9 +656,7 @@ class Poscar:
 
     def flip(self):
         # flip the z coordinate of the structure
-        ap = np.array(self.ap)
-        ap[:, 2] = 1.0-ap[:, 2]
-        self.ap = ap.tolist()
+        self.ap[:, 2] = 1.0 - self.ap[:, 2]
         self.wrap_to_cell()
 
     def supercell(self, N):
@@ -658,19 +666,13 @@ class Poscar:
         M = np.array([[N[0], 0, 0], [0, N[1], 0], [0, 0, N[2]]])
         self.lc = M @ self.lc
 
-        shift = np.zeros((N_total, 3))
-        i = 0
-        for iz in range(N[2]):
-            for iy in range(N[1]):
-                for ix in range(N[0]):
-                    shift[i, :] = np.array([ix, iy, iz])/np.array(N)
-                    i += 1
+        iz, iy, ix = np.meshgrid(np.arange(N[2]), np.arange(N[1]), np.arange(N[0]), indexing='ij')
+        shift = np.stack([ix, iy, iz], axis=-1).reshape(-1, 3) / np.array(N)
 
-        ap = np.array(self.ap)
-        apnew = np.zeros((N_total*self.Natom, 3))
+        ap = np.zeros((N_total*self.Natom, 3))
         for ia in range(self.Natom):
-            apnew[ia*N_total:(ia+1)*N_total, :] = ap[ia, :]/np.array(N)+shift
-        self.ap = apnew.tolist()
+            ap[ia*N_total:(ia+1)*N_total, :] = self.ap[ia, :]/np.array(N)+shift
+        self.ap = ap
 
         for itype in range(self.Ntype):
             self.Naint[itype] = self.Naint[itype]*N_total
@@ -695,8 +697,8 @@ class Poscar:
         for itype in range(self.Ntype):
             ap_new0 = []
             for iaint in range(self.Naint[itype]):
-                if self.ap[ia][2] < 1e-8:
-                    ap_new0.append([self.ap[ia][0], self.ap[ia][1], 1.0])
+                if self.ap[ia, 2] < 1e-8:
+                    ap_new0.append([self.ap[ia, 0], self.ap[ia, 1], 1.0])
                 ia += 1
             ap_new.append(ap_new0)
 
@@ -704,49 +706,42 @@ class Poscar:
             for ap in ap_new[itype]:
                 self.add_atom(itype, ap)
 
-        for ia in range(self.Natom):
-            self.ap[ia][2] = (self.ap[ia][2] - 0.5) * self.lc[2, 2] / a3_new + 0.5
+        self.ap[:, 2] = (self.ap[:, 2] - 0.5) * self.lc[2, 2] / a3_new + 0.5
 
         self.lc[2, 2] = a3_new
 
     def add_atom(self, itype, ap, new_type=None, add_to_head=False):
         # If new_type is defined, a new atom type will be inserted.
         # add_to_head defines if the atom will be added to the head.
-        if itype < 0:
-            print("Error: itype ("+str(itype)+") < 0 in add_atom function.")
-            sys.exit()
-        elif itype > self.Ntype:
-            print("Error: itype ("+str(itype)+") > self.Ntype ("+str(self.Ntype)+") in add_atom function.")
+        if itype < 0 or itype > self.Ntype:
+            print("Error: itype ("+str(itype)+") is not in range [0, "+str(self.Ntype)+"] in add_atom function.")
             sys.exit()
 
-        if new_type is None:
-            if itype == self.Ntype:
-                print("Warning: itype ("+str(itype)+") > self.Ntype ("+str(self.Ntype)+") in add_atom function,")
-                print("         but atom name is not defined.")
-                new_type = "X"
-            else:  # This is not a new type
-                self.Natom += 1
-                if add_to_head:
-                    self.ap.insert(sum(self.Naint[:itype]), ap)
-                else:
-                    self.ap.insert(sum(self.Naint[:itype+1]), ap)
-                self.Naint[itype] += 1
-                return
+        if new_type is None and itype == self.Ntype:
+            print("Warning: itype ("+str(itype)+") == self.Ntype in add_atom function, but atom name is not defined.")
+            new_type = "X"
 
-        else:  # This is a new type
-            self.Natom += 1
+        if new_type is not None:  # This is a new type
             self.Ntype += 1
             self.atomtype.insert(itype, new_type)
-            self.Naint.insert(itype, 1)
-            self.ap.insert(sum(self.Naint[:itype]), ap)
+            self.Naint.insert(itype, 0)
+
+        self.Natom += 1
+        if add_to_head:
+            insert_index = sum(self.Naint[:itype])
+        else:
+            insert_index = sum(self.Naint[:itype+1])
+        self.ap = np.insert(self.ap, insert_index, ap, axis=0)
+        self.Naint[itype] += 1
 
     def delete_atom(self, ia):
         if ia < 0 or ia >= self.Natom:
-            print("Error: ia ("+ia+") is out of range")
+            print("Error: ia ("+ia+") is out of range in delete_atom function")
             sys.exit()
 
+        self.ap = np.delete(self.ap, ia, axis=0)
         self.Natom -= 1
-        del self.ap[ia]
+
         iat = 0
         for itype in range(self.Ntype):
             iat = iat + self.Naint[itype]
@@ -763,7 +758,7 @@ class Poscar:
             print("Error: ia ("+ia+") is out of range")
             sys.exit()
 
-        ap = self.ap[ia]
+        ap = self.ap[ia, :]
         self.delete_atom(ia)
 
         for itype in range(self.Ntype):
@@ -776,13 +771,13 @@ class Poscar:
             self.add_atom(self.Ntype, ap, new_type)
 
     def new_lc(self, lc_new):
-        apc = np.array(self.cartesian())
-        self.ap = (apc @ np.linalg.inv(lc_new)).tolist()
+        apc = self.cartesian()
+        self.ap = apc @ np.linalg.inv(lc_new)
         self.lc = lc_new
 
     def rlc(self):
         pi = load_constant("pi")
-        return (np.linalg.inv(self.lc)*(2.0*pi)).tolist()
+        return np.linalg.inv(self.lc) * (2.0*pi)
 
     def volume(self):
         return abs(np.linalg.det(self.lc))
@@ -790,12 +785,12 @@ class Poscar:
     def cartesian(self, shift=None, factor=1.0):
         if shift is None:
             if self.Ndim == 3:
-                shift = [0.0, 0.0, 0.0]
+                shift = np.array([0.0, 0.0, 0.0])
             elif self.Ndim == 2:
-                shift = [0.0, 0.0, -0.5]
+                shift = np.array([0.0, 0.0, -0.5])
             elif self.Ndim == 0:
-                shift = [-0.5, -0.5, -0.5]
-        return ((np.array(self.ap) + np.array(shift)) @ self.lc * factor).tolist()
+                shift = np.array([-0.5, -0.5, -0.5])
+        return (self.ap + shift) @ self.lc * factor
 
     def atom_list(self):
         atom = []
@@ -822,7 +817,7 @@ class Poscar:
                 if is_atom_name == False:
                     atom_list = atom_section.replace("~", "-").split("-")
                     if len(atom_list) == 1:
-                        atom_flag[int(atom_list[0])-1] = True
+                        atom_flag[int(atom_list[0]) - 1] = True
                     else:
                         atom_flag[int(atom_list[0]) - 1: int(atom_list[1])] = True
         return atom_flag

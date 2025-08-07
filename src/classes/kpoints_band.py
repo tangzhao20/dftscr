@@ -107,9 +107,9 @@ class KpointsBand:
                 f1.write(p[ih+1]+"\n\n")
         f1.close()
 
-    def write_qe(self, filename="kpath.out", Nk=0, rlc=[]):
+    def write_qe(self, filename="kpath.out", Nk=0, rlc=None):
         if Nk > 0:
-            xticks = self.xticks_out(rlc=rlc)
+            xticks = self.xticks_out(rlc)
 
             Ltotal = 0.0
             for ip in range(len(xticks)):
@@ -210,7 +210,7 @@ class KpointsBand:
                 for i in range(3):
                     kpc0 = 0.0
                     for j in range(3):
-                        kpc0 = kpc0+self.kpdict[p[ik]][j]*rlc[i][j]
+                        kpc0 = kpc0+self.kpdict[p[ik]][j]*rlc[i, j]
                     kpc.append(kpc0)
                 if ik > 0:
                     dkpc = ((kpc[0]-kpcold[0])**2+(kpc[1]-kpcold[1])**2+(kpc[2]-kpcold[2])**2)**0.5

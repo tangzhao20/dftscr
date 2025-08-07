@@ -22,23 +22,22 @@ def moveatoms(poscar1, poscar2, factor):
     # move atoms of poscar1 towards a new structure poscar2
     for i in range(poscar1.Natom):
         for j in range(3):
-            if poscar2.ap[i][j]-poscar1.ap[i][j] >= 0.5:
-                newap = poscar2.ap[i][j]-1.0
-            elif poscar2.ap[i][j]-poscar1.ap[i][j] < -0.5:
-                newap = poscar2.ap[i][j]+1.0
+            if poscar2.ap[i, j]-poscar1.ap[i, j] >= 0.5:
+                newap = poscar2.ap[i, j]-1.0
+            elif poscar2.ap[i, j]-poscar1.ap[i, j] < -0.5:
+                newap = poscar2.ap[i, j]+1.0
             else:
-                newap = poscar2.ap[i][j]
-            poscar1.ap[i][j] = poscar1.ap[i][j]*(1.0-factor)+newap*factor
+                newap = poscar2.ap[i, j]
+            poscar1.ap[i, j] = poscar1.ap[i, j]*(1.0-factor)+newap*factor
     poscar1.wrap_to_cell()
 
 
 def displacement(poscar1, poscar2):
     # find the displacement vector of two POSCARs
-    # disp[Na][3]
-    disp = np.array(poscar2.ap)-np.array(poscar1.ap)
+    # disp[Na, 3]
+    disp = poscar2.ap - poscar1.ap
     disp = (disp+0.5) % 1-0.5
     disp = disp @ poscar1.lc
-    disp = disp.tolist()
     return disp
 
 
