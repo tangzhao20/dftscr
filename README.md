@@ -200,8 +200,7 @@ python3 afmplot.py (iz) (atom) (tilt) (bohr) (verbose) (toten)
 
 **Outputs:** afm\_\*.png, (toten.dat)  
 
-In the first round, this code reads the total energies from seq\_\*\_\*/parsec.out files and writes to toten.dat. After that, the toten.dat will be read.  
-`iz` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `iz` should be set to 2 as default. Add the `atom` option to display the atom positions. Only the top layer within 1 Å is plotted. Add the `tilt` option to use the tilt correction. Add the `bohr` option to use the Bohr as the length unit.  
+In the first round, this code reads the total energies from seq\_\*\_\*/parsec.out files and writes to toten.dat. After that, the toten.dat will be read. `iz` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `iz` should be set to 2 as default. Add the `atom` option to display the atom positions. Only the top layer within 1 Å is plotted. Add the `tilt` option to use the tilt correction. Add the `bohr` option to use the Bohr as the length unit.  
 
 An iterative tilt correction method is implemented in this code, which solves the lateral shift using $\mathit{\Delta}(x)=F(x+\mathit{\Delta}(x))/k$. The maximum number of iterations, `niter`, and the damping factor, `alpha`, can be set in the input file `afm.in`. This method is described in:  
 * Zhao Tang, Dingxin Fan, and James R. Chelikowsky, *Real space simulation for state-resolved high-resolution atomic force microscopy of defects in monolayer h-BN*, [Physical Review Materials **9**, 086201](https://doi.org/10.1103/ncc2-rhmb) (2025).  
