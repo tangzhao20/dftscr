@@ -49,19 +49,27 @@ else:
     sys.exit()
 
 # read the Ndim
+ndim_set = False
 for iw in range(len(sys.argv)-1, -1, -1):
     if sys.argv[iw] in ["0d", "molecule", "cluster"]:
         poscar1.Ndim = 0
         del sys.argv[iw]
+        ndim_set = True
     elif sys.argv[iw] in ["1d", "wire"]:
         poscar1.Ndim = 1
         del sys.argv[iw]
+        ndim_set = True
     elif sys.argv[iw] in ["2d", "slab"]:
         poscar1.Ndim = 2
         del sys.argv[iw]
+        ndim_set = True
     elif sys.argv[iw] in ["3d", "bulk"]:
         poscar1.Ndim = 3
         del sys.argv[iw]
+        ndim_set = True
+if not ndim_set and poscar1.Ndim == 3:
+    poscar1.find_ndim()
+
 
 # read the file posconvert.in if it exists, then do some operations here
 files = os.listdir()

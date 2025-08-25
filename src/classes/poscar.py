@@ -827,3 +827,39 @@ class Poscar:
         for ix in range(self.Ndim):
             grid[ix] = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
         return grid
+
+    def find_ndim(self):
+        # if c not vertical: 3D
+        # if atoms span nearly whole c: 3D
+        # else if a has nonzero y: 2D
+        # else if atoms span nearly whole b: 2D
+        # else if atoms span nearly whole a: 1D
+        # else: 0D
+
+        if self.Ndim != 3:
+            print("Warning: find_ndim called, but Ndim != 3")
+            return
+        vacuum = 5.0
+
+        if not np.allclose(self.lc[:2, 2], 0.0):
+            self.Ndim = 3
+            return
+
+        apc = self.cartesian()
+        if max(apc[:, 2]) > self.lc[2, 2] - vacuum or min(apc[:, 2]) < vacuum:
+            self.Ndim = 3
+            return
+
+        if not np.isclose(self.lc[0, 1], 0.0):
+            self.Ndim = 2
+
+        if max(apc[:, 1]) > self.lc[1, 1] - vacuum or min(apc[:, 1]) < vacuum:
+            self.Ndim = 2
+            return
+
+        if max(apc[:, 0]) > self.lc[0, 0] - vacuum or min(apc[:, 0]) < vacuum:
+            self.Ndim = 1
+            return
+
+        self.Ndim = 0
+        return
