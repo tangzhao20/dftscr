@@ -16,6 +16,7 @@ class Procar:
         proj[Ns, Nk, Nb, Na, Norb] (numpy.ndarray): The core projection data stored in a 5D array.
         weight[Nk] (numpy.ndarray): The weight of each k-point.
         eig[Ns, Nk, Nb] (numpy.ndarray): The eigenvalues (band energies) for each state.
+        occ[Ns, Nk, Nb] (numpy.ndarray): The occupation numbers for each state.
         orb_name[Norb] (list of str): A list containing the names of the orbitals (e.g., 's', 'py', 'px', 'dxy', etc.).
     """
 
@@ -51,6 +52,7 @@ class Procar:
         self.proj = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb))
         self.weight = np.zeros((self.Nk))
         self.eig = np.zeros((self.Ns, self.Nk, self.Nb))
+        self.occ = np.zeros((self.Ns, self.Nk, self.Nb))
         ispin = -1
         for this_line in line:
             word = this_line.split()
@@ -64,6 +66,7 @@ class Procar:
             elif word[0] == "band":
                 ib = int(word[1]) - 1
                 self.eig[ispin, ik, ib] = float(word[4])
+                self.occ[ispin, ik, ib] = float(word[7])
             elif word[0].isdigit():
                 ia = int(word[0]) - 1
                 for iorb in range(self.Norb):
