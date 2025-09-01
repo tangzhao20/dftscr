@@ -92,18 +92,15 @@ class Eigenval:
                     break
 
         Ha = load_constant("rydberg")*2.0
+        bohr = load_constant("bohr")
 
         tree = ET.parse(filename)
         kpoints = tree.getroot().find("output").find("band_structure").findall("ks_energies")
         cell = tree.getroot().find("input").find("atomic_structure").find("cell")
-        lc = []
+        lc = np.zeros((3, 3))
         for ix in range(3):
-            lc.append([float(lc1) for lc1 in cell.find("a"+str(ix+1)).text.split()])
-            # convert lc (from Bohr) to a/2pi
-        factor = (lc[0][0]**2+lc[0][1]**2+lc[0][2]**2)**0.5
-        for ix1 in range(3):
-            for ix2 in range(3):
-                lc[ix1][ix2] = lc[ix1][ix2]/factor
+            lc[ix, :] = [float(x) for x in cell.find(f"a{ix+1}").text.split()]
+        lc = lc * bohr
 
         self.Nk = len(kpoints)
         if tree.getroot().find("output").find("band_structure").find("lsda").text in ["True", "true"]:

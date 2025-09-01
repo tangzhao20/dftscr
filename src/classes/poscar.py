@@ -171,14 +171,12 @@ class Poscar:
         bohr = load_constant("bohr")
 
         tree = ET.parse(filename)
+
         cell = tree.getroot().find("output").find("atomic_structure").find("cell")
+        for ix in range(3):
+            self.lc[ix, :] = [float(x) for x in cell.find(f"a{ix+1}").text.split()]
 
-        for ix0 in range(3):
-            lc1 = cell.find("a"+str(ix0+1)).text.split()
-            for ix1 in range(3):
-                self.lc[ix0, ix1] = float(lc1[ix1])
         atoms = tree.getroot().find("output").find("atomic_structure").find("atomic_positions").findall("atom")
-
         ap = []
         for atom in atoms:
             atom_name = atom.get("name")
