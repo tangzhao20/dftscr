@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1280px" height="640px" viewBox="0 0 1280 640" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>dftscr Logo</title>
+    <desc>Logo for dftscr, showing stylized DOS plot and text</desc>
+    
+    <g id="dftscr-Logo" stroke="none" fill="none">
+        <!-- Icon with a hint of a DOS plot -->
+        <g id="DOS" transform="translate(110, 332) scale(1.2)">
+            <!-- Axis -->
+            <path d="M 0,0 L 400,0" stroke="#c6c6c9" stroke-width="4"></path>
+
+            <!-- Top curve -->
+            <path d="M 0,-10 
+                     L 50,-15 L 80,-12 L 100,-25 L 120,-80 L 130,-70 L 140,-95 L 150,-40 
+                     L 180,-50 L 190,-30 L 210,-45 L 220,-20 L 250,-30 L 280,-15 L 320,-25 L 400,-10" 
+                  stroke="#2959aa" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+
+            <!-- Bottom curve -->
+            <path d="M 0,10 
+                     L 60,12 L 90,20 L 110,30 L 130,60 L 140,50 L 150,75 L 160,35 
+                     L 180,45 L 200,25 L 215,60 L 230,30 L 260,40 L 290,20 L 330,30 L 400,15" 
+                  stroke="#ff9e64" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+        </g>
+
+        <!-- Text: dftscr -->
+        <g id="Text" transform="translate(620, 240)">
+            <text font-family="'Noto Serif Thin', 'Noto Serif', serif" font-size="220" fill="#1a1b26">
+                <tspan x="0" y="150">dftscr</tspan>
+            </text>
+        </g>
+    </g>
+</svg>
+
