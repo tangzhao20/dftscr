@@ -85,10 +85,10 @@ for ia0 in range(N**3-1, -1, -1):
             poscar0.delete_atom(ia0)
             apc_h.append(apc_si1[ia0] + neighbor_si1[in_range.index(1)]*(bond_si_si-bond_si_h))
 
-ap_h = (np.array(apc_h) @ np.linalg.inv(poscar0.lc)).tolist()
+ap_h = np.array(apc_h) @ np.linalg.inv(poscar0.lc)
 new_type = "H"
 for ia in range(len(apc_h)):
-    poscar0.add_atom(1, ap_h[ia], new_type=new_type, add_to_head=False)
+    poscar0.add_atom(1, ap_h[ia, :], new_type=new_type, add_to_head=False)
     new_type = None
 
 apc = poscar0.cartesian()

@@ -769,7 +769,7 @@ class Poscar:
             self.add_atom(self.Ntype, ap, new_type)
 
     def new_lc(self, lc_new):
-        apc = self.cartesian()
+        apc = self.cartesian(shift=0.0)
         self.ap = apc @ np.linalg.inv(lc_new)
         self.lc = lc_new
 

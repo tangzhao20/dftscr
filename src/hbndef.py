@@ -2,13 +2,17 @@
 
 # This script creates the structure of an h-BN monolayer (or flake) with or without a defect.
 
-# Generate 2d h-BN structures by:
+# Generate 2D h-BN structures of a hexagonal cell:
 #  python3 hbndef.py N (defect)
 
-# or generate h-BN flake structures by:
+# Generate 2D h-BN structures of a rectangular cell:
+#  python3 hbndef.py rec r (defect)
+
+# # Generate h-BN flake structures:
 #  python3 hbndef.py flake r (defect)
 
-# N defines the size of the supercell, r defines the radius of the h-BN flake.
+# N defines the size of the supercell.
+# r denotes either the radius of the h-BN flake or half the minimum defect–defect distance.
 # (defect) is the name of the defect in h-BN, such as CBVN.
 # Use correct capitalization of atomic symbols.
 
@@ -27,16 +31,18 @@ poscar0.Ndim = 2
 bond_b_n = poscar0.lc[1, 1]*2.0/3.0
 bond_b_h = 1.20
 bond_n_h = 1.02
-# TODO: Here B-H bond and N-H bond are taken from wikipedia, with no reference.
+# TODO: Here B-H bond and N-H bond lengths are taken from wikipedia, with no reference.
 
 if len(sys.argv) < 2:
     print("Need input:")
     print(" python3 hbndef.py N (defect)")
+    print(" python3 hbndef.py rec r (defect)")
     print(" python3 hbndef.py flake r (defect)")
     sys.exit()
 
 if "flake" in sys.argv:
-    lflake = True
+    is_flake = True
+    is_rec = False
     sys.argv.remove("flake")
     for word in sys.argv:
         try:
@@ -50,27 +56,52 @@ if "flake" in sys.argv:
     print("supercell: "+str(N)+", "+str(N)+", 1")
     poscar0.supercell([N, N, 1])
 else:
-    lflake = False
-    for word in sys.argv:
-        try:
-            int(word)
-            N = int(word)
-            sys.argv.remove(word)
-            break
-        except ValueError:
-            pass
-    print("supercell: "+str(N)+", "+str(N)+", 1")
-    poscar0.supercell([N, N, 1])
+    is_flake = False
+    if "rec" in sys.argv:
+        is_rec = True
+        sys.argv.remove("rec")
+        for word in sys.argv:
+            try:
+                float(word)
+                r_max = float(word)
+                sys.argv.remove(word)
+                break
+            except ValueError:
+                pass
+        poscar0.supercell([2, 1, 1])
+        lc_new = np.zeros((3, 3))
+        lc_new[0, 0] = poscar0.lc[1, 0] * 2
+        lc_new[1, 1] = poscar0.lc[1, 1] * 2
+        lc_new[2, 2] = poscar0.lc[2, 2]
+        poscar0.new_lc(lc_new)
+        poscar0.wrap_to_cell()
+        Nx = math.ceil(r_max * 2.0 / poscar0.lc[0, 0])
+        Ny = math.ceil(r_max * 2.0 / poscar0.lc[1, 1])
+        print("supercell: "+str(Nx)+", "+str(Ny)+", 1")
+        poscar0.supercell([Nx, Ny, 1])
+    else:
+        is_rec = False
+        for word in sys.argv:
+            try:
+                int(word)
+                N = int(word)
+                sys.argv.remove(word)
+                break
+            except ValueError:
+                pass
+        print("supercell: "+str(N)+", "+str(N)+", 1")
+        poscar0.supercell([N, N, 1])
     poscar0.move([0.5, 0.5, 0])
-ldef = False
+
+has_defect = False
 if len(sys.argv) >= 2:  # contains a defect
-    ldef = True
+    has_defect = True
 
 center = np.array([0.5, 0.5, 0.0]) @ poscar0.lc  # center for Ndim = 2
 apc = poscar0.cartesian()
 apc_distance = np.linalg.norm(apc-center, axis=1)
 
-if lflake:
+if is_flake:
     apc_b = apc[:N**2]
     apc_b_distance = apc_distance[:N**2]
     apc_n = apc[N**2:]
@@ -117,10 +148,10 @@ if lflake:
                 poscar0.delete_atom(ia0)
                 apc_h.append(apc_b[ia0] + neighbor_b[in_range.index(1)]*(bond_b_n-bond_n_h))
 
-    ap_h = ((np.array(apc_h) @ np.linalg.inv(poscar0.lc)) + np.array([0.0, 0.0, 0.5])).tolist()
+    ap_h = np.array(apc_h) @ np.linalg.inv(poscar0.lc) + np.array([0.0, 0.0, 0.5])
     new_type = "H"
     for ia in range(len(apc_h)):
-        poscar0.add_atom(2, ap_h[ia], new_type=new_type, add_to_head=False)
+        poscar0.add_atom(2, ap_h[ia, :], new_type=new_type, add_to_head=False)
         new_type = None
 
     apc = poscar0.cartesian()
@@ -129,12 +160,11 @@ if lflake:
     radius = r_max + 5
     apc = apc - center + np.array([radius, radius, radius])
     center = np.array([radius, radius, radius])
-    poscar0.ap = (apc*(1/radius/2.0)).tolist()
+    poscar0.ap = apc * (1/radius/2.0)
     poscar0.lc = np.eye(3) * radius * 2.0
     poscar0.Ndim = 0
 
-if ldef:  # create a defect
-
+if has_defect:  # create a defect
     defect = re.findall(r'[A-Z][a-z]?', sys.argv[1])
     if len(defect) not in [2, 4]:
         # Maybe this is not necessary?
@@ -146,7 +176,7 @@ if ldef:  # create a defect
     print(defect_atoms)
 
     b = np.argmin(apc_distance[:poscar0.Naint[0]])
-    n = np.argmin(apc_distance[poscar0.Naint[0]:sum(poscar0.Naint[:2])])+poscar0.Naint[0]
+    n = np.argmin(apc_distance[poscar0.Naint[0]:sum(poscar0.Naint[:2])]) + poscar0.Naint[0]
 
     if "B" in defect_atoms:
         if defect_atoms["B"] == "V":
@@ -161,15 +191,17 @@ if ldef:  # create a defect
         else:
             poscar0.replace_atom(n, defect_atoms["N"], add_to_head=True)
 
-if not lflake:
+if not is_flake:
     poscar0.move([-0.5, -0.5, 0])
 
 filename = "hbn_"
-if lflake:
+if is_flake:
     filename += "flake_" + str(r_max)
+elif is_rec:
+    filename += "rec_" + str(r_max)
 else:
     filename += str(N)
-if ldef:
+if has_defect:
     filename += "_" + sys.argv[1]
 filename += ".vasp"
 
