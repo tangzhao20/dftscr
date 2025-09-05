@@ -27,6 +27,7 @@ class Procar:
         self.Na = 0
         self.Norb = 0
         self.proj = None
+        self.has_complex = False
         self.orb_name = []
 
     def read_vasp(self, filename="PROCAR"):
@@ -34,6 +35,11 @@ class Procar:
         f0 = open(filename, "r")
         line = f0.readlines()
         f0.close()
+
+        word = line[0].split()
+        if len(word) >= 5 and word[4].startswith("phase"):
+            self.has_complex = True
+
         word = line[1].split()
         self.Nk = int(word[3])
         self.Nb = int(word[7])
@@ -50,6 +56,8 @@ class Procar:
               "  Nb: "+str(self.Nb)+"  Norb: "+str(self.Norb))
 
         self.proj = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb))
+        if self.has_complex:
+            self.complex = np.zeros((self.Ns, self.Nk, self.Nb, self.Na, self.Norb), np.complex128)
         self.weight = np.zeros((self.Nk))
         self.eig = np.zeros((self.Ns, self.Nk, self.Nb))
         self.occ = np.zeros((self.Ns, self.Nk, self.Nb))
@@ -69,8 +77,12 @@ class Procar:
                 self.occ[ispin, ik, ib] = float(word[7])
             elif word[0].isdigit():
                 ia = int(word[0]) - 1
-                for iorb in range(self.Norb):
-                    self.proj[ispin, ik, ib, ia, iorb] = float(word[iorb+1])
+                if self.has_complex and len(word) > 2 * self.Norb:
+                    for iorb in range(self.Norb):
+                        self.complex[ispin, ik, ib, ia, iorb] = float(word[iorb*2+1]) + float(word[iorb*2+2]) * 1j
+                else:
+                    for iorb in range(self.Norb):
+                        self.proj[ispin, ik, ib, ia, iorb] = float(word[iorb+1])
 
         if self.Norb == 9:
             self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
