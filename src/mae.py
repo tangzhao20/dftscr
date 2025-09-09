@@ -2,8 +2,11 @@
 
 import sys
 import os
+import time
 import numpy as np
 from classes import Poscar, Procar
+
+start_time = time.time()
 
 poscar0 = Poscar()
 poscar0.read_vasp(filename="CONTCAR")
@@ -18,18 +21,17 @@ soc_factor_dict = {"Fe": 0.05965, "Co": 0.07412}
 atom_mask = np.isin(atom_list, list(soc_factor_dict))
 soc_factors = np.array([soc_factor_dict[a] for a in np.array(atom_list)[atom_mask]])
 
-
-Lp = np.zeros((3, 3, 3))  # i: x, y, z
-# Order of orbs: py, pz, px
-
-Lp[0, 0, 1] = 1
-Lp[0, 1, 0] = -1
-
-Lp[1, 1, 2] = -1
-Lp[1, 2, 1] = 1
-
-Lp[1, 0, 2] = -1
-Lp[1, 2, 0] = 1
+# Lp = np.zeros((3, 3, 3))  # i: x, y, z
+# # Order of orbs: py, pz, px
+#
+# Lp[0, 0, 1] = 1
+# Lp[0, 1, 0] = -1
+#
+# Lp[1, 1, 2] = -1
+# Lp[1, 2, 1] = 1
+#
+# Lp[1, 0, 2] = -1
+# Lp[1, 2, 0] = 1
 
 Ld = np.zeros((3, 5, 5))  # i: x, y, z
 # Order of orbs: dxy, dyz, dz2, dxz, x2-y2
@@ -80,25 +82,8 @@ for ik in range(procar0.Nk):
             L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
             e_i += sign * weight * np.sum(f * e * np.abs(L)**2 * 0.25, axis=(1, 2))
 
-            # for ib1 in range(procar0.Nb):  # higher band
-            #     e1 = procar0.eig[ispin1, ik, ib1]
-            #     occ1 = procar0.occ[ispin1, ik, ib1]
-            #     for ib2 in range(procar0.Nb):  # lower band
-            #         e2 = procar0.eig[ispin2, ik, ib2]
-            #         occ2 = procar0.occ[ispin2, ik, ib2]
-            #         #f = occ1
-            #         f = occ1*(1-occ2)
-            #         e = (e1-e2) / ((e1-e2)**2 + eta**2)
-            #         L = np.zeros(3)
-            #         for ia in range(poscar0.Natom):
-            #             if atom_list[ia] == "B":
-            #                 continue
-            #             soc_factor = soc_factor_dict[atom_list[ia]]
-            #             for ix in range(3):  # loop over x, y, z
-            #                 L[ix] += np.abs(soc_factor * procar0.complex[ispin1, ik, ib1, ia, 4:9].conj() @ \
-            #                          Ld[ix, :, :] @ procar0.complex[ispin2, ik, ib2, ia, 4:9])
-            #         e_i += sign*weight*f*e*L**2
-    print("ik: "+str(ik)+", e_i: "+str(e_i))
-
+print("E: "+str(e_i)+" eV")
 e_i = e_i - np.min(e_i)
-print("\ne_i: "+str(e_i))
+print("E_diff: "+str(e_i)+" eV")
+
+print(str(time.time() - start_time)+" sec")
