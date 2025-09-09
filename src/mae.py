@@ -13,9 +13,11 @@ procar0.read_vasp()
 
 atom_list = poscar0.atom_list()
 
-eta = 0.0001
+soc_factor_dict = {"Fe": 0.05965, "Co": 0.07412}
 
-soc_factor_dict = {"Fe": 0.05965, "Co": 0.07412, "B": 0.0}
+atom_mask = np.isin(atom_list, list(soc_factor_dict))
+soc_factors = np.array([soc_factor_dict[a] for a in np.array(atom_list)[atom_mask]])
+
 
 Lp = np.zeros((3, 3, 3))  # i: x, y, z
 # Order of orbs: py, pz, px
@@ -51,37 +53,52 @@ Ld[2, 1, 3] = -1.0
 Ld[2, 3, 1] = 1.0
 Ld[2, 4, 0] = 2.0
 
+eta = 0.0001
+
 e_i = np.zeros(3)
-L = np.zeros(3)
 for ik in range(procar0.Nk):
     weight = procar0.weight[ik]
-    for ia in range(poscar0.Natom):
-        soc_factor = soc_factor_dict[atom_list[ia]]
-        print("ik: "+str(ik)+", weight: "+str(weight)+", ia: "+str(ia) +
-              ", atom: "+str(atom_list[ia])+", soc_factor: "+str(soc_factor))
-        for ispin1 in range(2):
-            for ispin2 in range(2):
-                if ispin1 == ispin2:
-                    sign = 1
-                else:
-                    sign = -1
-                for ib1 in range(procar0.Nb):  # higher band
-                    e1 = procar0.eig[ispin1, ik, ib1]
-                    occ1 = procar0.occ[ispin1, ik, ib1]
-                    for ib2 in range(procar0.Nb):  # lower band
-                        e2 = procar0.eig[ispin2, ik, ib2]
-                        occ2 = procar0.occ[ispin2, ik, ib2]
-                        # f = occ1 - occ2
-                        f = occ1*(1-occ2)
-                        e = (e1-e2) / ((e1-e2)**2 + eta**2)
-                        for ix in range(3):  # loop over x, y, z
-                            L[ix] = procar0.proj[ispin1, ik, ib1, ia, 4:9] @ Ld[ix,
-                                                                                :, :] @ procar0.proj[ispin2, ik, ib2, ia, 4:9]
-                            e_i[ix] += sign*weight*soc_factor**2*f*e*L[ix]**2
-                        # print("ispin1: "+str(ispin1)+", ispin2: "+str(ispin2)+", sign: "+str(sign)+
-                        #      ", ib1: "+str(ib1)+", ib2: "+str(ib2)+", f: "+str(f)+", e: "+str(e))
-                        # print("L: "+str(L)+", e_i: "+str(e_i))
-        print("e_i: "+str(e_i))
-        print()
+    for ispin1 in range(2):
+        for ispin2 in range(2):
+            if ispin1 == ispin2:
+                sign = 1
+            else:
+                sign = -1
 
-print("e_i: "+str(e_i))
+            # vectorization over bands
+            e_diff = procar0.eig[ispin1, ik, :][:, np.newaxis] - procar0.eig[ispin2, ik, :][np.newaxis, :]
+            e = e_diff / (e_diff**2 + eta**2)
+            f = procar0.occ[ispin1, ik, :][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, :][np.newaxis, :])
+            # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
+            e = e[np.newaxis, :, :]
+            f = f[np.newaxis, :, :]
+
+            c1 = procar0.complex[ispin1, ik, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
+            c2 = procar0.complex[ispin2, ik, :, atom_mask, 4:9]
+
+            # a: atoms; i,j: bands; x: directions; m,n: orbitals
+            L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
+            e_i += sign * weight * np.sum(f * e * np.abs(L)**2 * 0.25, axis=(1, 2))
+
+            # for ib1 in range(procar0.Nb):  # higher band
+            #     e1 = procar0.eig[ispin1, ik, ib1]
+            #     occ1 = procar0.occ[ispin1, ik, ib1]
+            #     for ib2 in range(procar0.Nb):  # lower band
+            #         e2 = procar0.eig[ispin2, ik, ib2]
+            #         occ2 = procar0.occ[ispin2, ik, ib2]
+            #         #f = occ1
+            #         f = occ1*(1-occ2)
+            #         e = (e1-e2) / ((e1-e2)**2 + eta**2)
+            #         L = np.zeros(3)
+            #         for ia in range(poscar0.Natom):
+            #             if atom_list[ia] == "B":
+            #                 continue
+            #             soc_factor = soc_factor_dict[atom_list[ia]]
+            #             for ix in range(3):  # loop over x, y, z
+            #                 L[ix] += np.abs(soc_factor * procar0.complex[ispin1, ik, ib1, ia, 4:9].conj() @ \
+            #                          Ld[ix, :, :] @ procar0.complex[ispin2, ik, ib2, ia, 4:9])
+            #         e_i += sign*weight*f*e*L**2
+    print("ik: "+str(ik)+", e_i: "+str(e_i))
+
+e_i = e_i - np.min(e_i)
+print("\ne_i: "+str(e_i))
