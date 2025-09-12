@@ -1,6 +1,7 @@
-bohr       0.529177210903 # in angstrom
-rydberg   13.605693122994 # in eV
-electron   1.602176634E-19 # in Coulomb. This is also eV in J.
-angstrom   1.0E-10 # in meter
+bohr       0.529177210903  # in angstrom
+rydberg   13.605693122994  # in eV
+electron   1.602176634E-19  # in Coulomb. This is also eV in J.
+angstrom   1.0E-10  # in meter
 pi         3.141592653589793238463
-planck     6.62607015E-34 # in Js
+planck     6.62607015E-34  # in Js
+mu_b       9.2740100657E-24  # in J/T or A·m^2
