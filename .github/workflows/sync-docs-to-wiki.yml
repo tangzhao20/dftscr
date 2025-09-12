@@ -1,0 +1,49 @@
+name: Sync docs to Wiki
+
+on:
+  push:
+    branches:
+    - main
+    - release/*
+
+permissions:
+  contents: write    # allow pushing to the wiki repo
+
+jobs:
+  sync-docs-to-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (code)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout wiki repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: wiki
+          fetch-depth: 0
+
+      - name: Copy docs into wiki (replace everything except .git)
+        run: |
+          set -e
+          # remove everything in wiki except .git
+          find wiki -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          # copy docs folder contents into wiki root
+          cp -R docs/* wiki/ || true
+
+      - name: Commit & push changes to wiki
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -e
+          cd wiki
+          # determine the wiki's default branch (fallback to master)
+          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@refs/remotes/origin/@@' || echo 'master')
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Sync docs from ${GITHUB_SHA}" || echo "No changes to commit"
+          git push origin "HEAD:${DEFAULT_BRANCH}" || (echo "Push failed; check permissions and wiki enabled" && exit 1)
