@@ -41,7 +41,8 @@ jobs:
           set -e
           cd wiki
           # determine the wiki's default branch (fallback to master)
-          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@refs/remotes/origin/@@' || echo 'master')
+          DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@refs/remotes/origin/@@')
+          DEFAULT_BRANCH=${DEFAULT_BRANCH:-master}
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
