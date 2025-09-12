@@ -3,8 +3,10 @@ name: Sync docs to Wiki
 on:
   push:
     branches:
-    - main
-    - release/*
+      - main
+      - release/*
+    paths:
+      - 'docs/**'   # only triggers when files under docs/ change
 
 permissions:
   contents: write    # allow pushing to the wiki repo
