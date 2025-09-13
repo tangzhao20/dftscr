@@ -1,4 +1,3 @@
-## Band structure plotting
 **Script:** [bands.py](https://github.com/tangzhao20/dftscr/blob/main/src/bands.py)  
 
 For basic band structure plotting, use:  
