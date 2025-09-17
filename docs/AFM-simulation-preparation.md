@@ -25,7 +25,7 @@ If the `fdet` option is set, enter the spot directory and submit the job manuall
 afm.sh sbatch
 ```
 
-After all the calculations are done, use the Python script [afmplot.py](src/afmplot.py) to make the plots:  
+After all the calculations are done, use the Python script [afmplot.py](https://github.com/tangzhao20/dftscr/blob/main/src/afmplot.py) to make the plots:  
 ```bash
 python3 afmplot.py (iz) (atom) (tilt) (bohr) (verbose) (toten)
 ```
