@@ -5,6 +5,7 @@ import os
 import time
 import numpy as np
 from classes import Poscar, Procar
+from load_data import load_constant
 
 start_time = time.time()
 
@@ -87,8 +88,14 @@ print(f"E_2PT   {e_i[0]*1e3:8.4f} {e_i[1]*1e3:8.4f} {e_i[2]*1e3:8.4f} meV")
 e_i = e_i - np.min(e_i)
 print(f"E_diff  {e_i[0]*1e3:8.4f} {e_i[1]*1e3:8.4f} {e_i[2]*1e3:8.4f} meV")
 
-sorted_indices = np.argsort(e_i)
+i_sort = np.argsort(e_i)
 x_str = ["x", "y", "z"]
-print(f"Med: {x_str[sorted_indices[1]]}, Easy: {x_str[sorted_indices[0]]}")
+print(f"Med: {x_str[i_sort[1]]}, Easy: {x_str[i_sort[0]]}")
+
+volume = poscar0.volume()
+electron = load_constant("electron")
+angstrom = load_constant("angstrom")
+k1 = e_i[i_sort[1]] / volume * electron / angstrom**3 / 1e6
+print(f"K1: {k1:0.3f} MJ/m3")
 
 print(f"Running time: {time.time()-start_time:0.3f} sec")
