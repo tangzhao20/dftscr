@@ -82,8 +82,13 @@ for ik in range(procar0.Nk):
             L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
             e_i += sign * weight * np.sum(f * e * np.abs(L)**2 * 0.25, axis=(1, 2))
 
-print("E: "+str(e_i)+" eV")
+print("            x        y        z")
+print(f"E_2PT   {e_i[0]*1e3:8.4f} {e_i[1]*1e3:8.4f} {e_i[2]*1e3:8.4f} meV")
 e_i = e_i - np.min(e_i)
-print("E_diff: "+str(e_i)+" eV")
+print(f"E_diff  {e_i[0]*1e3:8.4f} {e_i[1]*1e3:8.4f} {e_i[2]*1e3:8.4f} meV")
 
-print(str(time.time() - start_time)+" sec")
+sorted_indices = np.argsort(e_i)
+x_str = ["x", "y", "z"]
+print(f"Med: {x_str[sorted_indices[1]]}, Easy: {x_str[sorted_indices[0]]}")
+
+print(f"Running time: {time.time()-start_time:0.3f} sec")
