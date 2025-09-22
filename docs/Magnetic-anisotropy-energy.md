@@ -9,7 +9,7 @@ E_i = \sum_{k} w_k
 \sum_{\sigma_1,\sigma_2} \sigma_1 \sigma_2 
 \sum_{b_1,b_2} f_{\sigma_1 b_1 k} (1 - f_{\sigma_2 b_2 k}) 
 \frac{E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k}}{(E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k})^2 + \eta^2} 
-\left|\langle \sigma_1 b_1 k \,|\, L_i \,|\, \sigma_2 b_2 k \rangle\right|^2
+\left|\langle \sigma_1 b_1 k | L_i | \sigma_2 b_2 k \rangle\right|^2
 $$
 
 Then the code determines the easy and medium axes, and calculates $K_1$:
