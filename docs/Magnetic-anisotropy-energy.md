@@ -21,6 +21,7 @@ $$
 To calculate MAE, first run a VASP collinear SCF calculation with the following settings:
 - `LORBIT = 14` to output orbital projections with phase.  
 - Initialize `MAGMOM` properly (recommended: 4 for Fe and Co).  
+The current version does not support symmetry operations with rotations higher than threefold. If the atomic structure contains such symmetries, set `ISYM = 0` to avoid using them.  
 
 Then run:
 ```bash
