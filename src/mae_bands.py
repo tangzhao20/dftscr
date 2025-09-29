@@ -121,22 +121,20 @@ for ispin1 in range(2):
             sign = 1
         else:
             sign = -1
-        # vectorization over bands [ik, ib1, ib2])
+        # vectorization over bands [ik, ib1, ib2]
         e_diff = procar0.eig[ispin1, :, :][:, :, np.newaxis] - procar0.eig[ispin2, :, :][:, np.newaxis, :]
         e = e_diff / (e_diff**2 + eta**2)
-
-        f1 = procar0.occ[ispin1, :, :][:, :, np.newaxis]
-        f2 = procar0.occ[ispin2, :, :][:, np.newaxis, :]
-        # f = 0.5 * (f1 * (1.0 - f2) + (1.0 - f1) * f2)
-        f = f1 - f2
+        f = procar0.occ[ispin1, :, :][:, :, np.newaxis] * (1 - procar0.occ[ispin2, :, :][:, np.newaxis, :])
+        # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
 
         c1 = procar0.complex[ispin1, :, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
         c2 = procar0.complex[ispin2, :, :, atom_mask, 4:9]
         # a: atoms; i,j: bands; x: directions; m,n: orbitals
-        L = np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_med, c2)**2 - \
-            np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_easy, c2)**2
-
-        mae_proj[ispin1, :, :] += sign * np.sum(f * e * np.abs(L)**2,  axis=2).T * 0.25
+        L = np.abs(np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_med, c2))**2 - \
+            np.abs(np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_easy, c2))**2
+        mae_proj[ispin1, :, :] += sign * np.sum(f * e * L,  axis=2).T * 0.25
+        mae_proj[ispin2, :, :] += sign * np.sum(f * e * L,  axis=1).T * 0.25
+mae_proj *= 0.5
 
 # make the plot
 
@@ -173,8 +171,11 @@ outputname = "mae_bs.png"
 # projection plot
 proj_color = ["blue", "beige"]
 
-dot_size = 5e5
+dot_size = 4e3
 proj_plot_size = mae_proj * dot_size
+size_thereshold = 0.3
+proj_plot_size[np.abs(proj_plot_size) < size_thereshold] = 0
+
 for ispin in range(eigenval0.Ns):
     for ip in range(len(xticks)):
         for ib in range(eigenval0.Nb):
