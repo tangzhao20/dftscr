@@ -171,29 +171,24 @@ else:
 # width is the physical width of each plots
 # Nx is the number of x points in each plots
 # ixl and ixr are the left and right index of each panel, to seperate the bands
-width = []
-Nx = []
-ixl = []
-ixr = []
-for p in x:
-    width.append(max(p))
-    Nx.append(len(p))
-    if ixl == []:
-        ixl = [0]
-    else:
-        ixl.append(ixr[-1])
-    ixr.append(ixl[-1]+Nx[-1])
+Np = len(xticks)
+width = [0.0] * Np
+Nx = [0] * Np
+ixl = [0] * Np
+ixr = [0] * Np
+for ip in range(Np):
+    width[ip] = xticks[ip][-1]
+    Nx[ip] = len(x[ip])
+    ixl[ip] = ixr[ip-1]  # ixl[0] = 0
+    ixr[ip] = ixl[ip] + Nx[ip]
 if fsecond:
-    Nx2 = []
-    ix2l = []
-    ix2r = []
+    Nx2 = [0] * Np
+    ix2l = [0] * Np
+    ix2r = [0] * Np
     for p in x2:
-        Nx2.append(len(p))
-        if ix2l == []:
-            ix2l = [0]
-        else:
-            ix2l.append(ix2r[-1])
-        ix2r.append(ix2l[-1]+Nx2[-1])
+        Nx2[ip] = len(x2[ip])
+        ix2l[ip] = ix2r[ip-1]  # ix2l[0] = 0
+        ix2r[ip] = ix2l[ip] + Nx2[ip]
 
 is_proj = False
 if package in package_name["vaspproj"]+package_name["qeproj"]:
@@ -236,10 +231,10 @@ spin_label = ["spin up", "spin down"]
 line_color = ["darkblue", "orange"]
 
 fig = plt.figure(figsize=(5, 3.75))
-gs0 = fig.add_gridspec(1, len(xticks), wspace=0.0, hspace=0.00, left=0.14, right=0.98,
-                       top=0.97, bottom=0.07, width_ratios=width[:len(xticks)])
+gs0 = fig.add_gridspec(1, Np, wspace=0.0, hspace=0.00, left=0.14, right=0.98,
+                       top=0.97, bottom=0.07, width_ratios=width[:Np])
 ax = []
-for ip in range(len(xticks)):
+for ip in range(Np):
     ax.append(fig.add_subplot(gs0[ip]))
 
     ax[ip].grid(axis="x", linewidth=1, color=palette["gray"], zorder=0)
@@ -261,17 +256,17 @@ outputname = "bs.png"
 f3 = open("eigenval.dat", "w")
 if eigenval1.Ns == 2:
     for ib in range(len(energy[0])):
-        for ip in range(len(xticks)):
+        for ip in range(Np):
             ik0 = 0
-            for ik in range(len(x[ip])):
+            for ik in range(Nx[ip]):
                 f3.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+str(energy[1][ib][ik0])+"\n")
                 ik0 += 1
         f3.write("\n")
 else:
     for ib in range(len(energy[0])):
-        for ip in range(len(xticks)):
+        for ip in range(Np):
             ik0 = 0
-            for ik in range(len(x[ip])):
+            for ik in range(Nx[ip]):
                 f3.write(str(x[ip][ik])+" "+str(energy[0][ib][ik0])+" "+"\n")
                 ik0 += 1
         f3.write("\n")
@@ -287,7 +282,7 @@ if is_proj:
     dot_size = 50.0
     proj_plot_size = procar1.plot(atom_flag, orb_flag) * dot_size
     for ispin in range(eigenval1.Ns):
-        for ip in range(len(xticks)):
+        for ip in range(Np):
             for ib in range(eigenval1.Nb):
                 ax[ip].scatter(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], s=proj_plot_size[ispin, ib, ixl[ip]:ixr[ip]],
                                c=palette[proj_color[ispin]], zorder=2.5-ispin)
@@ -297,9 +292,9 @@ if is_proj:
     f2.write("#ispin x_kpath energy(eV) size\n")
     for ispin in range(eigenval1.Ns):
         for ib in range(eigenval1.Nb):
-            for ip in range(len(x)):
+            for ip in range(Np):
                 ik0 = 0
-                for ik in range(len(x[ip])):
+                for ik in range(Nx[ip]):
                     f2.write(f"{ispin}  {x[ip][ik]}  {energy[ispin][ib][ik0]}  {proj_plot_size[ispin, ib, ik0]}\n")
                     ik0 += 1
             f2.write("\n")
@@ -308,21 +303,21 @@ if is_proj:
 # second band structure plot (for wannier)
 
 if fsecond:
-    for ip in range(len(xticks)):
+    for ip in range(Np):
         for ib in range(eigenval2.Nb):
             ax[ip].plot(x2[ip], energy2[0][ib][ix2l[ip]:ix2r[ip]], color=palette["orange"], linewidth=1, zorder=2)
     f3 = open("eigenval2.dat", "w")
     for ib in range(len(energy2[0])):
-        for ip in range(len(xticks)):
+        for ip in range(Np):
             ik0 = 0
-            for ik in range(len(x2[ip])):
+            for ik in range(Nx2[ip]):
                 f3.write(str(x2[ip][ik])+" "+str(energy2[0][ib][ik0])+" "+"\n")
                 ik0 += 1
         f3.write("\n")
     f3.close()
 
 ax[0].set_ylabel("Energy (eV)", labelpad=-2, color=palette["black"])
-for ip in range(len(xticks)):
+for ip in range(Np):
     ax[ip].set_ylim(ymin, ymax)
     ax[ip].set_xlim(xticks[ip][0], xticks[ip][-1])
     ax[ip].set_xticks(xticks[ip], xlabels[ip], color=palette["black"])
@@ -339,7 +334,7 @@ ax[0].tick_params(axis="y", left=True)
 ax[-1].tick_params(axis="y", right=True)
 
 f4 = open("label.dat", "w")
-for ip in range(len(xticks)):
+for ip in range(Np):
     for ik in range(len(xticks[ip])):
         f4.write(str(xticks[ip][ik])+" "+xlabels[ip][ik]+"\n")
 f4.close()
