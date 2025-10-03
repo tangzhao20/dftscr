@@ -40,7 +40,7 @@ else:
     doscar0.read_vasp()
     eigenval0.eigshift(doscar0.ef)
 
-x = eigenval0.bandkpout(kp=kpoints0, rlc=rlc)
+x = eigenval0.eig_x(kp=kpoints0, rlc=rlc)
 energy = eigenval0.eigtrans()
 
 xticks = kpoints0.xticks_out(rlc)

@@ -45,7 +45,7 @@ if package in package_name["vasp"]+package_name["vaspproj"]:
         doscar1.read_vasp()
         eigenval1.eigshift(doscar1.ef)
 
-    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    x = eigenval1.eig_x(kp=kpoints1, rlc=rlc)
     energy = eigenval1.eigtrans()
 
     xticks = kpoints1.xticks_out(rlc)
@@ -70,7 +70,7 @@ elif package in package_name["qe"]+package_name["qeproj"]:
         doscar1.read_xml()
         eigenval1.eigshift(doscar1.ef)
 
-    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    x = eigenval1.eig_x(kp=kpoints1, rlc=rlc)
     energy = eigenval1.eigtrans()
 
     xticks = kpoints1.xticks_out(rlc)
@@ -128,14 +128,14 @@ elif package in package_name["wannier90"]:
     else:
         print("Metal band structure are not shifted")
 
-    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    x = eigenval1.eig_x(kp=kpoints1, rlc=rlc)
     energy = eigenval1.eigtrans()
 
     xticks = kpoints1.xticks_out(rlc)
     xlabels = kpoints1.xlabels_out()
 
     if fsecond:
-        x2 = eigenval2.bandkpout(kp=kpoints1, rlc=rlc)
+        x2 = eigenval2.eig_x(kp=kpoints1, rlc=rlc)
         energy2 = eigenval2.eigtrans()
 
 
@@ -145,8 +145,7 @@ elif package in package_name["parsec"]:
     poscar1.read_parsec()
     rlc = poscar1.rlc()
 
-    eigenval1.read_parsec()
-    eigenval1.kc2kd(poscar1.lc)
+    eigenval1.read_parsec(lc=poscar1.lc)
 
     kpoints1.read_kpathin()
 
@@ -157,7 +156,7 @@ elif package in package_name["parsec"]:
     else:
         print("Metal band structure are not shifted")
 
-    x = eigenval1.bandkpout(kp=kpoints1, rlc=rlc)
+    x = eigenval1.eig_x(kp=kpoints1, rlc=rlc)
     energy = eigenval1.eigtrans()
 
     xticks = kpoints1.xticks_out(rlc)

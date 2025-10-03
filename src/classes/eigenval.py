@@ -101,6 +101,7 @@ class Eigenval:
         for ix in range(3):
             lc[ix, :] = [float(x) for x in cell.find(f"a{ix+1}").text.split()]
         lc = lc * bohr
+        a1 = np.linalg.norm(lc[0, :])
 
         self.Nk = len(kpoints)
         if tree.getroot().find("output").find("band_structure").find("lsda").text in ["True", "true"]:
@@ -110,12 +111,11 @@ class Eigenval:
         self.Nb = int(kpoints[0].find('eigenvalues').get("size"))//self.Ns
 
         for kp in kpoints:
-            # energies are in eV, and 2pi/a
+            # energies are in Ha; k-points are in 2pi/a1
             self.kp.append([float(kp1) for kp1 in kp.find('k_point').text.split()])
             self.wt.append(float(kp.find('k_point').get("weight")))
             eig1 = kp.find('eigenvalues').text.split()
             occ1 = kp.find('occupations').text.split()
-            # qe xml energies are in Hatree (Ha)
             eig0 = []
             occ0 = []
             if self.Ns == 1:
@@ -129,7 +129,7 @@ class Eigenval:
             self.eig.append(eig0)
             self.occ.append(occ0)
 
-        self.kc2kd(lc)
+        self.kp = (np.array(self.kp)@(lc)/a1).tolist()
 
         self.semic()
         if self.is_semic == True:
@@ -183,7 +183,10 @@ class Eigenval:
         self.Nb = len(self.eig[0])
         self.Ns = 1
 
-    def read_parsec(self):
+    def read_parsec(self, lc=None):
+        if lc is None:
+            lc = np.eye(3)
+
         bohr = load_constant("bohr")
         pi = load_constant("pi")
         rydberg = load_constant("rydberg")
@@ -227,9 +230,7 @@ class Eigenval:
         del eig
 
         # convert kp from 1/bohr to 1/A
-        for ik in range(self.Nk):
-            for ix in range(3):
-                self.kp[ik][ix] = self.kp[ik][ix]/bohr*0.5/pi
+        self.kp = (np.array(self.kp) @ lc / bohr * 0.5 / pi).tolist()
 
         self.eigshift(ef)
         Nvb = np.zeros((self.Ns, self.Nk), dtype=int)
@@ -307,7 +308,7 @@ class Eigenval:
                 for s in range(self.Ns):
                     self.eig[k][b][s] = self.eig[k][b][s]-ezero
 
-    def bandkpout(self, kp, rlc=None):
+    def eig_x(self, kp, rlc=None):
         # transfer the fractional to cartesian in k space
         # if kp is already in cartisian, simply set rlc=I
         if rlc is None:
@@ -324,10 +325,6 @@ class Eigenval:
                 kpout[-1].append(kpout[-1][-1]+dkpc)
             kplabelold = kplabel
         return (kpout)
-
-    def kc2kd(self, lc):
-        # convert kc from Cartesian to direct
-        self.kp = (np.array(self.kp)@(lc.T)).tolist()
 
     def eigtrans(self):
         eigout = []
