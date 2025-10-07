@@ -37,6 +37,7 @@ class Procar:
         f0.close()
 
         word = line[0].split()
+        has_complex = False
         if len(word) >= 5 and word[4].startswith("phase"):
             self.has_complex = True
 
@@ -45,8 +46,11 @@ class Procar:
         self.Nb = int(word[7])
         self.Na = int(word[11])
 
-        if len(line) > (((self.Na+5)*self.Nb+3)*self.Nk+1)*1.5:
+        if not has_complex and len(line) > (((self.Na+5)*self.Nb+3)*self.Nk+1)*1.5:
             # the file length should be (((Na+5)Nb+3)Nk+1)Ns+1
+            self.Ns = 2
+        if has_complex and len(line) > (((2*self.Na+7)*self.Nb+3)*self.Nk+1)*1.5:
+            # the file length should be (((2*Na+7)Nb+3)Nk+1)Ns+1
             self.Ns = 2
 
         word = line[7].split()

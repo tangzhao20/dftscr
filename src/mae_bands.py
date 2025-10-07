@@ -81,6 +81,7 @@ else:
 # calculate MAE decomposition here
 atom_list = poscar0.atom_list()
 
+# SOC factors taken from [New J. Phys. 21, 73054 (2019)]
 soc_factor_dict = {"Fe": 0.05965, "Co": 0.07412}
 
 atom_mask = np.isin(atom_list, list(soc_factor_dict))

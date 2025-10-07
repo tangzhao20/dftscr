@@ -17,6 +17,7 @@ procar0.read_vasp()
 
 atom_list = poscar0.atom_list()
 
+# SOC factors taken from [New J. Phys. 21, 73054 (2019)]
 soc_factor_dict = {"Fe": 0.05965, "Co": 0.07412}
 
 atom_mask = np.isin(atom_list, list(soc_factor_dict))
@@ -95,7 +96,9 @@ print(f"Med: {x_str[i_sort[1]]}, Easy: {x_str[i_sort[0]]}")
 volume = poscar0.volume()
 electron = load_constant("electron")
 angstrom = load_constant("angstrom")
-k1 = e_i[i_sort[1]] / volume * electron / angstrom**3 / 1e6
-print(f"K1: {k1:0.3f} MJ/m3")
+k1_med = e_i[i_sort[1]] / volume * electron / angstrom**3 / 1e6
+print(f"K1_med-easy: {k1_med:0.3f} MJ/m3")
+k1_hard = e_i[i_sort[2]] / volume * electron / angstrom**3 / 1e6
+print(f"K1_hard-easy: {k1_hard:0.3f} MJ/m3")
 
 print(f"Running time: {time.time()-start_time:0.3f} sec")
