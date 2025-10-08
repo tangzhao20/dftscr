@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Script to calculate magnetic properties
+# Calculate saturation magnetic polarization (Js)
 
 # Inputs: CONTCAR, OUTCAR
 
