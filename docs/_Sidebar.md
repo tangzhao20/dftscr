@@ -9,5 +9,5 @@
 8. [Silicon nanocrystals creation](https://github.com/tangzhao20/dftscr/wiki/Silicon-nanocrystals-creation)
 9. [h-BN with defect structure creation](https://github.com/tangzhao20/dftscr/wiki/h‐BN-with-defect-structure-creation)
 10. [AFM simulation preparation](https://github.com/tangzhao20/dftscr/wiki/AFM-simulation-preparation)
-11. [Magnetic properties](https://github.com/tangzhao20/dftscr/wiki/Magnetic-properties.md)
+11. [Magnetic properties](https://github.com/tangzhao20/dftscr/wiki/Magnetic-properties)
 
