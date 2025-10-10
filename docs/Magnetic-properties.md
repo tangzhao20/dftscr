@@ -27,7 +27,7 @@ E_i = \sum_{k} w_k
 \sum_{\sigma_1,\sigma_2} \sigma_1 \sigma_2 
 \sum_{b_1,b_2} f_{\sigma_1 b_1 k} (1 - f_{\sigma_2 b_2 k}) 
 \frac{E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k}}{(E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k})^2 + \eta^2} 
-\left|\langle \sigma_1 b_1 k | L_i | \sigma_2 b_2 k \rangle\right|^2
+\left| \sum_a \xi_a \langle k b_1 \sigma_1 a | L_i | k b_2 \sigma_2 a \rangle \right|^2
 $$
 
 Then, the code determines the easy and medium axes and calculates first-order magnetic anisotropy constant *K*<sub>1</sub>:
@@ -46,13 +46,28 @@ Then run:
 python3 mae.py
 ```
 
-Currently, the code supports the *d* orbitals of Fe and Co, with their spin-orbit coupling constants taken from the following reference:
+Currently, the code supports the *d* orbitals of Fe and Co, and their spin-orbit coupling constants (*ξ<sub>a</sub>*) are taken from the following reference:
 * M. Blanco-Rey, J. I. Cerda, and A. Arnau, *Validity of perturbative methods to treat the spin–orbit interaction: application to magnetocrystalline anisotropy*, [New Journal of Physics **21**, 73054](https://dx.doi.org/10.1088/1367-2630/ab3060) (2019).  
 
-Since the MAE formula from 2PT is a summation, it can be decomposed to find the contribution of individual bands. [mae_bands.py](https://github.com/tangzhao20/dftscr/blob/main/src/mae_bands.py) calculates the band-resolved MAE contributions. This helps identify the electronic origin of magnetic anisotropy. The code is currently under development.
+## Decomposition of MAE
 
-To run the code, first perform a band structure calculation with `LORBIT = 14`. Then:
+Since the MAE formula from 2PT is a summation, it can be decomposed to find the contribution of individual bands. The [mae_bands.py](https://github.com/tangzhao20/dftscr/blob/main/src/mae_bands.py) script calculates these band-resolved MAE contributions, helping to identify the electronic origin of magnetic anisotropy.  
+
+The contribution of band *b*<sub>1</sub> with spin *σ*<sub>1</sub> along direction *i* is given by:
+
+$$
+E_{i b_1 \sigma_1} = \frac{1}{2} \sum_k w_k \sum_{\sigma_2} \sigma_1 \sigma_2 \sum_{b_2}
+   \left( f_{k b_1 \sigma_1} - f_{k b_2 \sigma_2} \right) 
+   \frac{E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k}}{(E_{\sigma_2 b_2 k} - E_{\sigma_1 b_1 k})^2 + \eta^2}
+   \left| \sum_a \xi_a \langle k b_1 \sigma_1 a | L_i | k b_2 \sigma_2 a \rangle \right|^2
+$$
+
+To run the code, first perform a band structure calculation with `LORBIT = 14`. Then execute:
+
 ```bash
 mae_bands.py med easy (E1) (E2)
 ```
 
+Here, `med` and `easy` can be chosen as `x`, `y`, or `z`.
+
+The code is currently under development. 
