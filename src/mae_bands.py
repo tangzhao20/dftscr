@@ -3,7 +3,7 @@
 # mae_bands.py med easy (E1) (E2)
 # Making the band structure plot with mae decomposition
 
-#
+# Only for VASP outputs
 
 # if E2 exists, the energy range is (E1,E2)
 # if only E1 exists, the energy range is (-E1,E1)
@@ -12,9 +12,6 @@
 import sys
 import numpy as np
 from classes import *
-from load_data import load_palette
-import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 poscar0 = Poscar()
 eigenval0 = Eigenval()
@@ -43,40 +40,21 @@ else:
 x = eigenval0.eig_x(kp=kpoints0, rlc=rlc)
 energy = eigenval0.eigtrans()
 
-xticks = kpoints0.xticks_out(rlc)
-xlabels = kpoints0.xlabels_out()
-
-
-# width is the physical width of each plots
-# Nx is the number of x points in each plots
-# ixl and ixr are the left and right index of each panel, to seperate the bands
-width = []
-Nx = []
-ixl = []
-ixr = []
-for p in x:
-    width.append(max(p))
-    Nx.append(len(p))
-    if ixl == []:
-        ixl = [0]
-    else:
-        ixl.append(ixr[-1])
-    ixr.append(ixl[-1]+Nx[-1])
+x_ticks = kpoints0.xticks_out(rlc)
+x_labels = kpoints0.xlabels_out()
 
 x_str = ["x", "y", "z"]
 
 i_med = x_str.index(sys.argv[1])
 i_easy = x_str.index(sys.argv[2])
 
+y_range = [-5.0, 5.0]
 if len(sys.argv) >= 5:
-    ymax = float(sys.argv[4])
-    ymin = float(sys.argv[4])
+    y_range[0] = min(float(sys.argv[3]), float(sys.argv[4]))
+    y_range[1] = max(float(sys.argv[3]), float(sys.argv[4]))
 elif len(sys.argv) == 4:
-    ymax = float(sys.argv[3])
-    ymin = -float(sys.argv[3])
-else:
-    ymax = 5.0
-    ymin = -5.0
+    y_range[0] = -float(sys.argv[3])
+    y_range[1] = float(sys.argv[3])
 
 # calculate MAE decomposition here
 atom_list = poscar0.atom_list()
@@ -139,68 +117,21 @@ mae_proj *= 0.5
 
 # make the plot
 
-palette = load_palette()
-mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
-mpl.rcParams.update({'font.size': 14})
-
-spin_label = ["spin up", "spin down"]
-line_color = ["darkblue", "orange"]
-
-fig = plt.figure(figsize=(5, 3.75))
-gs0 = fig.add_gridspec(1, len(xticks), wspace=0.0, hspace=0.00, left=0.14, right=0.98,
-                       top=0.97, bottom=0.07, width_ratios=width[:len(xticks)])
-ax = []
-for ip in range(len(xticks)):
-    ax.append(fig.add_subplot(gs0[ip]))
-
-    ax[ip].grid(axis="x", linewidth=1, color=palette["gray"], zorder=0)
-    ax[ip].axhline(linewidth=1, color=palette["gray"], zorder=0)
-    for ispin in range(eigenval0.Ns):
-        for ib in range(eigenval0.Nb):
-            if eigenval0.Ns == 2 and ib == 0:
-                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[line_color[ispin]],
-                            label=spin_label[ispin], linewidth=1, zorder=3-ispin)
-            else:
-                ax[ip].plot(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]], color=palette[line_color[ispin]],
-                            linewidth=1, zorder=3-ispin)
+bands = BandsPlot(x_ticks, x_labels, y_range)
+bands.plot_bands(eigenval0, kpoints0, rlc)
 
 outputname = "mae_bs.png"
 
 # if eigenval1.Ns==2 :
 #    plt.legend()
 
-# projection plot
-proj_color = ["blue", "beige"]
-
-dot_size = 4e3
-proj_plot_size = mae_proj * dot_size
+colors = np.where(mae_proj > 0, bands.palette["red"], bands.palette["green"])
+dot_size = 3e3
+proj_plot_size = (mae_proj * dot_size)**2
 size_thereshold = 0.3
-proj_plot_size[np.abs(proj_plot_size) < size_thereshold] = 0
+proj_plot_size[proj_plot_size < size_thereshold] = 0
 
 for ispin in range(eigenval0.Ns):
-    for ip in range(len(xticks)):
-        for ib in range(eigenval0.Nb):
-            colors = np.where(mae_proj[ispin, ib, ixl[ip]:ixr[ip]] > 0, palette["red"], palette["green"])
-            ax[ip].scatter(x[ip], energy[ispin][ib][ixl[ip]:ixr[ip]],
-                           s=np.abs(proj_plot_size[ispin, ib, ixl[ip]:ixr[ip]]),
-                           c=colors, zorder=3.5-ispin)
+    bands.add_scatter(x, energy[ispin], proj_plot_size[ispin], color=colors[ispin], zorder=3.5-ispin)
 
-
-ax[0].set_ylabel("Energy (eV)", labelpad=-2, color=palette["black"])
-for ip in range(len(xticks)):
-    ax[ip].set_ylim(ymin, ymax)
-    ax[ip].set_xlim(xticks[ip][0], xticks[ip][-1])
-    ax[ip].set_xticks(xticks[ip], xlabels[ip], color=palette["black"])
-    ax[ip].tick_params(axis="x", direction="in", length=0)
-    ax[ip].tick_params(axis="y", left=False, right=False, direction="in",
-                       color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
-    if ip != 0:
-        ax[ip].yaxis.set_ticklabels([])
-    for edge in ["bottom", "top", "left", "right"]:
-        ax[ip].spines[edge].set_color(palette["black"])
-        ax[ip].spines[edge].set_linewidth(1)
-        ax[ip].spines[edge].set_zorder(4)
-ax[0].tick_params(axis="y", left=True)
-ax[-1].tick_params(axis="y", right=True)
-
-fig.savefig(outputname, dpi=1200)
+bands.fig.savefig(outputname, dpi=1200)

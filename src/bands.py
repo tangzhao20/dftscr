@@ -163,8 +163,8 @@ x_labels = kpoints1.xlabels_out()
 
 y_range = [-5.0, 5.0]
 if len(sys.argv) >= 4:
-    y_range[0] = min(float(sys.argv[3]), float(sys.argv[2]))
-    y_range[1] = max(float(sys.argv[3]), float(sys.argv[2]))
+    y_range[0] = min(float(sys.argv[2]), float(sys.argv[3]))
+    y_range[1] = max(float(sys.argv[2]), float(sys.argv[3]))
 elif len(sys.argv) == 3:
     y_range[0] = -float(sys.argv[2])
     y_range[1] = float(sys.argv[2])

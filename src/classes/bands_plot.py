@@ -90,8 +90,12 @@ class BandsPlot:
         Nb = len(energy)
         for ip in range(self.Np):
             for ib in range(Nb):
+                if not isinstance(color, str):
+                    current_color = color[ib][ix_edges[ip]:ix_edges[ip+1]]
+                else:
+                    current_color = color
                 self.ax[ip].scatter(x[ip], energy[ib][ix_edges[ip]:ix_edges[ip+1]],
-                                    s=size[ib][ix_edges[ip]:ix_edges[ip+1]], c=color, zorder=zorder)
+                                    s=size[ib][ix_edges[ip]:ix_edges[ip+1]], c=current_color, zorder=zorder)
 
     def plot_bands(self, eigenval1, kpoints1, rlc):
 
