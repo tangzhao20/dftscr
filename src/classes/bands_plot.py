@@ -1,5 +1,3 @@
-import sys
-import os
 from load_data import load_palette
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -63,7 +61,7 @@ class BandsPlot:
         return str_out
 
     def add_plot(self, x, energy, color=None, label=None, zorder=3):
-
+        # energy is a list of arrays with shape (Nb, Nx)
         if color is None:
             color = self.palette["darkblue"]
 

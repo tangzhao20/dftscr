@@ -120,8 +120,6 @@ mae_proj *= 0.5
 bands = BandsPlot(x_ticks, x_labels, y_range)
 bands.plot_bands(eigenval0, kpoints0, rlc)
 
-outputname = "mae_bs.png"
-
 # if eigenval1.Ns==2 :
 #    plt.legend()
 
@@ -134,4 +132,26 @@ proj_plot_size[proj_plot_size < size_thereshold] = 0
 for ispin in range(eigenval0.Ns):
     bands.add_scatter(x, energy[ispin], proj_plot_size[ispin], color=colors[ispin], zorder=3.5-ispin)
 
-bands.fig.savefig(outputname, dpi=1200)
+bands.fig.savefig("mae_bs.png", dpi=1200)
+
+# Calculate the summation on each k-point
+
+mae_proj_sum = mae_proj.sum(axis=1)  # sum over bands
+y_range_sum = np.zeros(2)
+mae_proj_sum_max = np.max(mae_proj_sum)
+mae_proj_sum_min = np.min(mae_proj_sum)
+y_range_sum[0] = mae_proj_sum_min - (mae_proj_sum_max - mae_proj_sum_min) * 0.05
+y_range_sum[1] = mae_proj_sum_max + (mae_proj_sum_max - mae_proj_sum_min) * 0.05
+
+bands_sum = BandsPlot(x_ticks, x_labels, y_range_sum)
+bands_sum.fig.set_size_inches(5, 1)
+bands_sum.ax[0].set_ylabel("")
+for ip in range(bands_sum.Np):
+    bands_sum.ax[ip].xaxis.set_ticklabels([])
+
+bands_sum.add_plot(x, mae_proj_sum[0, np.newaxis, :],
+                   color=bands_sum.palette["darkblue"], label="majority spin", zorder=3)
+bands_sum.add_plot(x, mae_proj_sum[1, np.newaxis, :],
+                   color=bands_sum.palette["orange"], label="minority spin", zorder=2)
+
+bands_sum.fig.savefig("mae_bs_sum.png", dpi=1200)
