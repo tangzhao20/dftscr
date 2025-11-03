@@ -138,15 +138,21 @@ bands.fig.savefig("mae_bs.png", dpi=1200)
 
 mae_proj_sum = mae_proj.sum(axis=1)  # sum over bands
 y_range_sum = np.zeros(2)
-mae_proj_sum_max = np.max(mae_proj_sum)
-mae_proj_sum_min = np.min(mae_proj_sum)
-y_range_sum[0] = mae_proj_sum_min - (mae_proj_sum_max - mae_proj_sum_min) * 0.05
-y_range_sum[1] = mae_proj_sum_max + (mae_proj_sum_max - mae_proj_sum_min) * 0.05
+mae_max = np.max(mae_proj_sum)
+mae_min = np.min(mae_proj_sum)
+y_range_sum[0] = mae_min - (mae_max - mae_min) * 0.05
+y_range_sum[1] = mae_max + (mae_max - mae_min) * 0.05
 
 bands_sum = BandsPlot(x_ticks, x_labels, y_range_sum)
 bands_sum.fig.set_size_inches(5, 1)
-bands_sum.ax[0].set_ylabel("")
+bands_sum.ax[0].set_ylabel("MAE\nprojection", labelpad=4)
+bands_sum.ax[0].yaxis.set_ticks([mae_min+(mae_max-mae_min)*0.05, 0.0, mae_max-(mae_max-mae_min)*0.05])
+bands_sum.ax[0].yaxis.set_ticklabels(["–", "0", "+"])
+bands_sum.ax[0].tick_params(axis="y", left=False)
+bands_sum.ax[-1].tick_params(axis="y", right=False)
 for ip in range(bands_sum.Np):
+    pos = bands_sum.ax[ip].get_position()
+    bands_sum.ax[ip].set_position([pos.x0, 0.03, pos.width, 0.94])
     bands_sum.ax[ip].xaxis.set_ticklabels([])
 
 bands_sum.add_plot(x, mae_proj_sum[0, np.newaxis, :],
