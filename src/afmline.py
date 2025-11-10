@@ -214,7 +214,7 @@ else:
         kts = (toten[0:nz-2, :, 0] - 2*toten[1:nz-1, :, 0] + toten[2:nz, :, 0]) / z_spacing**2
 
 if lbohr:
-    if force:
+    if lforce:
         # convert k_ts from eV/A to Ha/a0
         kts = kts * bohr/Ha
     else:
