@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 
 # mae_bands.py med easy (E1) (E2)
-# Making the energy-resolved MAE density
+# Plot energy-resolved MAE density
 
 # Only for VASP outputs
 
-# if E2 exists, the energy range is (E1,E2)
-# if only E1 exists, the energy range is (-E1,E1)
-# if neither exists, the energy range is (-5 eV, 5 eV)
+# if E2 exists, the energy range is [E1, E2]
+# if only E1 exists, the energy range is [-E1, E1]
+# if neither exists, the energy range is [-5 eV, 5 eV]
 
 import sys
 import numpy as np
-from classes import Poscar, Procar
-from load_data import load_constant, load_palette
+from classes import Poscar, Procar, Doscar
+from load_data import load_palette
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -35,6 +35,10 @@ poscar0.read_vasp(filename="CONTCAR")
 
 procar0 = Procar()
 procar0.read_vasp()
+
+doscar0 = Doscar()  # for Fermi level
+doscar0.read_vasp()
+procar0.eig = procar0.eig - doscar0.ef
 
 atom_list = poscar0.atom_list()
 
@@ -66,14 +70,17 @@ Ld[2, 1, 3] = -1.0
 Ld[2, 3, 1] = 1.0
 Ld[2, 4, 0] = 2.0
 
+L_med = Ld[i_med, :, :]
+L_easy = Ld[i_easy, :, :]
+
 eta = 0.0001
 
-# prepare DOS data
+Ne = 1000
+d_energy = np.linspace(y_range[0], y_range[1], Ne)
+mae_d = np.zeros((2, Ne))  # spin, energy
+
 sigma = 0.05  # eV
 gaussian_coeff = (1 / (sigma * (2*np.pi)**0.5))
-Nedos = 1000
-energy = np.linspace(y_range[0], y_range[1], Nedos)
-mae_density = np.zeros((2, Nedos))  # Energy, spin
 
 for ik in range(procar0.Nk):
     weight = procar0.weight[ik]
@@ -85,56 +92,71 @@ for ik in range(procar0.Nk):
                 sign = -1
 
             # vectorization over bands
-            e_diff = procar0.eig[ispin1, ik, :][:, np.newaxis] - procar0.eig[ispin2, ik, :][np.newaxis, :]
+            e1 = procar0.eig[ispin1, ik, :]
+            e2 = procar0.eig[ispin2, ik, :]
+            e_diff = e1[:, np.newaxis] - e2[np.newaxis, :]
             e = e_diff / (e_diff**2 + eta**2)
             f = procar0.occ[ispin1, ik, :][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, :][np.newaxis, :])
             # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
-            e = e[np.newaxis, :, :]
-            f = f[np.newaxis, :, :]
 
             c1 = procar0.complex[ispin1, ik, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
             c2 = procar0.complex[ispin2, ik, :, atom_mask, 4:9]
 
-            # a: atoms; i,j: bands; x: directions; m,n: orbitals
-            L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
-            e_i += sign * weight * np.sum(f * e * np.abs(L)**2 * 0.25, axis=(1, 2))
-                       
-            # TODO: calculate MAE density here
+            # L matrix [Nb, Nb]
+            L = np.abs(np.einsum("a, aim, mn, ajn -> ij", soc_factors, c1, L_med, c2))**2 - \
+                np.abs(np.einsum("a, aim, mn, ajn -> ij", soc_factors, c1, L_easy, c2))**2
 
-mae_density_max = np.max(mae_density)
-mae_density_min = np.min(mae_density)
-mae_density_color = ["darkblue", "orange"]
+            d1 = (d_energy[:, None] - e1[None, :]) / sigma  # [Ne, Nb]
+            d2 = (d_energy[:, None] - e2[None, :]) / sigma  # [Ne, Nb]
+            s1 = gaussian_coeff * np.exp(-0.5 * d1**2)
+            s2 = gaussian_coeff * np.exp(-0.5 * d2**2)
+
+            mae_matrix = f * e * L  # [Nb, Nb]
+
+            mae_d[ispin1] += sign * weight * 0.25 * np.einsum("ij, ei -> e", mae_matrix, s1)
+            mae_d[ispin2] += sign * weight * 0.25 * np.einsum("ij, ej -> e", mae_matrix, s2)
+
+mae_d = mae_d * 0.5
+
+# print(np.sum(mae_d*(d_energy[1]-d_energy[0])))  # check the integration gives the correct MAE
+
+mae_d_max = np.max(mae_d)
+mae_d_min = np.min(mae_d)
 
 palette = load_palette()
 mpl.rcParams["font.sans-serif"].insert(0, "Noto Sans")
 mpl.rcParams.update({'font.size': 14})
 
-fig = plt.figure(figsize=(1, 3.75))
-gs0 = fig.add_gridspec(1, 1, wspace=0.0, hspace=0.00, left=0.03, right=0.97, top=0.97, bottom=0.07)
+# increase the top space for title
+fig = plt.figure(figsize=(1, 3.9))
+gs0 = fig.add_gridspec(1, 1, wspace=0.0, hspace=0.00, left=0.03, right=0.97,
+                       top=0.9326923076923080, bottom=0.0673076923076923)
 
-ax=fig.add_subplot(gs0[0])
+ax = fig.add_subplot(gs0[0])
 
 ax.axhline(linewidth=1, color=palette["gray"], zorder=0)
-for ispin in range(2):
-    ax.plot(mae_density[ispin], energy, color=palette[mae_density_color[ispin]], linewidth=1, zorder=3)
+ax.axvline(linewidth=1, color=palette["gray"], zorder=0)
 
-x_range_sum = [0.0, 0.0]
-x_range_sum[0] = mae_density_min - (mae_density_max - mae_density_min) * 0.05
-x_range_sum[1] = mae_density_max + (mae_density_max - mae_density_min) * 0.05
-ax.set_xlim(x_range_sum)
+ax.plot(mae_d[0], d_energy, color=palette["darkblue"], linewidth=1, zorder=3.5)
+ax.plot(mae_d[1], d_energy, color=palette["orange"], linewidth=1, zorder=3)
+
+x_range = [0.0, 0.0]
+x_range[0] = mae_d_min - (mae_d_max - mae_d_min) * 0.05
+x_range[1] = mae_d_max + (mae_d_max - mae_d_min) * 0.05
+ax.set_xlim(x_range)
 
 ax.set_ylim(y_range)
 ax.tick_params(axis="x", bottom=False, top=False, direction="in", length=0)
-ax.tick_params(axis="y", left=True, right=True, direction="in", color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0, pad=4)
+ax.tick_params(axis="y", left=True, right=True, direction="in", color=palette["gray"],
+               labelcolor=palette["black"], width=1, zorder=0, pad=4)
 ax.set_yticklabels([])
 
-# put "DOS" as ticklabel to align with the K point labels in bs
-ax[0].set_xticks([0.5*(mae_density_max+mae_density_min)], ["MAE Density"], color=palette["black"])
+ax.set_title("MAE den.", fontsize=14, pad=4, color=palette["black"])
+ax.set_xticks([mae_d_min, 0, mae_d_max], ["–", "0", "+"], color=palette["black"])
 
 for edge in ["bottom", "top", "left", "right"]:
     ax.spines[edge].set_color(palette["black"])
     ax.spines[edge].set_linewidth(1)
     ax.spines[edge].set_zorder(4)
 
-fig.savefig("mae_density.png", dpi=1200)
-
+fig.savefig("mae_d.png", dpi=1200)
