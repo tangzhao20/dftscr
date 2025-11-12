@@ -33,7 +33,8 @@ $$
 $$
 
 
-An angular momentum term is defined as: 
+An angular momentum term is defined as:  
+
 $$
 L_{i \sigma_1 b_1 \sigma_2 b_2 k} = \sum_a \xi_a \langle \sigma_1 b_1 a k | L_i | \sigma_2 b_2 a k \rangle
 $$
