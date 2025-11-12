@@ -159,4 +159,4 @@ for edge in ["bottom", "top", "left", "right"]:
     ax.spines[edge].set_linewidth(1)
     ax.spines[edge].set_zorder(4)
 
-fig.savefig("mae_d.png", dpi=1200)
+fig.savefig("mae_density.png", dpi=1200)
