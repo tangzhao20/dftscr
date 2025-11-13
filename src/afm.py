@@ -22,7 +22,7 @@ y_spacing = 0.6
 z_spacing = 0.3
 z_range = [5.7, 6.3]
 boundary = -1e0
-vacuum = 5.0
+vacuum = 7.5
 lfdet = False
 lspin = False
 

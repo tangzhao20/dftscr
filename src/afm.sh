@@ -123,3 +123,8 @@ if [[ "$1" == "copy" ]]; then
     cp $2/tip.xyz .
     ln -s ../../pp/* .
 fi
+
+if [[ "$1" == "tar" ]]; then
+    tar -cvzf afm.tar.gz afm.in parsec.in.head job.sh sample.parsec_st.dat tip.xyz toten.dat
+fi
+
