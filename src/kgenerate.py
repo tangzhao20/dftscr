@@ -7,9 +7,7 @@
 # input: POSCAR
 
 import sys
-import os
 from classes import KpointsBand, Poscar
-from load_data import load_package_name
 
 poscar0 = Poscar()
 poscar0.read_vasp()
@@ -38,19 +36,19 @@ if latt == "orcc":
 
     zeta = (1.0 + (a/b)**2) / 4.0
 
-    kpoints0.kpdict = {}
-    kpoints0.kpdict["Γ"] = [0.0, 0.0, 0.0]
-    kpoints0.kpdict["A"] = [zeta, zeta, 0.5]
-    kpoints0.kpdict["A₁"] = [-zeta, 1.0-zeta, 0.5]
-    kpoints0.kpdict["R"] = [0.0, 0.5, 0.5]
-    kpoints0.kpdict["S"] = [0.0, 0.5, 0.0]
-    kpoints0.kpdict["T"] = [-0.5, 0.5, 0.5]
-    kpoints0.kpdict["X"] = [zeta, zeta, 0.0]
-    kpoints0.kpdict["X₁"] = [-zeta, 1.0-zeta, 0.0]
-    kpoints0.kpdict["Y"] = [-1/2, 1/2, 0.0]
-    kpoints0.kpdict["Z"] = [0.0, 0.0, 0.5]
+    kpoints0.kp_dict = {}
+    kpoints0.kp_dict["Γ"] = [0.0, 0.0, 0.0]
+    kpoints0.kp_dict["A"] = [zeta, zeta, 0.5]
+    kpoints0.kp_dict["A₁"] = [-zeta, 1.0-zeta, 0.5]
+    kpoints0.kp_dict["R"] = [0.0, 0.5, 0.5]
+    kpoints0.kp_dict["S"] = [0.0, 0.5, 0.0]
+    kpoints0.kp_dict["T"] = [-0.5, 0.5, 0.5]
+    kpoints0.kp_dict["X"] = [zeta, zeta, 0.0]
+    kpoints0.kp_dict["X₁"] = [-zeta, 1.0-zeta, 0.0]
+    kpoints0.kp_dict["Y"] = [-1/2, 1/2, 0.0]
+    kpoints0.kp_dict["Z"] = [0.0, 0.0, 0.5]
 
-    kpoints0.xlabels = [["Γ", "X", "S", "A", "Z", "Γ", "Y", "X₁", "A₁", "T", "Y"], ["Z", "T"]]
+    kpoints0.x_labels = [["Γ", "X", "S", "A", "Z", "Γ", "Y", "X₁", "A₁", "T", "Y"], ["Z", "T"]]
 
 else:
     print("Error: lattice "+latt+" is not supported")

@@ -4,7 +4,6 @@
 # python kconvert.py package1 package2 (N)
 
 import sys
-import os
 from classes import KpointsBand, Poscar
 from load_data import load_package_name
 

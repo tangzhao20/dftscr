@@ -40,8 +40,8 @@ else:
 x = eigenval0.eig_x(kp=kpoints0, rlc=rlc)
 energy = eigenval0.eigtrans()
 
-x_ticks = kpoints0.xticks_out(rlc)
-x_labels = kpoints0.xlabels_out()
+x_ticks = kpoints0.x_ticks_out(rlc)
+x_labels = kpoints0.x_labels_out()
 
 x_str = ["x", "y", "z"]
 

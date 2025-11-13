@@ -158,8 +158,8 @@ if package in package_name["vaspproj"]+package_name["qeproj"]:
 
 # The following plotting section should be generalized, not code-specific
 
-x_ticks = kpoints1.xticks_out(rlc)
-x_labels = kpoints1.xlabels_out()
+x_ticks = kpoints1.x_ticks_out(rlc)
+x_labels = kpoints1.x_labels_out()
 
 y_range = [-5.0, 5.0]
 if len(sys.argv) >= 4:
