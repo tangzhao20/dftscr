@@ -21,6 +21,18 @@ for w in sys.argv:
         Nb = int(w[3:])
         print("Nb is reset to "+str(Nb))
 
+# Identify the highest occupied state and the lowest hole state
+occ_tol = 1e-3
+occ_min = np.min(procar0.occ, axis=1)
+occ_max = np.max(procar0.occ, axis=1)
+cb = [0, 0]  # non-full bands: [cb:Nb]
+vb = [0, 0]  # non-empty bands: [0:vb]
+for ispin in range(2):
+    cb[ispin] = np.where(occ_min[ispin] < 1.0 - occ_tol)[0][0]
+    vb[ispin] = np.where(occ_max[ispin] > occ_tol)[0][-1] + 1
+if Nb < max(vb):
+    print("Warning: Nb is smaller than the highest occupied band.")
+
 print(f"Read time: {time.time()-start_time:0.3f} s")
 start_time = time.time()
 
@@ -79,15 +91,17 @@ for ik in range(procar0.Nk):
                 sign = -1
 
             # vectorization over bands
-            e_diff = procar0.eig[ispin1, ik, 0:Nb][:, np.newaxis] - procar0.eig[ispin2, ik, 0:Nb][np.newaxis, :]
+            e_diff = procar0.eig[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] - \
+                procar0.eig[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :]
             e = e_diff / (e_diff**2 + eta**2)
-            f = procar0.occ[ispin1, ik, 0:Nb][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, 0:Nb][np.newaxis, :])
+            f = procar0.occ[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] * \
+                (1 - procar0.occ[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :])
             # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
             e = e[np.newaxis, :, :]
             f = f[np.newaxis, :, :]
 
-            c1 = procar0.complex[ispin1, ik, 0:Nb, atom_mask, 4:9].conj()  # numpy move the masked axis to front
-            c2 = procar0.complex[ispin2, ik, 0:Nb, atom_mask, 4:9]
+            c1 = procar0.complex[ispin1, ik, 0:vb[ispin1], atom_mask, 4:9].conj()  # numpy move the masked axis to front
+            c2 = procar0.complex[ispin2, ik, cb[ispin2]:Nb, atom_mask, 4:9]
 
             # a: atoms; i,j: bands; x: directions; m,n: orbitals
             L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
