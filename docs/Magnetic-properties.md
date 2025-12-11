@@ -65,11 +65,13 @@ To calculate MAE, first perform a collinear SCF calculation using VASP with the 
 - `LORBIT = 14` to output orbital projections with phase.  
 - Initialize `MAGMOM` properly (recommended: 4 for Fe and Co).  
 - The current version does not support symmetry operations with rotations higher than threefold. If the atomic structure contains such symmetries, set `ISYM = 0` to avoid using them.  
+- High `NBANDS` may cause incorrect results. The reason is under investigation.  
 
 Execute the following command to perform the calculations for MAE:
 ```bash
-mae.py
+mae.py [Nb=<int>]
 ```
+**Nb**: Number of bands to include. Default: all available bands.  
 
 Currently, the code supports the *d* orbitals of Fe and Co, and their spin-orbit coupling constants (*ξ<sub>a</sub>*) are taken from the following reference:
 * M. Blanco-Rey, J. I. Cerda, and A. Arnau, *Validity of perturbative methods to treat the spin–orbit interaction: application to magnetocrystalline anisotropy*, [New Journal of Physics **21**, 73054](https://dx.doi.org/10.1088/1367-2630/ab3060) (2019).  

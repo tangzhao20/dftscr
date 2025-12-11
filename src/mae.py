@@ -15,6 +15,15 @@ poscar0.read_vasp(filename="CONTCAR")
 procar0 = Procar()
 procar0.read_vasp()
 
+Nb = procar0.Nb
+for w in sys.argv:
+    if w[0:3] == "Nb=":
+        Nb = int(w[3:])
+        print("Nb is reset to "+str(Nb))
+
+print(f"Read time: {time.time()-start_time:0.3f} s")
+start_time = time.time()
+
 atom_list = poscar0.atom_list()
 
 # SOC factors taken from [New J. Phys. 21, 73054 (2019)]
@@ -70,15 +79,15 @@ for ik in range(procar0.Nk):
                 sign = -1
 
             # vectorization over bands
-            e_diff = procar0.eig[ispin1, ik, :][:, np.newaxis] - procar0.eig[ispin2, ik, :][np.newaxis, :]
+            e_diff = procar0.eig[ispin1, ik, 0:Nb][:, np.newaxis] - procar0.eig[ispin2, ik, 0:Nb][np.newaxis, :]
             e = e_diff / (e_diff**2 + eta**2)
-            f = procar0.occ[ispin1, ik, :][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, :][np.newaxis, :])
+            f = procar0.occ[ispin1, ik, 0:Nb][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, 0:Nb][np.newaxis, :])
             # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
             e = e[np.newaxis, :, :]
             f = f[np.newaxis, :, :]
 
-            c1 = procar0.complex[ispin1, ik, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
-            c2 = procar0.complex[ispin2, ik, :, atom_mask, 4:9]
+            c1 = procar0.complex[ispin1, ik, 0:Nb, atom_mask, 4:9].conj()  # numpy move the masked axis to front
+            c2 = procar0.complex[ispin2, ik, 0:Nb, atom_mask, 4:9]
 
             # a: atoms; i,j: bands; x: directions; m,n: orbitals
             L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
@@ -101,4 +110,4 @@ print(f"K1_med-easy: {k1_med:0.3f} MJ/m3")
 k1_hard = e_i[i_sort[2]] / volume * electron / angstrom**3 / 1e6
 print(f"K1_hard-easy: {k1_hard:0.3f} MJ/m3")
 
-print(f"Running time: {time.time()-start_time:0.3f} sec")
+print(f"Compute time: {time.time()-start_time:0.3f} s")
