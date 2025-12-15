@@ -278,9 +278,9 @@ for ic in range(len(im_extent)):
 if lforce:
     norm = mpl.colors.TwoSlopeNorm(vmin=-0.21, vcenter=0, vmax=0.42)  # may depend on the system: use kts.max()
     cmap = "seismic"
-    im = ax0.imshow(kts, interpolation='bicubic', cmap=cmap, origin="lower", norm=norm, extent=im_extent, zorder=1)
+    im = ax0.imshow(kts, interpolation='spline36', cmap=cmap, origin="lower", norm=norm, extent=im_extent, zorder=1)
 else:
-    im = ax0.imshow(kts, interpolation='bicubic', cmap="rainbow", origin="lower", extent=im_extent, zorder=1)
+    im = ax0.imshow(kts, interpolation='spline36', cmap="rainbow", origin="lower", extent=im_extent, zorder=1)
 
 ax0.set_aspect((y_range[1]-y_range[0])/(z_range[1]-z_range[0]-z_spacing*2))
 

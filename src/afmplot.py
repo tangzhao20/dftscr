@@ -170,7 +170,7 @@ if ltilt:
     # interpolation from a 2d grid
     toten_2d = []
     for iz in range(3):
-        toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1]))  # bicubic
+        toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1]))  # bicubic spline
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
     x_init = x_grid[np.newaxis, :]
@@ -250,7 +250,7 @@ gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
 im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
 for ic in range(len(im_extent)):
     im_extent[ic] = im_extent[ic]/funit
-im = ax0.imshow(kts, interpolation='bicubic', cmap="YlOrBr_r",
+im = ax0.imshow(kts, interpolation='spline36', cmap="Blues_r",
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom:
@@ -299,7 +299,7 @@ fig0.savefig(filename, dpi=1200)
 # ==================== vector map for tilt corrections ====================
 if ltilt:
     fig1 = plt.figure(figsize=(5, 3.75))
-    gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.74, top=0.95, bottom=0.15)
+    gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.7526, top=0.95, bottom=0.15)
     ax2 = gs1.subplots()
 
     q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
@@ -311,6 +311,8 @@ if ltilt:
         ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors=palette["black"], linewidths=0.25, zorder=2)
     ax2.set_xlim([x_range[0]/funit, x_range[1]/funit])
     ax2.set_ylim([y_range[0]/funit, y_range[1]/funit])
+    ax2.set_aspect('equal')
+
     if lbohr:
         ax2.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
         ax2.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
