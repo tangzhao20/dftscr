@@ -108,6 +108,9 @@ ny = len(y_grid)
 z = z_range[0]
 z_grid = np.arange(z_range[0], z_range[1]+1e-6, z_spacing)
 nz = len(z_grid)
+if icenter < 1 or icenter > nz-2:
+    print(f"Error: z-plane index must be in [2, {nz-1}].")
+    sys.exit()
 
 # ==================== calculate or read toten ====================
 toten = np.zeros((nz, ny, nx))  # in eV
