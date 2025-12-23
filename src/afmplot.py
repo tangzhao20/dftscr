@@ -280,6 +280,17 @@ if lbohr:
 else:
     ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
 
+# Conditional scientific notation to maintain colorbar label width
+formatter = mpl.ticker.ScalarFormatter(useMathText=True)
+formatter.set_scientific(True)
+formatter.set_powerlimits((-2, 2))
+cb.ax.yaxis.set_major_formatter(formatter)
+fig0.canvas.draw()
+offset_text = cb.ax.yaxis.get_major_formatter().get_offset()
+if offset_text:
+    cb.ax.yaxis.get_offset_text().set_visible(False)
+    cb.ax.text(1.25, -0.06, offset_text, transform=cb.ax.transAxes, ha='left', va='top', color=palette["black"])
+
 ax0.tick_params(axis="x", bottom=True, right=False, direction="in",
                 color=palette["gray"], labelcolor=palette["black"], width=1, zorder=0)
 ax0.tick_params(axis="y", left=True, right=False, direction="in",
