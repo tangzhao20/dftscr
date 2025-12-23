@@ -50,6 +50,7 @@ x_spacing = 0.6
 y_spacing = 0.6
 z_spacing = 0.3
 z_range = [5.7, 6.3]
+contrast_range = None
 parallel = 1
 k_spring = 0.8  # k in N/m
 niter = 1000  # number of iterations
@@ -73,10 +74,12 @@ with open("afm.in", "r") as f0:
             y_spacing = float(word[1])
         elif word[0] == "z_spacing":
             z_spacing = float(word[1])
-        elif word[0] == "parallel":
-            parallel = int(word[1])
         elif word[0] == "k_spring":
             k_spring = float(word[1])
+        elif word[0] == "contrast_range":
+            contrast_range = [float(word[1]), float(word[2])]
+        elif word[0] == "parallel":
+            parallel = int(word[1])
         elif word[0] == "niter":
             niter = int(word[1])
         elif word[0] == "alpha":
@@ -253,7 +256,9 @@ gs0 = fig0.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
 im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
 for ic in range(len(im_extent)):
     im_extent[ic] = im_extent[ic]/funit
-im = ax0.imshow(kts, interpolation='spline36', cmap="Blues_r",
+if contrast_range is None:
+    contrast_range = [np.percentile(kts, 1), np.percentile(kts, 99)]  # ignores top/bottom 1% of outliers
+im = ax0.imshow(kts, interpolation='spline36', cmap="Blues_r", vmin=contrast_range[0], vmax=contrast_range[1],
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if latom:

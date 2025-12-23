@@ -10,6 +10,8 @@ y_range -9.3 9.3
 # z_range 5.7 6.3
 # z_spacing 0.3
 
+# contrast_range 0.14 0.18  # in eV/Å^2
+
 # boundary 15.568814
 # vacuum 5.0
 
@@ -19,3 +21,4 @@ fdet True
 
 # niter 1000
 # alpha 0.2
+

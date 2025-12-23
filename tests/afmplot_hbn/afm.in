@@ -10,6 +10,8 @@ y_spacing 0.6003143203
 z_range 5.7 6.3
 # z_spacing 0.3
 
+# contrast_range 0.14 0.18  # in eV/Å^2
+
 parallel 4
 
 # k_spring 0.8  # default
@@ -19,3 +21,4 @@ parallel 4
 
 fdet true
 # spin true
+
