@@ -9,9 +9,13 @@ from load_data import load_constant, load_atom_index
 
 bohr = load_constant("bohr")
 lvasp = False
+lverbose = False
 if "vasp" in sys.argv:
     lvasp = True
     sys.argv.remove("vasp")
+if "verbose" in sys.argv:
+    lverbose = True
+    sys.argv.remove("verbose")
 
 # ================================================================
 # read the input file
@@ -64,6 +68,22 @@ for l in line:
         pass
     else:
         print("Warning: keyword "+word[0]+" is not defined.")
+
+if lverbose:
+    print(f"x_range: {x_range[0]:f} ~ {x_range[1]:f} Bohr")
+    print(f"x_spacing: {x_spacing:f} Bohr")
+    print(f"y_range: {y_range[0]:f} ~ {y_range[1]:f} Bohr")
+    print(f"y_spacing: {y_spacing:f} Bohr")
+    print(f"z_range: {z_range[0]:f} ~ {z_range[1]:f} Bohr")
+    print(f"z_spacing: {z_spacing:f} Bohr")
+    if use_fdet:
+        print("FDET is enabled")
+    else:
+        print("FDET is not enabled")
+    if use_spin:
+        print("Nspin is set to 2")
+    else:
+        print("Nspin is set to 1")
 
 x = x_range[0]
 nx = 0

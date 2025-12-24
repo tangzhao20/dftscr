@@ -20,6 +20,8 @@ class Poscar:
         Naint[Ntype] (list of int): number of atoms per type.
         ap[Natom, 3] (numpy.ndarray): atomic positions in fractional coordinates.
         seldyn[Natom][3] (list of bool): optional selective dynamics flags; None if not present.
+        k_grid[3] (list of int): optional k-point grid; None if not present.
+        k_grid_shift[3] (list of float): optional k-point grid shift; None if not present.
     """
 
     def __init__(self):

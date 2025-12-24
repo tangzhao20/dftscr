@@ -55,7 +55,7 @@ parallel = 1
 k_spring = 0.8  # k in N/m
 niter = 1000  # number of iterations
 alpha = 0.2  # damping factor in the iterative solver
-h = 0.2  # step size in the finite difference method, in units of A
+h = 0.2  # step size in the finite difference method, in units of Å
 
 with open("afm.in", "r") as f0:
     for l in f0:
@@ -91,7 +91,30 @@ with open("afm.in", "r") as f0:
         else:
             print("Warning: keyword \""+word[0]+"\" is not defined.")
 
-k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/A^2
+
+if lverbose:
+    print(f"x_range: {x_range[0]:f} ~ {x_range[1]:f} Bohr")
+    print(f"x_spacing: {x_spacing:f} Bohr")
+    print(f"y_range: {y_range[0]:f} ~ {y_range[1]:f} Bohr")
+    print(f"y_spacing: {y_spacing:f} Bohr")
+    print(f"z_range: {z_range[0]:f} ~ {z_range[1]:f} Bohr")
+    print(f"z_spacing: {z_spacing:f} Bohr")
+    print(f"k_spring: {k_spring:f} N/m")
+    if contrast_range is None:
+        print("contrast_range: default")
+    else:
+        print(f"contrast_range: default")
+    if ltilt:
+        if abs(alpha-1.0) < 1e-6 and niter == 1:
+            print("old tilting correction method")
+        else:
+            print("iterative tilting correction method")
+            print(f"niter: {niter:d}")
+            print(f"alpha: {alpha:f}")
+    else:
+        print("tilting correction is not enabled")
+
+k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/Å^2
 x_spacing = x_spacing * bohr
 y_spacing = y_spacing * bohr
 z_spacing = z_spacing * bohr
