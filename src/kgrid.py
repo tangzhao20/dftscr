@@ -9,12 +9,11 @@ Output: KPOINTS
 """
 
 from classes import Poscar
-import sys
 
 poscar0 = Poscar()
 poscar0.read_vasp()
 
-k_grid = poscar0.k_grid()
+k_grid = poscar0.find_k_grid()
 
 f1 = open("KPOINTS", "w")
 f1.write("Automatic mesh\n")

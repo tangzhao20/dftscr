@@ -32,6 +32,8 @@ class Poscar:
         self.Naint = []
         self.ap = np.empty((0, 3))
         self.seldyn = None
+        self.k_grid = None
+        self.k_grid_shift = None
 
     def __str__(self):
         str_out = "POSCAR:\n"
@@ -274,8 +276,10 @@ class Poscar:
                     self.Ndim = 3
                     break
 
-        Fat = False
-        Flc = False
+        reading_ap = False
+        reading_lc = False
+        reading_k_grid = False
+        reading_k_grid_shift = False
         factor_lc = bohr
         ap = []
         for il in range(len(line)):
@@ -283,17 +287,29 @@ class Poscar:
             if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
                 continue
             if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "atom_coord":
-                Fat = True
+                reading_ap = True
                 continue
             if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "atom_coord":
-                Fat = False
+                reading_ap = False
                 continue
             if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "cell_shape":
-                Flc = True
+                reading_lc = True
                 ilc = 0
                 continue
             if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "cell_shape":
-                Flc = False
+                reading_lc = False
+                continue
+            if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "monkhorst_pack_grid":
+                reading_k_grid = True
+                continue
+            if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "monkhorst_pack_grid":
+                reading_k_grid = False
+                continue
+            if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "monkhorst_pack_shift":
+                reading_k_grid_shift = True
+                continue
+            if len(word) >= 2 and word[0].lower() == "end" and word[1].lower() == "monkhorst_pack_shift":
+                reading_k_grid_shift = False
                 continue
             if word[0].lower() == "boundary_sphere_radius":
                 alat = float(word[1]) * 2.0  # in Bohr here
@@ -320,14 +336,22 @@ class Poscar:
                 else:  # cartesian_bohr
                     lcart = True
                     factor_ap = bohr
-            if Flc:
+            if reading_lc:
                 for ix in range(self.Ndim):
                     self.lc[ilc, ix] = float(word[ix])
                 ilc += 1
-            if Fat:
+            if reading_ap:
                 ap.append([float(word[0]), float(word[1]), float(word[2])])
                 self.Naint[-1] += 1
                 self.Natom += 1
+            if reading_k_grid:
+                self.k_grid = [1, 1, 1]
+                for iw in range(min(len(word), 3)):
+                    self.k_grid[iw] = int(word[iw])
+            if reading_k_grid_shift:
+                self.k_grid_shift = [0.0, 0.0, 0.0]
+                for iw in range(min(len(word), 3)):
+                    self.k_grid_shift[iw] = float(word[iw])
 
         self.lc = self.lc * factor_lc
         self.ap = np.array(ap) * factor_ap
@@ -450,7 +474,7 @@ class Poscar:
                 itype = itype + 1
                 iaint = 0
 
-        k_grid = self.k_grid()
+        k_grid = self.find_k_grid()
         f2.write("K_POINTS automatic\n")
         f2.write(f"  {k_grid[0]:d}  {k_grid[1]:d}  {k_grid[2]:d} 0 0 0\n")
         f2.close()
@@ -527,13 +551,15 @@ class Poscar:
 
             f2.write("kpoint_method mp\n\n")
             f2.write("begin monkhorst_pack_grid\n")
-            k_grid = self.k_grid()
+            k_grid = self.find_k_grid()
             for ix in range(self.Ndim):
                 f2.write(f"  {k_grid[ix]:d}")
             f2.write("\nend monkhorst_pack_grid\n\n")
+            k_grid_shift = self.find_k_grid_shift()
             f2.write("begin monkhorst_pack_shift\n")
-            f2.write("0.0  0.0  0.0\n")
-            f2.write("end monkhorst_pack_shift\n\n")
+            for ix in range(self.Ndim):
+                f2.write(f"  {k_grid_shift[ix]:f}")
+            f2.write("\nend monkhorst_pack_shift\n\n")
 
         f2.write("atom_types_num " + str(len(self.atomtype)) + "\n")
         if lcartesian:
@@ -820,11 +846,18 @@ class Poscar:
                         atom_flag[int(atom_list[0]) - 1: int(atom_list[1])] = True
         return atom_flag
 
-    def k_grid(self):
+    def find_k_grid(self):
+        if self.k_grid is not None:
+            return self.k_grid
         grid = [1] * 3
         for ix in range(self.Ndim):
             grid[ix] = math.ceil(30.0/(np.linalg.norm(self.lc[ix])))
         return grid
+
+    def find_k_grid_shift(self):
+        if self.k_grid_shift is not None:
+            return self.k_grid_shift
+        return [0.0] * 3
 
     def find_ndim(self):
         # if c not vertical: 3D

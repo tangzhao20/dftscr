@@ -2,9 +2,7 @@
 
 # This script works with afm.sh together to prepare the inputs for AFM simulation
 
-import os
 import sys
-import math
 import numpy as np
 from classes import Poscar
 from load_data import load_constant, load_atom_index
@@ -254,13 +252,15 @@ if lfdet:
 
         f2.write("kpoint_method mp\n\n")
         f2.write("begin monkhorst_pack_grid\n")
-        k_grid = poscar2.k_grid()
+        k_grid = poscar2.find_k_grid()
         for ix in range(2):
             f2.write(f"  {k_grid[ix]:d}")
         f2.write("\nend monkhorst_pack_grid\n\n")
+        k_grid_shift = poscar2.find_k_grid_shift()
         f2.write("begin monkhorst_pack_shift\n")
-        f2.write("0.0  0.0  0.0\n")
-        f2.write("end monkhorst_pack_shift\n\n")
+        for ix in range(2):
+            f2.write(f"  {k_grid_shift[ix]:f}")
+        f2.write("\nend monkhorst_pack_shift\n\n")
 
     f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
     f2.write("atom_types_num "+str(poscar2.Ntype)+"\n")
@@ -308,13 +308,15 @@ for iz in range(nz):
 
             f2.write("kpoint_method mp\n\n")
             f2.write("begin monkhorst_pack_grid\n")
-            k_grid = poscar2.k_grid()
+            k_grid = poscar2.find_k_grid()
             for ix in range(2):
                 f2.write(f"  {k_grid[ix]:d}")
             f2.write("\nend monkhorst_pack_grid\n\n")
+            k_grid_shift = poscar2.find_k_grid_shift()
             f2.write("begin monkhorst_pack_shift\n")
-            f2.write("0.0  0.0  0.0\n")
-            f2.write("end monkhorst_pack_shift\n\n")
+            for ix in range(2):
+                f2.write(f"  {k_grid_shift[ix]:f}")
+            f2.write("\nend monkhorst_pack_shift\n\n")
 
         f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
         if lfdet:
