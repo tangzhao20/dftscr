@@ -78,8 +78,8 @@ if "posconvert.in" in files:
     line = f1.readlines()
     f1.close()
     for l in line:
-        word = l.split()
-        if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+        word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+        if len(word) == 0:
             continue
         if word[0] == "wrap_to_cell":
             poscar1.wrap_to_cell()

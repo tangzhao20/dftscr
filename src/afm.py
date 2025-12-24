@@ -21,16 +21,16 @@ z_spacing = 0.3
 z_range = [5.7, 6.3]
 boundary = -1e0
 vacuum = 7.5
-lfdet = False
-lspin = False
+use_fdet = False
+use_spin = False
 
 f1 = open("afm.in", "r")
 line = f1.readlines()
 f1.close()
 
 for l in line:
-    word = l.split()
-    if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+    word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+    if len(word) == 0:
         continue
     if word[0] == "x_range":
         x_range = [float(word[1]), float(word[2])]
@@ -53,14 +53,14 @@ for l in line:
     elif word[0] == "parallel":
         parallel = int(word[1])
     elif word[0] == "fdet":
-        lfdet = True
+        use_fdet = True
         if len(word) > 1 and word[1].lower() in ["false", ".false."]:
-            lfdet = False
+            use_fdet = False
     elif word[0] == "spin":
-        lspin = True
+        use_spin = True
         if len(word) > 1 and word[1].lower() in ["false", ".false.", "1", "0"]:
-            lspin = False
-    elif word[0] in ["k_spring"]:
+            use_spin = False
+    elif word[0] in ["k_spring", "niter", "alpha"]:
         pass
     else:
         print("Warning: keyword "+word[0]+" is not defined.")
@@ -232,11 +232,11 @@ else:  # Calculate the z_move, make the bottom at 10 bohr from boundary
 
 
 # if FDET, we do a calculation for a sample potential file
-if lfdet:
+if use_fdet:
     filename_parsec = "parsec_st_spot.dat"
     f2 = open(filename_parsec, "w")
     f2.write("#---------output from afm.py----------\n")
-    if lspin:
+    if use_spin:
         f2.write("spin_polarization .true.\n")
     f2.write("states_num "+str(Nb2)+"\n\n")
     if poscar2.Ndim == 0:
@@ -289,9 +289,9 @@ for iz in range(nz):
         f2 = open(filename_parsec, "w")
         f2.write("#---------output from afm.py----------\n\n")
         f2.write("minimization manual\n\n")
-        if lspin and not lfdet:
+        if use_spin and not use_fdet:
             f2.write("spin_polarization .true.\n")
-        if lfdet:
+        if use_fdet:
             f2.write("states_num "+str(Nb1_max)+"\n\n")
         else:
             f2.write("states_num "+str(Nb1_max+Nb2)+"\n\n")
@@ -319,7 +319,7 @@ for iz in range(nz):
             f2.write("\nend monkhorst_pack_shift\n\n")
 
         f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
-        if lfdet:
+        if use_fdet:
             f2.write("atom_types_num "+str(poscar1.Ntype)+"\n")
         else:
             f2.write("atom_types_num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
@@ -340,13 +340,13 @@ for iz in range(nz):
         f2.write("#-------------- end tip --------------\n\n")
 
         f2.write("#------------ begin sample -----------\n")
-        if lfdet:
+        if use_fdet:
             f2.write("add_point_charges .TRUE.\n")
             f2.write("point_typ_num "+str(poscar2.Ntype)+"\n\n")
 
         k = 0
         for i in range(poscar2.Ntype):
-            if lfdet:
+            if use_fdet:
                 f2.write("pt_chg: "+str(zion2[i])+"\n")
                 f2.write("begin point_coord\n")
             else:
@@ -358,7 +358,7 @@ for iz in range(nz):
                 f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
                 k = k+1
 
-            if lfdet:
+            if use_fdet:
                 f2.write("end point_coord\n\n")
             else:
                 f2.write("end atom_coord\n\n")
@@ -372,7 +372,7 @@ for iz in range(nz):
             for ia in range(poscar1.Natom):
                 f4.write(f"{apc1[ia, 0]+movelist[ip][istep][0]:18.12f}{apc1[ia, 1]+movelist[ip][istep][1]:18.12f}" +
                          f"{apc1[ia, 2]+zlist[iz]:18.12f}\n")
-            if not lfdet:
+            if not use_fdet:
                 for ia in range(poscar2.Natom):
                     f4.write(f"{apc2[ia, 0]:18.12f}{apc2[ia, 1]:18.12f}{apc2[ia, 2]:18.12f}\n")
             f4.write("\n")
@@ -381,7 +381,7 @@ for iz in range(nz):
 # convert the structure to vasp format
 if lvasp:
     poscar3 = Poscar()
-    if lfdet:
+    if use_fdet:
         poscar3.read_parsec("parsec_st_spot.dat")
     else:
         poscar3.read_parsec("parsec_st_1_1.dat")
@@ -394,7 +394,7 @@ if lvasp:
     shift = np.array(shift)
     offset = np.array([sum(x_range)/2, sum(y_range)/2, sum(z_range)/2])
     ap1 = (apc1 + offset) * bohr @ rlc3 / (2*pi) + shift
-    if lfdet:
+    if use_fdet:
         ia = 0
         for itype in range(poscar1.Ntype):
             for iaint in range(poscar1.Naint[itype]):

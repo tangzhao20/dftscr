@@ -114,10 +114,10 @@ class Poscar:
         line = f1.readlines()
         f1.close()
 
-        Fat = False
+        reading_ap = False
         ap = []
-        for l in range(len(line)):
-            word = line[l].split()
+        for il in range(len(line)):
+            word = line[il].split()
             if len(word) >= 2 and word[0] == "CELL_PARAMETERS":
                 word[1] = word[1].replace("(", "").replace("{", "")
                 if word[1][0].lower() == "a":
@@ -129,19 +129,19 @@ class Poscar:
                     print("Only Angstrom and Bohr are supported.")
                     sys.exit()
                 for il in range(3):
-                    wordlc = line[l+il+1].split()
+                    wordlc = line[il+il+1].split()
                     for ix in range(3):
                         self.lc[il, ix] = float(wordlc[ix])
                 continue
             elif len(word) >= 2 and word[0] == "ATOMIC_POSITIONS":
-                Fat = True
+                reading_ap = True
                 continue
 
-            if Fat == True:
+            if reading_ap == True:
                 try:
                     ap.append([float(word[1]), float(word[2]), float(word[3])])
                 except:
-                    Fat = False
+                    reading_ap = False
                     continue
 
                 self.Natom += 1
@@ -207,34 +207,34 @@ class Poscar:
         line = f1.readlines()
         f1.close()
 
-        Flc = False
-        Fat = False
+        reading_lc = False
+        reading_ap = False
 
         ix0 = 0
         ap = []
-        for l in range(len(line)):
-            word = line[l].split()
+        for l in line:
+            word = l.split()
             if len(word) >= 2 and word[0] == "begin" and word[1] == "latticevecs":
-                Flc = True
+                reading_lc = True
                 continue
             elif len(word) >= 2 and word[0] == "end" and word[1] == "latticevecs":
-                Flc = False
+                reading_lc = False
                 continue
             elif len(word) >= 2 and word[0] == "begin" and word[1] == "coordinates":
-                Fat = True
+                reading_ap = True
                 continue
             elif len(word) >= 2 and word[0] == "end" and word[1] == "coordinates":
-                Fat = False
+                reading_ap = False
                 continue
 
-            if Flc == True:
+            if reading_lc == True:
                 if len(word) >= 4 and word[0] == "coord":
                     for ix1 in range(3):
                         self.lc[ix0, ix1] = float(word[ix1+1])
                     ix0 += 1
                 elif len(word) >= 2 and word[0] == "volume":
                     volume = float(word[1])
-            elif Fat == True:
+            elif reading_ap == True:
                 if len(word) >= 2 and word[0] == "newtype":
                     self.Ntype += 1
                     self.atomtype.append(word[1])
@@ -265,8 +265,8 @@ class Poscar:
 
         self.Ndim = 0
         for il in range(len(line)):
-            word = line[il].replace(":", " ").replace("=", " ").split()
-            if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+            word = line[il].split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+            if len(word) == 0:
                 continue
             if word[0].lower() == "boundary_conditions":
                 if word[1].lower() == "slab":
@@ -282,9 +282,9 @@ class Poscar:
         reading_k_grid_shift = False
         factor_lc = bohr
         ap = []
-        for il in range(len(line)):
-            word = line[il].replace(":", " ").replace("=", " ").split()
-            if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+        for l in line:
+            word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+            if len(word) == 0:
                 continue
             if len(word) >= 2 and word[0].lower() == "begin" and word[1].lower() == "atom_coord":
                 reading_ap = True
