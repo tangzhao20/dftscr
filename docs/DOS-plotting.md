@@ -2,21 +2,24 @@
 
 To plot DOS:  
 ```bash
-python3 dos.py (v) package (E1) (E2)
+python3 dos.py (v) (o) package (E1) (E2)
 ```
-* `v` indicates plot vertically   
-* `E1` and `E2` define the energy range, as described in the band structure section
+
+To plot projected DOS (PDOS):  
+```bash
+python3 dos.py (v) (o) package atom_list orb_list (E1) (E2)
+```
+
+**Options**  
+* `v`: plot vertically (e.g., for side-by-side band structure comparison).  
+* `o`: output data to .dat files.  
+* `E1` `E2`: energy range. Default => -5~5; `E1` => -E1~E1; `E1` `E2` => E1~E2.  
 
 **Supported formats:** VASP, QE  
 
-**VASP input:** DOSCAR  
-**QE input:** \*.dos
-
-To plot projected DOS:  
-```bash
-python3 dos.py (v) package atoms orbitals (E1) (E2)
-```
-**Support format:** QE (qeproj)  
-
-**QE inputs:** \*.dos \*.xml \*.pdos\_atm#\*(\*)\_wfc#\*(\*)
-
+| Code | Mode | `package` arg | Required files |
+| :--- | :--- | :--- | :--- |
+| **VASP** | DOS | `vasp` | `DOSCAR` |
+| | PDOS | `vaspproj` | `DOSCAR`, `POSCAR`, `PROCAR` |
+| **QE** | DOS | `qe` | `*.dos`, `*.xml` |
+| | PDOS | `qeproj` | `*.dos`, `*.xml`, `*.pdos_atm#*(*)_wfc#*(*)` |

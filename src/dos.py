@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 
-# plot DOS
+# Plot DOS
+#   python dos.py (v) (o) package (E1) (E2)
+# Plot PDOS
+#   python dos.py (v) (o) package atom_list orb_list (E1) (E2)
 
-# python dos.py (v) package (E1) (E2)
+# Options:
+#   v: vertical plot, designed at side of band structure plot
+#   o: output data to .dat file
+#   Energy Range (E1, E2): default => -5~5; E1 => -E1~E1; E1 E2 => E1~E2
 
-# VASP input: DOSCAR
-# QE input: *.dos *.xml
-# QE projection input: *.dos *.xml *.pdos_atm#*(*)_wfc#*(*)
+# VASP input (vasp): DOSCAR
+# VASP projection input (vaspproj): DOSCAR, PROCAR, POSCAR
+# QE input (qe): *.dos *.xml
+# QE projection input (qeproj): *.dos *.xml *.pdos_atm#*(*)_wfc#*(*)
 
 import sys
 import os
@@ -16,13 +23,19 @@ import matplotlib.pyplot as plt
 from classes import Doscar, Poscar, Procar
 from load_data import load_package_name, load_palette
 
-fvertical = False
+is_vertical = False
+output_data = False
 filename_out = "dos.png"
 
 for iw in range(1, len(sys.argv)):
-    if sys.argv[iw] in ["v", "vertical"]:
-        fvertical = True
+    if sys.argv[iw] == "v" or sys.argv[iw].lower() == "vertical":
+        is_vertical = True
         filename_out = "dos_v.png"
+        del sys.argv[iw]
+        break
+for iw in range(1, len(sys.argv)):
+    if sys.argv[iw] == "o" or sys.argv[iw].lower() == "output":
+        output_data = True
         del sys.argv[iw]
         break
 if len(sys.argv) <= 1:
@@ -54,11 +67,12 @@ else:
     print("python dos.py (v) package (Emin) (Emax)")
     sys.exit()
 
-is_proj = False
-input_shift = 0
 if package in package_name["vaspproj"]+package_name["qeproj"]:
     is_proj = True
     input_shift = 2
+else:
+    is_proj = False
+    input_shift = 0
 
 if len(sys.argv) >= 4 + input_shift:
     xmax = float(sys.argv[3 + input_shift])
@@ -123,7 +137,7 @@ else:
     color_dos = ["darkblue", "orange"]
     color_pdos = ["blue", "beige"]
 
-if fvertical == False:
+if is_vertical == False:
     fig = plt.figure(figsize=(5, 3.75))
     gs0 = fig.add_gridspec(doscar0.Ns, 1, wspace=0.0, hspace=0.00, left=0.14, right=0.96, top=0.97, bottom=0.12)
     ax = []
@@ -199,3 +213,29 @@ for ispin in range(doscar0.Ns):
         ax[ispin].spines[edge].set_zorder(4)
 
 fig.savefig(filename_out, dpi=1200)
+
+if output_data:
+    data_name = "dos_data.dat"
+    with open(data_name, "w") as f0:
+        f0.write("#Energy(eV) ")
+        for ispin in range(doscar0.Ns):
+            f0.write(f"DOS_{ispin:d} ")
+        f0.write("\n")
+        for ie in range(doscar0.Nedos):
+            f0.write(f"{doscar0.energy[ie]:.6f} ")
+            for ispin in range(doscar0.Ns):
+                f0.write(f"{doscar0.dos[ispin][ie]:.6f} ")
+            f0.write("\n")
+
+    if is_proj:
+        data_name = "pdos_data_"+atom_list+"_"+orb_list+".dat"
+        with open(data_name, "w") as f0:
+            f0.write("#Energy(eV) ")
+            for ispin in range(doscar0.Ns):
+                f0.write(f"PDOS_{ispin:d} ")
+            f0.write("\n")
+            for ie in range(doscar0.energy_pdos.shape[0]):
+                f0.write(f"{doscar0.energy_pdos[ie]:.6f} ")
+                for ispin in range(doscar0.Ns):
+                    f0.write(f"{pdos[ispin, ie]:.6f} ")
+                f0.write("\n")
