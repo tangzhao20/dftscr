@@ -13,7 +13,7 @@ python3 dos.py (v) (o) package atom_list orb_list (E1) (E2)
 **Options**  
 * `v`: plot vertically (e.g., for side-by-side band structure comparison).  
 * `o`: output data to .dat files.  
-* `E1` `E2`: energy range. Default => -5~5; `E1` => -E1~E1; `E1` `E2` => E1~E2.  
+* `E1` `E2`: energy range. Default => -5 ~ 5; `E1` => -E1 ~ E1; `E1` `E2` => E1 ~ E2.  
 
 **Supported formats:** VASP, QE  
 
