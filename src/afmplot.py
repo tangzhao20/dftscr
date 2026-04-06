@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 
-# This script reads the afm simulation results and makes the plot
+"""
+Plot AFM simulation results from PARSEC outputs.
 
-# The matrix in this script are mostly M[ny][nx] or M[nz][ny][nx] to match the size of image
+The matrices used are primarily M[ny][nx] or M[nz][ny][nx] to match the image size.
 
-import sys
+inputs: afm.in, [toten.dat], [steps.dat], [sample.parsec_st.dat]
+
+examples:
+    python afmplot.py --tilt --atom
+    python afmplot.py -z 3 --tilt --atom --verbose
+"""
+
+import argparse
 import os
-from load_data import load_constant, load_palette, load_atom_color
-from classes import Poscar
+import sys
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import scipy
 import numpy as np
+import scipy
+
+from classes import Poscar
+from load_data import load_constant, load_palette, load_atom_color
+
 
 bohr = load_constant("bohr")
 rydberg = load_constant("rydberg")
@@ -19,31 +31,26 @@ Ha = rydberg*2.0
 electron = load_constant("electron")
 angstrom = load_constant("angstrom")
 
-ltilt = False
-if "tilt" in sys.argv:
-    ltilt = True
-    sys.argv.remove("tilt")
-latom = False
-if "atom" in sys.argv:
-    latom = True
-    sys.argv.remove("atom")
-lbohr = False
-if "bohr" in sys.argv:
-    lbohr = True
-    sys.argv.remove("bohr")
-lverbose = False
-if "verbose" in sys.argv:
-    lverbose = True
-    sys.argv.remove("verbose")
-ltoten = False
-if "toten" in sys.argv:
-    ltoten = True
-    sys.argv.remove("toten")
-icenter = 1
-for word in sys.argv:
-    if word.isnumeric():
-        icenter = int(word)-1
-        sys.argv.remove(word)
+parser = argparse.ArgumentParser(
+    description=__doc__,
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+
+parser.add_argument("-z", "--iz", type=int, default=2, metavar="<int>", help="index of the z-layer to plot")
+parser.add_argument("--tilt", "-t", action="store_true", help="use tilting correction")
+parser.add_argument("--atom", "-a", action="store_true", help="show atoms")
+parser.add_argument("--toten", "-e", action="store_true", help="plot total energy")
+parser.add_argument("--bohr", "-b", action="store_true", help="use Bohr units")
+parser.add_argument("--verbose", "-v", action="store_true", help="print verbose output")
+
+args = parser.parse_args()
+
+z_index = args.iz - 1  # convert to 0-based index
+use_tilt = args.tilt
+show_atom = args.atom
+plot_toten = args.toten
+use_bohr = args.bohr
+verbose = args.verbose
 
 # ==================== read the input file ====================
 x_spacing = 0.6
@@ -59,40 +66,33 @@ h = 0.2  # step size in the finite difference method, in units of Å
 
 with open("afm.in", "r") as f0:
     for l in f0:
-        word = l.split()
-        if not word or word[0][0] in ("#", "!"):
+        word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+        if not word:
             continue
-        if word[0] == "x_range":
-            x_range = [float(word[1]), float(word[2])]
-        elif word[0] == "y_range":
-            y_range = [float(word[1]), float(word[2])]
-        elif word[0] == "z_range":
-            z_range = [float(word[1]), float(word[2])]
-        elif word[0] == "x_spacing":
-            x_spacing = float(word[1])
-        elif word[0] == "y_spacing":
-            y_spacing = float(word[1])
-        elif word[0] == "z_spacing":
-            z_spacing = float(word[1])
-        elif word[0] == "k_spring":
-            k_spring = float(word[1])
-        elif word[0] == "contrast_range":
-            contrast_range = [float(word[1]), float(word[2])]
-        elif word[0] == "parallel":
-            parallel = int(word[1])
-        elif word[0] == "niter":
-            niter = int(word[1])
-        elif word[0] == "alpha":
-            alpha = float(word[1])
-        elif word[0] == "h":
-            h = float(word[1])
-        elif word[0] in ["fdet", "boundary", "spin"]:
-            pass
-        else:
-            print("Warning: keyword \""+word[0]+"\" is not defined.")
 
+        match word:
+            case ["x_range", v1, v2]: x_range = [float(v1), float(v2)]
+            case ["y_range", v1, v2]: y_range = [float(v1), float(v2)]
+            case ["z_range", v1, v2]: z_range = [float(v1), float(v2)]
+            case ["x_spacing", val]: x_spacing = float(val)
+            case ["y_spacing", val]: y_spacing = float(val)
+            case ["z_spacing", val]: z_spacing = float(val)
 
-if lverbose:
+            case ["parallel", val]: parallel = int(val)
+            case ["contrast_range", v1, v2]: contrast_range = [float(v1), float(v2)]
+
+            case ["k_spring", val]: k_spring = float(val)
+            case ["niter", val]: niter = int(val)
+            case ["alpha", val]: alpha = float(val)
+            case ["h", val]: h = float(val)
+
+            case [("fdet" | "boundary" | "spin"), *_]:
+                pass
+
+            case _:
+                print(f"Warning: check your input line: {' '.join(word)}")
+
+if verbose:
     print(f"x_range: {x_range[0]:f} ~ {x_range[1]:f} Bohr")
     print(f"x_spacing: {x_spacing:f} Bohr")
     print(f"y_range: {y_range[0]:f} ~ {y_range[1]:f} Bohr")
@@ -103,8 +103,8 @@ if lverbose:
     if contrast_range is None:
         print("contrast_range: default")
     else:
-        print(f"contrast_range: default")
-    if ltilt:
+        print(f"contrast_range: {contrast_range[0]:f} ~ {contrast_range[1]:f}")
+    if use_tilt:
         if abs(alpha-1.0) < 1e-6 and niter == 1:
             print("old tilting correction method")
         else:
@@ -134,7 +134,7 @@ ny = len(y_grid)
 z = z_range[0]
 z_grid = np.arange(z_range[0], z_range[1]+1e-6, z_spacing)
 nz = len(z_grid)
-if icenter < 1 or icenter > nz-2:
+if z_index < 1 or z_index > nz-2:
     print(f"Error: z-plane index must be in [2, {nz-1}].")
     sys.exit()
 
@@ -172,10 +172,6 @@ else:
     for iz in range(nz):
         istep = -1
         for ip in range(parallel):
-            filename = "seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out"
-            f1 = open(filename, "r")
-            line = f1.readlines()
-            f1.close()
             with open("seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out", "r") as f1:
                 for l in f1:
                     word = l.split()
@@ -195,11 +191,11 @@ else:
                     f2.write(f"{ix:6d}{iy:6d}{iz:6d}{toten[iz][iy][ix]:24.12f}\n")
 
 # ==================== caclulate forces for tilt correction ====================
-if ltilt:
+if use_tilt:
     # interpolation from a 2d grid
     toten_2d = []
     for iz in range(3):
-        toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[icenter+iz-1]))  # bicubic spline
+        toten_2d.append(scipy.interpolate.RectBivariateSpline(y_grid, x_grid, toten[z_index+iz-1]))  # bicubic spline
 
     # We use an iterative method to solve D=F(D)/k. For conventional D=F/k, set Niter=1 and alpha=1
     x_init = x_grid[np.newaxis, :]
@@ -216,30 +212,30 @@ if ltilt:
         x_new += x_incr * alpha
         y_new += y_incr * alpha
         if np.max(x_incr**2 + y_incr**2) < 1.e-8:
-            if lverbose:
+            if verbose:
                 print(f" tilt correction converge at iiter = {iiter:0d}")
             break
         if iiter == niter-1:
             print(f" tilt correction does not converge in niter = {niter:0d}")
 
 # ==================== calculate kts ====================
-if ltilt:
+if use_tilt:
     kts = (toten_2d[0](y_new, x_new, grid=False) - 2*toten_2d[1](y_new, x_new, grid=False)
            + toten_2d[2](y_new, x_new, grid=False)) / z_spacing**2
 else:
-    kts = (toten[icenter-1, :, :] - 2*toten[icenter, :, :] + toten[icenter+1, :, :]) / z_spacing**2
+    kts = (toten[z_index-1, :, :] - 2*toten[z_index, :, :] + toten[z_index+1, :, :]) / z_spacing**2
 
-if lbohr:
+if use_bohr:
     # convert k_ts from eV/A^2 to Ha/a0^2
     kts = kts * bohr**2/Ha
 
 # ==================== construct the atomic structure ====================
 palette = load_palette()
-if lbohr:
+if use_bohr:
     funit = bohr
 else:
     funit = 1.0
-if latom:
+if show_atom:
     color_dict = load_atom_color()
     poscar1 = Poscar()
     poscar1.read_parsec(filename="sample.parsec_st.dat")
@@ -284,11 +280,11 @@ if contrast_range is None:
 im = ax0.imshow(kts, interpolation='spline36', cmap="Blues_r", vmin=contrast_range[0], vmax=contrast_range[1],
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
-if latom:
+if show_atom:
     ax0.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
 ax0.set_xlim([x_range[0]/funit, x_range[1]/funit])
 ax0.set_ylim([y_range[0]/funit, y_range[1]/funit])
-if lbohr:
+if use_bohr:
     ax0.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
     ax0.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
 else:
@@ -298,7 +294,7 @@ else:
 cb = fig0.colorbar(im, cax=ax1, orientation='vertical')
 cb.outline.set_linewidth(1)
 cb.outline.set_color(palette["black"])
-if lbohr:
+if use_bohr:
     ax1.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
 else:
     ax1.set_ylabel(r"$\mathit{k}_{ts}\ (eV/Å^2)$", color=palette["black"])
@@ -328,34 +324,34 @@ for edge in ["bottom", "top", "left", "right"]:
     ax0.spines[edge].set_zorder(4)
 
 filename = "afm"
-if ltilt:
+if use_tilt:
     filename += "_tilt"
-if latom:
+if show_atom:
     filename += "_atom"
-if lbohr:
+if use_bohr:
     filename += "_bohr"
-filename += "_"+str(icenter+1)
+filename += "_"+str(z_index+1)
 filename += ".png"
 fig0.savefig(filename, dpi=1200)
 
 # ==================== vector map for tilt corrections ====================
-if ltilt:
+if use_tilt:
     fig1 = plt.figure(figsize=(5, 3.75))
     gs1 = fig1.add_gridspec(1, 1, left=0.14, right=0.7526, top=0.95, bottom=0.15)
     ax2 = gs1.subplots()
 
     q = ax2.quiver(x_grid/funit, y_grid/funit, (x_new-x_init)/funit, (y_new-y_init)/funit, angles='xy',
                    scale_units='xy', scale=1, color=palette["darkblue"], linewidth=1, zorder=3)
-    if lverbose:
-        print("iz: "+str(icenter+1)+"    Delta_max: "+f"{np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5:0.4f} Å")
+    if verbose:
+        print("iz: "+str(z_index+1)+"    Delta_max: "+f"{np.max((x_new-x_init)**2+(y_new-y_init)**2)**0.5:0.4f} Å")
 
-    if latom:
+    if show_atom:
         ax2.scatter(atom_x, atom_y, c=atom_color, s=24, edgecolors=palette["black"], linewidths=0.25, zorder=2)
     ax2.set_xlim([x_range[0]/funit, x_range[1]/funit])
     ax2.set_ylim([y_range[0]/funit, y_range[1]/funit])
     ax2.set_aspect('equal')
 
-    if lbohr:
+    if use_bohr:
         ax2.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
         ax2.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
     else:
@@ -372,17 +368,16 @@ if ltilt:
         ax2.spines[edge].set_zorder(4)
 
     filename = "tilt"
-    if latom:
+    if show_atom:
         filename += "_atom"
-    if lbohr:
+    if use_bohr:
         filename += "_bohr"
-    filename += "_"+str(icenter+1)
+    filename += "_"+str(z_index+1)
     filename += ".png"
     fig1.savefig(filename, dpi=1200)
 
-
 # ==================== toten images ====================
-if ltoten:
+if plot_toten:
     fig2 = plt.figure(figsize=(5, 3.75))
     gs2 = fig2.add_gridspec(1, 2, wspace=0.02, hspace=0.00, left=0.14, right=0.80,
                             top=0.95, bottom=0.15, width_ratios=[0.6, 0.04])
@@ -391,14 +386,14 @@ if ltoten:
     im_extent = [x_range[0]-x_spacing*0.5, x_range[1]+x_spacing*0.5, y_range[0]-y_spacing*0.5, y_range[1]+y_spacing*0.5]
     for ic in range(len(im_extent)):
         im_extent[ic] = im_extent[ic]/funit
-    im = ax3.imshow(toten[icenter], interpolation='nearest', cmap="YlOrBr_r",
+    im = ax3.imshow(toten[z_index], interpolation='nearest', cmap="YlOrBr_r",
                     origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
-    if latom:
+    if show_atom:
         ax3.scatter(atom_x, atom_y, c=atom_color, s=12, edgecolors=edge_color, linewidths=0.25, zorder=3)
     ax3.set_xlim([x_range[0]/funit, x_range[1]/funit])
     ax3.set_ylim([y_range[0]/funit, y_range[1]/funit])
-    if lbohr:
+    if use_bohr:
         ax3.set_xlabel(r"$\mathit{x}\ (Bohr)$", color=palette["black"])
         ax3.set_ylabel(r"$\mathit{y}\ (Bohr)$", color=palette["black"])
     else:
@@ -408,7 +403,7 @@ if ltoten:
     cb2 = fig2.colorbar(im, cax=ax4, orientation='vertical')
     cb2.outline.set_linewidth(1)
     cb2.outline.set_color(palette["black"])
-    if lbohr:
+    if use_bohr:
         ax4.set_ylabel(r"$\mathit{k}_{ts}\ (a.u.)$", color=palette["black"])
     else:
         ax4.set_ylabel("Energy (eV)", color=palette["black"])
@@ -427,10 +422,10 @@ if ltoten:
         ax3.spines[edge].set_zorder(4)
 
     filename = "toten"
-    if latom:
+    if show_atom:
         filename += "_atom"
-    if lbohr:
+    if use_bohr:
         filename += "_bohr"
-    filename += "_"+str(icenter+1)
+    filename += "_"+str(z_index+1)
     filename += ".png"
     fig2.savefig(filename, dpi=1200)
