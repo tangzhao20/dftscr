@@ -3,14 +3,14 @@
 """
 Plot AFM simulation results from PARSEC outputs.
 
-The matrices used are primarily M[ny][nx] or M[nz][ny][nx] to match the image size.
-
 inputs: afm.in, [toten.dat], [steps.dat], [sample.parsec_st.dat]
 
 examples:
     python afmplot.py --tilt --atom
     python afmplot.py -z 3 --tilt --atom --verbose
 """
+
+# The matrices in this script are primarily M[ny][nx] or M[nz][ny][nx] to match the image shape.
 
 import argparse
 import os
@@ -41,7 +41,7 @@ parser.add_argument("--tilt", "-t", action="store_true", help="use tilting corre
 parser.add_argument("--atom", "-a", action="store_true", help="show atoms")
 parser.add_argument("--toten", "-e", action="store_true", help="plot total energy")
 parser.add_argument("--bohr", "-b", action="store_true", help="use Bohr units")
-parser.add_argument("--verbose", "-v", action="store_true", help="print verbose output")
+parser.add_argument("--verbose", action="store_true", help="print verbose output")
 
 args = parser.parse_args()
 
@@ -53,20 +53,20 @@ use_bohr = args.bohr
 verbose = args.verbose
 
 # ==================== read the input file ====================
+z_range = [5.7, 6.3]
 x_spacing = 0.6
 y_spacing = 0.6
 z_spacing = 0.3
-z_range = [5.7, 6.3]
-contrast_range = None
 parallel = 1
+contrast_range = None
 k_spring = 0.8  # k in N/m
 niter = 1000  # number of iterations
 alpha = 0.2  # damping factor in the iterative solver
 h = 0.2  # step size in the finite difference method, in units of Å
 
 with open("afm.in", "r") as f0:
-    for l in f0:
-        word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+    for line in f0:
+        word = line.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
         if not word:
             continue
 
@@ -94,10 +94,10 @@ with open("afm.in", "r") as f0:
 
 if verbose:
     print(f"x_range: {x_range[0]:f} ~ {x_range[1]:f} Bohr")
-    print(f"x_spacing: {x_spacing:f} Bohr")
     print(f"y_range: {y_range[0]:f} ~ {y_range[1]:f} Bohr")
-    print(f"y_spacing: {y_spacing:f} Bohr")
     print(f"z_range: {z_range[0]:f} ~ {z_range[1]:f} Bohr")
+    print(f"x_spacing: {x_spacing:f} Bohr")
+    print(f"y_spacing: {y_spacing:f} Bohr")
     print(f"z_spacing: {z_spacing:f} Bohr")
     print(f"k_spring: {k_spring:f} N/m")
     if contrast_range is None:
@@ -114,13 +114,13 @@ if verbose:
     else:
         print("tilting correction is not enabled")
 
-k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/Å^2
-x_spacing = x_spacing * bohr
-y_spacing = y_spacing * bohr
-z_spacing = z_spacing * bohr
 x_range = [x_range[0] * bohr, x_range[1] * bohr]
 y_range = [y_range[0] * bohr, y_range[1] * bohr]
 z_range = [z_range[0] * bohr, z_range[1] * bohr]
+x_spacing = x_spacing * bohr
+y_spacing = y_spacing * bohr
+z_spacing = z_spacing * bohr
+k_spring = k_spring * angstrom**2/electron  # convert spring constant to eV/Å^2
 
 # ==================== prepare the x and y coordinates ====================
 x = x_range[0]
@@ -145,9 +145,9 @@ files = os.listdir()
 if "toten.dat" in files:
     il = 0
     with open("toten.dat", "r") as f2:
-        for l in f2:
-            word = l.split()
-            if not word or word[0][0] in ("#", "!"):
+        for line in f2:
+            word = line.split("#")[0].split("!")[0].split()
+            if not word:
                 continue
             ix, iy, iz = map(int, word[:3])
             toten[iz, iy, ix] = float(word[3])
@@ -159,9 +159,9 @@ else:
     # Set up AFM scan path
     step_list = []
     with open("steps.dat", "r") as f3:
-        for l in f3:
-            word = l.split()
-            if not word or word[0][0] in ("#", "!"):
+        for line in f3:
+            word = line.split("#")[0].split("!")[0].split()
+            if not word:
                 continue
             step_list.append(int(word[0]))
 
@@ -172,14 +172,12 @@ else:
     for iz in range(nz):
         istep = -1
         for ip in range(parallel):
-            with open("seq_"+str(iz+1)+"_"+str(ip+1)+"/parsec.out", "r") as f1:
-                for l in f1:
-                    word = l.split()
-                    if not word or word[0][0] in ("#", "!"):
-                        continue
-                    if len(word) >= 2 and word[0] == "Starting" and word[1] == "SCF...":
+            with open(f"seq_{iz+1}_{ip+1}/parsec.out", "r") as f1:
+                for line in f1:
+                    if "Starting SCF..." in line:
                         istep += 1
-                    if len(word) >= 5 and word[0] == "Total" and word[1] == "Energy" and word[2] == "=":
+                    if "Total Energy =" in line:
+                        word = line.split()
                         toten[iz, scan_path[istep][0], scan_path[istep][1]] = float(word[3]) * rydberg
 
     # write toten.dat
@@ -216,7 +214,7 @@ if use_tilt:
                 print(f" tilt correction converge at iiter = {iiter:0d}")
             break
         if iiter == niter-1:
-            print(f" tilt correction does not converge in niter = {niter:0d}")
+            print(f"Warning: tilt correction does not converge in niter = {niter:0d}")
 
 # ==================== calculate kts ====================
 if use_tilt:

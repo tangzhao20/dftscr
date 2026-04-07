@@ -1,80 +1,90 @@
 #!/usr/bin/env python3
 
-# This script works with afm.sh together to prepare the inputs for AFM simulation
+"""
+This script works with afm.sh together to prepare the inputs for AFM simulation
 
+inputs: afm.in, tip.xyz, sample.parsec_st.dat, *_POTRE.DAT
+
+example:
+    python afm.py --vasp
+"""
+
+import argparse
 import sys
+
 import numpy as np
+
 from classes import Poscar
 from load_data import load_constant, load_atom_index
 
+
 bohr = load_constant("bohr")
-lvasp = False
-lverbose = False
-if "vasp" in sys.argv:
-    lvasp = True
-    sys.argv.remove("vasp")
-if "verbose" in sys.argv:
-    lverbose = True
-    sys.argv.remove("verbose")
+
+parser = argparse.ArgumentParser(
+    description=__doc__,
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+
+parser.add_argument("--vasp", "-v", action="store_true", help="export the structure to afm.vasp for visualization")
+parser.add_argument("--verbose", action="store_true", help="print verbose output")
+
+args = parser.parse_args()
+
+export_vasp = args.vasp
+verbose = args.verbose
 
 # ================================================================
 # read the input file
+z_range = [5.7, 6.3]
 x_spacing = 0.6
 y_spacing = 0.6
 z_spacing = 0.3
-z_range = [5.7, 6.3]
 boundary = -1e0
 vacuum = 7.5
+parallel = 1
 use_fdet = False
 use_spin = False
 
-f1 = open("afm.in", "r")
-line = f1.readlines()
-f1.close()
+with open("afm.in", "r") as f0:
+    for line in f0:
+        word = line.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
+        if not word:
+            continue
 
-for l in line:
-    word = l.split("#")[0].split("!")[0].replace(":", " ").replace("=", " ").split()
-    if len(word) == 0:
-        continue
-    if word[0] == "x_range":
-        x_range = [float(word[1]), float(word[2])]
-    elif word[0] == "y_range":
-        y_range = [float(word[1]), float(word[2])]
-    elif word[0] == "z_range":
-        z_range = [float(word[1]), float(word[2])]
-    elif word[0] == "x_spacing":
-        x_spacing = float(word[1])
-    elif word[0] == "y_spacing":
-        y_spacing = float(word[1])
-    elif word[0] == "z_spacing":
-        z_spacing = float(word[1])
-    elif word[0] == "boundary":
-        boundary = float(word[1])
-        if len(word) > 2 and word[2][0] in ["a", "A"]:
-            boundary = boundary/bohr
-    elif word[0] == "vacuum":
-        vacuum = float(word[1])
-    elif word[0] == "parallel":
-        parallel = int(word[1])
-    elif word[0] == "fdet":
-        use_fdet = True
-        if len(word) > 1 and word[1].lower() in ["false", ".false."]:
-            use_fdet = False
-    elif word[0] == "spin":
-        use_spin = True
-        if len(word) > 1 and word[1].lower() in ["false", ".false.", "1", "0"]:
-            use_spin = False
-    elif word[0] in ["k_spring", "niter", "alpha"]:
-        pass
-    else:
-        print("Warning: keyword "+word[0]+" is not defined.")
+        match word:
+            case ["x_range", v1, v2]: x_range = [float(v1), float(v2)]
+            case ["y_range", v1, v2]: y_range = [float(v1), float(v2)]
+            case ["z_range", v1, v2]: z_range = [float(v1), float(v2)]
+            case ["x_spacing", val]: x_spacing = float(val)
+            case ["y_spacing", val]: y_spacing = float(val)
+            case ["z_spacing", val]: z_spacing = float(val)
 
-if lverbose:
+            case ["boundary", val, *rest]:
+                if rest and rest[0].lower().startswith("a"):
+                    boundary = float(val) / bohr
+                else:
+                    boundary = float(val)
+            case ["vacuum", val]: vacuum = float(val)
+
+            case ["parallel", val]: parallel = int(val)
+
+            case ["fdet", *rest]:
+                use_fdet = not (rest and rest[0].lower() in ["false", ".false."])
+            case ["spin", *rest]:
+                use_spin = not (rest and rest[0].lower() in ["false", ".false.", "1", "0"])
+
+            case [("contrast_range" | "k_spring" | "niter" | "alpha" | "h"), *_]:
+                pass
+
+            case _:
+                print(f"Warning: check your input line: {' '.join(word)}")
+
+if verbose:
     print(f"x_range: {x_range[0]:f} ~ {x_range[1]:f} Bohr")
-    print(f"x_spacing: {x_spacing:f} Bohr")
     print(f"y_range: {y_range[0]:f} ~ {y_range[1]:f} Bohr")
-    print(f"y_spacing: {y_spacing:f} Bohr")
     print(f"z_range: {z_range[0]:f} ~ {z_range[1]:f} Bohr")
+    print(f"x_spacing: {x_spacing:f} Bohr")
+    print(f"y_spacing: {y_spacing:f} Bohr")
     print(f"z_spacing: {z_spacing:f} Bohr")
     if use_fdet:
         print("FDET is enabled")
@@ -85,30 +95,17 @@ if lverbose:
     else:
         print("Nspin is set to 1")
 
-x = x_range[0]
-nx = 0
-xlist = []
-while (x < x_range[1]+1e-6):
-    xlist.append(x)
-    x += x_spacing
-    nx += 1
-x_range[1] = xlist[-1]
-y = y_range[0]
-ny = 0
-ylist = []
-while (y < y_range[1]+1e-6):
-    ylist.append(y)
-    y += y_spacing
-    ny += 1
-y_range[1] = ylist[-1]
-z = z_range[0]
-nz = 0
-zlist = []
-while (z < z_range[1]+1e-6):
-    zlist.append(z)
-    z += z_spacing
-    nz += 1
-z_range[1] = zlist[-1]
+x_grid = np.arange(x_range[0], x_range[1]+1e-6, x_spacing)
+nx = len(x_grid)
+x_range[1] = x_grid[-1]
+
+y_grid = np.arange(y_range[0], y_range[1]+1e-6, y_spacing)
+ny = len(y_grid)
+y_range[1] = y_grid[-1]
+
+z_grid = np.arange(z_range[0], z_range[1]+1e-6, z_spacing)
+nz = len(z_grid)
+z_range[1] = z_grid[-1]
 
 # ================================================================
 # Read the structure from tip.xyz and sample.parsec_st.dat
@@ -125,18 +122,16 @@ if poscar2.Ndim != 0 and poscar2.Ndim != 2:
 # Read the core charge from pp files *_POTRE.DAT
 zion1 = []
 for i in range(poscar1.Ntype):
-    pp_name = poscar1.atomtype[i]+"_POTRE.DAT"
-    f5 = open(pp_name, "r")
-    line = f5.readlines()
-    f5.close()
-    zion1.append(int(float(line[3].split()[5])+0.5))
+    pp_name = f"{poscar1.atomtype[i]}_POTRE.DAT"
+    with open(pp_name, "r") as f5:
+        lines = f5.readlines()
+        zion1.append(int(float(lines[3].split()[5]) + 0.5))
 zion2 = []
 for i in range(poscar2.Ntype):
-    pp_name = poscar2.atomtype[i]+"_POTRE.DAT"
-    f5 = open(pp_name, "r")
-    line = f5.readlines()
-    f5.close()
-    zion2.append(int(float(line[3].split()[5])+0.5))
+    pp_name = f"{poscar2.atomtype[i]}_POTRE.DAT"
+    with open(pp_name, "r") as f5:
+        lines = f5.readlines()
+        zion2.append(int(float(lines[3].split()[5]) + 0.5))
 
 # Calculate the maximum of Nb for in advance.
 atomdir = load_atom_index()
@@ -190,38 +185,37 @@ apc2[:, 2] -= zmid
 
 # ================================================================
 # calculate the step numbers. Need to minus 1 in the parsec.in file
-steplist = [(nx*ny)//parallel]*parallel
-for ip in range((nx*ny) % parallel):
-    steplist[ip] += 1
-f3 = open("steps.dat", "w")
-for ip in range(parallel):
-    f3.write(str(steplist[ip])+"\n")
-f3.close()
-movelist = []
+steps_per_task = [(nx * ny) // parallel] * parallel
+for ip in range((nx * ny) % parallel):
+    steps_per_task[ip] += 1
+with open("steps.dat", "w") as f3:
+    for steps in steps_per_task:
+        f3.write(f"{steps}\n")
+task_paths = []
 
-lxincrease = True
+is_x_forward = True
 k = 0
 ip = 0
 for iy in range(ny):
-    if lxincrease:
+    if is_x_forward:
         for ix in range(nx):
             if k == 0:
-                movelist.append([])
-            movelist[-1].append([xlist[ix], ylist[iy]])
+                task_paths.append([])
+            task_paths[-1].append([x_grid[ix], y_grid[iy]])
             k += 1
-            if k == steplist[ip]:
+            if k == steps_per_task[ip]:
                 ip += 1
                 k = 0
     else:
         for ix in range(nx-1, -1, -1):
             if k == 0:
-                movelist.append([])
-            movelist[-1].append([xlist[ix], ylist[iy]])
+                task_paths.append([])
+            task_paths[-1].append([x_grid[ix], y_grid[iy]])
             k += 1
-            if k == steplist[ip]:
+            if k == steps_per_task[ip]:
                 ip += 1
                 k = 0
-    lxincrease = not lxincrease
+    is_x_forward = not is_x_forward
 
 # ================================================================
 # If the boundary is not set, calculate it
@@ -253,68 +247,11 @@ else:  # Calculate the z_move, make the bottom at 10 bohr from boundary
 
 # if FDET, we do a calculation for a sample potential file
 if use_fdet:
-    filename_parsec = "parsec_st_spot.dat"
-    f2 = open(filename_parsec, "w")
-    f2.write("#---------output from afm.py----------\n")
-    if use_spin:
-        f2.write("spin_polarization .true.\n")
-    f2.write("states_num "+str(Nb2)+"\n\n")
-    if poscar2.Ndim == 0:
-        pass
-    if poscar2.Ndim == 2:
-        f2.write("boundary_conditions slab\n")
-        f2.write("begin cell_shape\n")
-        for ix0 in range(2):
-            for ix1 in range(3):
-                f2.write(f"{poscar2.lc[ix0, ix1]/bohr:18.12f}")
-            f2.write("\n")
-        f2.write("end cell_shape\n\n")
-
-        f2.write("kpoint_method mp\n\n")
-        f2.write("begin monkhorst_pack_grid\n")
-        k_grid = poscar2.find_k_grid()
-        for ix in range(2):
-            f2.write(f"  {k_grid[ix]:d}")
-        f2.write("\nend monkhorst_pack_grid\n\n")
-        k_grid_shift = poscar2.find_k_grid_shift()
-        f2.write("begin monkhorst_pack_shift\n")
-        for ix in range(2):
-            f2.write(f"  {k_grid_shift[ix]:f}")
-        f2.write("\nend monkhorst_pack_shift\n\n")
-
-    f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
-    f2.write("atom_types_num "+str(poscar2.Ntype)+"\n")
-    f2.write("coordinate_unit cartesian_bohr\n\n")
-
-    f2.write("#------------ begin sample -----------\n")
-    k = 0
-    for i in range(poscar2.Ntype):
-        f2.write("atom_type "+poscar2.atomtype[i]+"\n")
-        f2.write("local_component s\n")
-        f2.write("begin atom_coord\n")
-        for ia in range(poscar2.Naint[i]):
-            f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
-            k = k+1
-        f2.write("end atom_coord\n\n")
-    f2.write("#------------- end sample ------------\n\n")
-
-    f2.close()
-
-# main loop
-for iz in range(nz):
-    for ip in range(parallel):
-        # ================================================================
-        # Write the structure to parsec_st_iz_ip.dat file
-        filename_parsec = "parsec_st_"+str(iz+1)+"_"+str(ip+1)+".dat"
-        f2 = open(filename_parsec, "w")
-        f2.write("#---------output from afm.py----------\n\n")
-        f2.write("minimization manual\n\n")
-        if use_spin and not use_fdet:
+    with open("parsec_st_spot.dat", "w") as f2:
+        f2.write("#---------output from afm.py----------\n")
+        if use_spin:
             f2.write("spin_polarization .true.\n")
-        if use_fdet:
-            f2.write("states_num "+str(Nb1_max)+"\n\n")
-        else:
-            f2.write("states_num "+str(Nb1_max+Nb2)+"\n\n")
+        f2.write(f"states_num {Nb2}\n\n")
         if poscar2.Ndim == 0:
             pass
         if poscar2.Ndim == 2:
@@ -339,67 +276,119 @@ for iz in range(nz):
             f2.write("\nend monkhorst_pack_shift\n\n")
 
         f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
-        if use_fdet:
-            f2.write("atom_types_num "+str(poscar1.Ntype)+"\n")
-        else:
-            f2.write("atom_types_num "+str(poscar1.Ntype+poscar2.Ntype)+"\n")
+        f2.write(f"atom_types_num {poscar2.Ntype}\n")
         f2.write("coordinate_unit cartesian_bohr\n\n")
 
-        f2.write("#------------- begin tip -------------\n")
-        k = 0
-        for i in range(poscar1.Ntype):
-            f2.write("atom_type "+poscar1.atomtype[i]+"\n")
-            # Assume the local_component is s here. A dictionary of {element: local_component} should be added
-            f2.write("local_component: s\n")
-            f2.write("begin atom_coord\n")
-            for ia in range(poscar1.Naint[i]):
-                f2.write(f"{apc1[k, 0]+movelist[ip][0][0]:18.12f}{apc1[k, 1]+movelist[ip][0][1]:18.12f}" +
-                         f"{apc1[k, 2]+zlist[iz]:18.12f}\n")
-                k = k+1
-            f2.write("end atom_coord\n\n")
-        f2.write("#-------------- end tip --------------\n\n")
-
         f2.write("#------------ begin sample -----------\n")
-        if use_fdet:
-            f2.write("add_point_charges .TRUE.\n")
-            f2.write("point_typ_num "+str(poscar2.Ntype)+"\n\n")
-
         k = 0
         for i in range(poscar2.Ntype):
-            if use_fdet:
-                f2.write("pt_chg: "+str(zion2[i])+"\n")
-                f2.write("begin point_coord\n")
-            else:
-                f2.write("atom_type: "+poscar2.atomtype[i]+"\n")
-                f2.write("local_component: s\n")
-                f2.write("begin atom_coord\n")
-
+            f2.write(f"atom_type {poscar2.atomtype[i]}\n")
+            f2.write("local_component s\n")
+            f2.write("begin atom_coord\n")
             for ia in range(poscar2.Naint[i]):
                 f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
                 k = k+1
-
-            if use_fdet:
-                f2.write("end point_coord\n\n")
-            else:
-                f2.write("end atom_coord\n\n")
+            f2.write("end atom_coord\n\n")
         f2.write("#------------- end sample ------------\n\n")
 
-        f2.close()
+# main loop
+for iz in range(nz):
+    for ip in range(parallel):
+        # ================================================================
+        # Write the structure to parsec_st_iz_ip.dat file
+        with open(f"parsec_st_{iz+1}_{ip+1}.dat", "w") as f2:
+            f2.write("#---------output from afm.py----------\n\n")
+            f2.write("minimization manual\n\n")
+            if use_spin and not use_fdet:
+                f2.write("spin_polarization .true.\n")
+            if use_fdet:
+                f2.write(f"states_num {Nb1_max}\n\n")
+            else:
+                f2.write(f"states_num {Nb1_max+Nb2}\n\n")
+            if poscar2.Ndim == 0:
+                pass
+            if poscar2.Ndim == 2:
+                f2.write("boundary_conditions slab\n")
+                f2.write("begin cell_shape\n")
+                for ix0 in range(2):
+                    for ix1 in range(3):
+                        f2.write(f"{poscar2.lc[ix0, ix1]/bohr:18.12f}")
+                    f2.write("\n")
+                f2.write("end cell_shape\n\n")
+
+                f2.write("kpoint_method mp\n\n")
+                f2.write("begin monkhorst_pack_grid\n")
+                k_grid = poscar2.find_k_grid()
+                for ix in range(2):
+                    f2.write(f"  {k_grid[ix]:d}")
+                f2.write("\nend monkhorst_pack_grid\n\n")
+                k_grid_shift = poscar2.find_k_grid_shift()
+                f2.write("begin monkhorst_pack_shift\n")
+                for ix in range(2):
+                    f2.write(f"  {k_grid_shift[ix]:f}")
+                f2.write("\nend monkhorst_pack_shift\n\n")
+
+            f2.write(f"boundary_sphere_radius {boundary:.12g}\n\n")
+            if use_fdet:
+                f2.write(f"atom_types_num {poscar1.Ntype}\n")
+            else:
+                f2.write(f"atom_types_num {poscar1.Ntype+poscar2.Ntype}\n")
+            f2.write("coordinate_unit cartesian_bohr\n\n")
+
+            f2.write("#------------- begin tip -------------\n")
+            k = 0
+            for i in range(poscar1.Ntype):
+                f2.write(f"atom_type {poscar1.atomtype[i]}\n")
+                # Assume the local_component is s here. A dictionary of {element: local_component} should be added
+                f2.write("local_component: s\n")
+                f2.write("begin atom_coord\n")
+                for ia in range(poscar1.Naint[i]):
+                    f2.write(f"{apc1[k, 0]+task_paths[ip][0][0]:18.12f}{apc1[k, 1]+task_paths[ip][0][1]:18.12f}" +
+                             f"{apc1[k, 2]+z_grid[iz]:18.12f}\n")
+                    k = k+1
+                f2.write("end atom_coord\n\n")
+            f2.write("#-------------- end tip --------------\n\n")
+
+            f2.write("#------------ begin sample -----------\n")
+            if use_fdet:
+                f2.write("add_point_charges .TRUE.\n")
+                f2.write(f"point_typ_num {poscar2.Ntype}\n\n")
+
+            k = 0
+            for i in range(poscar2.Ntype):
+                if use_fdet:
+                    f2.write(f"pt_chg: {zion2[i]}\n")
+                    f2.write("begin point_coord\n")
+                else:
+                    f2.write(f"atom_type: {poscar2.atomtype[i]}\n")
+                    f2.write("local_component: s\n")
+                    f2.write("begin atom_coord\n")
+
+                for ia in range(poscar2.Naint[i]):
+                    f2.write(f"{apc2[k, 0]:18.12f}{apc2[k, 1]:18.12f}{apc2[k, 2]:18.12f}\n")
+                    k = k+1
+
+                if use_fdet:
+                    f2.write("end point_coord\n\n")
+                else:
+                    f2.write("end atom_coord\n\n")
+            f2.write("#------------- end sample ------------\n\n")
 
         # write the manual_*.dat file
-        f4 = open("manual_"+str(iz+1)+"_"+str(ip+1)+".dat", "w")
-        for istep in range(1, steplist[ip]):
-            for ia in range(poscar1.Natom):
-                f4.write(f"{apc1[ia, 0]+movelist[ip][istep][0]:18.12f}{apc1[ia, 1]+movelist[ip][istep][1]:18.12f}" +
-                         f"{apc1[ia, 2]+zlist[iz]:18.12f}\n")
-            if not use_fdet:
-                for ia in range(poscar2.Natom):
-                    f4.write(f"{apc2[ia, 0]:18.12f}{apc2[ia, 1]:18.12f}{apc2[ia, 2]:18.12f}\n")
-            f4.write("\n")
-        f4.close()
+        with open(f"manual_{iz+1}_{ip+1}.dat", "w") as f4:
+            for istep in range(1, steps_per_task[ip]):
+                dx = task_paths[ip][istep][0]
+                dy = task_paths[ip][istep][1]
+                dz = z_grid[iz]
+                for ia in range(poscar1.Natom):
+                    f4.write(f"{apc1[ia, 0] + dx:18.12f}{apc1[ia, 1] + dy:18.12f}{apc1[ia, 2] + dz:18.12f}\n")
+                if not use_fdet:
+                    for ia in range(poscar2.Natom):
+                        f4.write(f"{apc2[ia, 0]:18.12f}{apc2[ia, 1]:18.12f}{apc2[ia, 2]:18.12f}\n")
+                f4.write("\n")
 
 # convert the structure to vasp format
-if lvasp:
+if export_vasp:
     poscar3 = Poscar()
     if use_fdet:
         poscar3.read_parsec("parsec_st_spot.dat")
