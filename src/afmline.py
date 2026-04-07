@@ -36,9 +36,9 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("--tilt", "-t", action="store_true", help="use tilting correction")
-parser.add_argument("--atom", "-a", action="store_true", help="show atoms")
-parser.add_argument("--max", "-m", action="store_true", help="show maximum")
-parser.add_argument("--bohr", "-b", action="store_true", help="use Bohr units")
+parser.add_argument("--atom", "-a", action="store_true", help="display atom positions")
+parser.add_argument("--max", "-m", action="store_true", help="display maximum")
+parser.add_argument("--bohr", "-b", action="store_true", help="use atomic units")
 parser.add_argument("--force", "-f", action="store_true", help="plot force instead of kts")
 parser.add_argument("--verbose", action="store_true", help="print verbose output")
 

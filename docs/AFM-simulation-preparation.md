@@ -13,7 +13,7 @@ An example of [afm.in](https://github.com/tangzhao20/dftscr/blob/main/data/input
 
 The Bash script can be used to create directories and prepare files by
 ```bash
-afm.sh seq 
+afm.sh seq
 ```
 
 **Inputs:** afm.in, job.sh, parsec.in.head, parsec\_st\_\*\_\*.dat, \[parsec\_st\_spot.dat\], manual\_\*\_\*.dat, steps.dat  
@@ -27,14 +27,22 @@ afm.sh sbatch
 
 After all the calculations are done, use the Python script [afmplot.py](https://github.com/tangzhao20/dftscr/blob/main/src/afmplot.py) to make the plots:  
 ```bash
-python3 afmplot.py [-z <int>] [--tilt] [--atom] [--toten] [--bohr] [--verbose]
+python3 afmplot.py [-z <int>] [--tilt] [--atom] [--orange] [--toten] [--bohr] [--verbose]
 ```
 
 **Inputs:** afm.in, steps.dat, \[toten.dat or seq\_\*\_\*/parsec.out\]  
 
 **Outputs:** afm\_\*.png, \[toten.dat\]  
 
-In the first round, this code reads the total energies from seq\_\*\_\*/parsec.out files and writes to toten.dat. After that, the toten.dat will be read. `-z` represents the index of layers to be calculated. For the simple scenario of computing 3 z values for the tip, `-z` should be set to 2 as default. Add the `--atom` option to display the atom positions. Only the top layer within 1 Å is plotted. Add the `--tilt` option to use the tilt correction. Add the `--toten` option to plot the total energy map. Add the `--bohr` option to use the Bohr as the length unit.  
+In the first round, this code reads the total energies from seq\_\*\_\*/parsec.out files and writes to toten.dat. After that, the toten.dat will be read.  
+
+**Command-line options:**
+* `-z`: Index of the *z*-layer to plot. For the simple scenario of computing 3 *z* values for the tip, this can be left at its default value (`iz = 2`).
+* `--tilt`: Use tilting correction.
+* `--atom`: Display atom positions. Only the top layer within 1 Å is plotted.
+* `--orange`: Apply `YlOrBr_r` colormap instead of `Blues_r`.
+* `--toten`: Plot total energy map.
+* `--bohr`: Use atomic units.
 
 An iterative tilt correction method is implemented in this code, which solves the lateral shift using $\mathit{\Delta}(x)=F(x+\mathit{\Delta}(x))/k$. The maximum number of iterations, `niter`, and the damping factor, `alpha`, can be set in the input file `afm.in`. This method is described in:  
 * Zhao Tang, Dingxin Fan, and James R. Chelikowsky, *Real space simulation for state-resolved high-resolution atomic force microscopy of defects in monolayer h-BN*, [Physical Review Materials **9**, 086201](https://doi.org/10.1103/ncc2-rhmb) (2025).  

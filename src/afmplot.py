@@ -6,8 +6,8 @@ Plot AFM simulation results from PARSEC outputs.
 inputs: afm.in, [toten.dat], [steps.dat], [sample.parsec_st.dat]
 
 examples:
-    python afmplot.py --tilt --atom
-    python afmplot.py -z 3 --tilt --atom --verbose
+    python afmplot.py -t -a
+    python afmplot.py -z 3 --tilt --atom --orange --verbose
 """
 
 # The matrices in this script are primarily M[ny][nx] or M[nz][ny][nx] to match the image shape.
@@ -38,9 +38,10 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("-z", "--iz", type=int, default=2, metavar="<int>", help="index of the z-layer to plot")
 parser.add_argument("--tilt", "-t", action="store_true", help="use tilting correction")
-parser.add_argument("--atom", "-a", action="store_true", help="show atoms")
-parser.add_argument("--toten", "-e", action="store_true", help="plot total energy")
-parser.add_argument("--bohr", "-b", action="store_true", help="use Bohr units")
+parser.add_argument("--atom", "-a", action="store_true", help="display atom positions")
+parser.add_argument("--orange", "-o", action="store_true", help="apply YlOrBr_r colormap instead of Blues_r")
+parser.add_argument("--toten", "-e", action="store_true", help="plot total energy map")
+parser.add_argument("--bohr", "-b", action="store_true", help="use atomic units")
 parser.add_argument("--verbose", action="store_true", help="print verbose output")
 
 args = parser.parse_args()
@@ -48,6 +49,7 @@ args = parser.parse_args()
 z_index = args.iz - 1  # convert to 0-based index
 use_tilt = args.tilt
 show_atom = args.atom
+use_orange = args.orange
 plot_toten = args.toten
 use_bohr = args.bohr
 verbose = args.verbose
@@ -275,7 +277,12 @@ for ic in range(len(im_extent)):
     im_extent[ic] = im_extent[ic]/funit
 if contrast_range is None:
     contrast_range = [np.percentile(kts, 1), np.percentile(kts, 99)]  # ignores top/bottom 1% of outliers
-im = ax0.imshow(kts, interpolation='spline36', cmap="Blues_r", vmin=contrast_range[0], vmax=contrast_range[1],
+
+if use_orange:
+    cmap_afm = "YlOrBr_r"
+else:
+    cmap_afm = "Blues_r"
+im = ax0.imshow(kts, interpolation='spline36', cmap=cmap_afm, vmin=contrast_range[0], vmax=contrast_range[1],
                 origin="lower", extent=im_extent, aspect='equal', zorder=1)
 
 if show_atom:
