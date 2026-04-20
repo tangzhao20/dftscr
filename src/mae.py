@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-import os
 import time
 import numpy as np
 from classes import Poscar, Procar
@@ -85,11 +84,6 @@ for ik in range(procar0.Nk):
     weight = procar0.weight[ik]
     for ispin1 in range(2):
         for ispin2 in range(2):
-            if ispin1 == ispin2:
-                sign = 1
-            else:
-                sign = -1
-
             # vectorization over bands
             e_diff = procar0.eig[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] - \
                 procar0.eig[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :]
@@ -104,8 +98,12 @@ for ik in range(procar0.Nk):
             c2 = procar0.complex[ispin2, ik, cb[ispin2]:Nb, atom_mask, 4:9]
 
             # a: atoms; i,j: bands; x: directions; m,n: orbitals
-            L = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
-            e_i += sign * weight * np.sum(f * e * np.abs(L)**2 * 0.25, axis=(1, 2))
+            m_soc = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)
+            e_soc_xyz = weight * np.sum(f * e * np.abs(m_soc)**2 * 0.25, axis=(1, 2))
+            if ispin1 == ispin2:
+                e_i += e_soc_xyz
+            else:
+                e_i += np.sum(e_soc_xyz) - e_soc_xyz
 
 print("            x        y        z")
 print(f"E_2PT   {e_i[0]*1e3:8.4f} {e_i[1]*1e3:8.4f} {e_i[2]*1e3:8.4f} meV")

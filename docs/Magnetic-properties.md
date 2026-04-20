@@ -42,11 +42,19 @@ $$
 From this, the SOC energy correction along direction *i* is given by:
 
 $$
-E_i = \sum_{k} w_k 
-\sum_{\sigma_1,\sigma_2} \sigma_1 \sigma_2 
-\sum_{b_1,b_2} f_{\sigma_1 b_1 k} (1 - f_{\sigma_2 b_2 k}) 
-\mathrm{S}_\eta(\varepsilon_{\sigma_2 b_2 k}, \varepsilon_{\sigma_1 b_1 k})
-\left|L_{i \sigma_1 b_1 \sigma_2 b_2 k}\right|^2
+E_i = \sum_{k} w_k \sum_{\sigma_1,\sigma_2} \sum_{b_1,b_2} f_{\sigma_1 b_1 k} (1 - f_{\sigma_2 b_2 k}) 
+\mathrm{S}_\eta(\varepsilon_{\sigma_1 b_1 k}, \varepsilon_{\sigma_2 b_2 k}) 
+\left| M_{i \sigma_1 b_1 \sigma_2 b_2 k} \right|^2
+$$
+
+The effective coupling matrix element $M$ is determined by the spin selection rules:
+
+$$
+\left| M_{i \sigma_1 b_1 \sigma_2 b_2 k} \right|^2 = \frac{1}{4}
+\begin{cases} 
+   \left| L_{i \sigma_1 b_1 \sigma_2 b_2 k} \right|^2 & (\sigma_1 = \sigma_2) \\
+   \sum_{j \neq i} \left| L_{j \sigma_1 b_1 \sigma_2 b_2 k} \right|^2 & (\sigma_1 \neq \sigma_2) 
+\end{cases}
 $$
 
 Based on these directional energy calculations, the code identifies the easy and medium axes to obtain the MAE:
