@@ -129,7 +129,7 @@ class Eigenval:
             self.eig.append(eig0)
             self.occ.append(occ0)
 
-        self.kp = (np.array(self.kp)@(lc)/a1).tolist()
+        self.kp = (np.array(self.kp) @ lc.T / a1).tolist()
 
         self.semic()
         if self.is_semic == True:
@@ -230,7 +230,7 @@ class Eigenval:
         del eig
 
         # convert kp from 1/bohr to 1/A
-        self.kp = (np.array(self.kp) @ lc / bohr * 0.5 / pi).tolist()
+        self.kp = (np.array(self.kp) @ lc.T / bohr * 0.5 / pi).tolist()
 
         self.eigshift(ef)
         Nvb = np.zeros((self.Ns, self.Nk), dtype=int)
