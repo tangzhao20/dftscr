@@ -206,23 +206,7 @@ if is_proj:
 if fsecond:
     x2 = eigenval2.eig_x(kp=kpoints1, rlc=rlc)
     energy2 = eigenval2.eigtrans()
-
     bands.add_plot(x2, energy2[0], color=bands.palette["orange"], label="Wannier", zorder=2)
-
-    f3 = open("eigenval2.dat", "w")
-    for ib in range(len(energy2[0])):
-        for ip in range(bands.Np):
-            ik0 = 0
-            for ik in range(len(x2[ip])):
-                f3.write(str(x2[ip][ik])+" "+str(energy2[0][ib][ik0])+" "+"\n")
-                ik0 += 1
-        f3.write("\n")
-    f3.close()
-
-f4 = open("label.dat", "w")
-for ip in range(bands.Np):
-    for ik in range(len(x_ticks[ip])):
-        f4.write(str(x_ticks[ip][ik])+" "+x_labels[ip][ik]+"\n")
-f4.close()
+    bands.write_bands(x=x2, energy=energy2, filename="eigenval_wan.dat")
 
 bands.fig.savefig(output_name, dpi=1200)

@@ -19,6 +19,8 @@ class BandsPlot:
 
     def __init__(self, x_ticks, x_labels, y_range=[0.0, 0.0]):
 
+        self.x_ticks = x_ticks
+        self.x_labels = x_labels
         self.Np = len(x_ticks)
         self.width = [0.0] * self.Np
         for ip in range(self.Np):
@@ -107,22 +109,35 @@ class BandsPlot:
             self.add_plot(self.x, self.energy[ispin],
                           color=self.palette[line_color[ispin]], label=spin_label, zorder=3-ispin)
 
-        f1 = open("eigenval.dat", "w")
-        if eigenval1.Ns == 2:
-            for ib in range(len(self.energy[0])):
-                for ip in range(self.Np):
-                    ik0 = 0
-                    for ik in range(len(self.x[ip])):
-                        f1.write(str(self.x[ip][ik])+" "+str(self.energy[0][ib][ik0]) +
-                                 " "+str(self.energy[1][ib][ik0])+"\n")
-                        ik0 += 1
-                f1.write("\n")
-        else:
-            for ib in range(len(self.energy[0])):
-                for ip in range(self.Np):
-                    ik0 = 0
-                    for ik in range(len(self.x[ip])):
-                        f1.write(str(self.x[ip][ik])+" "+str(self.energy[0][ib][ik0])+" "+"\n")
-                        ik0 += 1
-                f1.write("\n")
+        self.write_bands()
+        self.write_labels()
+
+    def write_bands(self, x=None, energy=None, filename="eigenval.dat"):
+        if x is None:
+            x = self.x
+        if energy is None:
+            energy = self.energy
+        f1 = open(filename, "w")
+        f1.write("#kpath(2pi/A)")
+        for ispin in range(len(energy)):
+            f1.write(f" energy_{ispin}(eV)")
+        f1.write("\n")
+        for ib in range(len(energy[0])):
+            for ip in range(len(x)):
+                ik0 = 0
+                for ik in range(len(x[ip])):
+                    f1.write(f"{x[ip][ik]:12.6f}")
+                    for ispin in range(len(energy)):
+                        f1.write(f" {energy[ispin][ib][ik0]:12.6f}")
+                    f1.write("\n")
+                    ik0 += 1
+            f1.write("\n")
         f1.close()
+
+    def write_labels(self, filename="label.dat"):
+        f4 = open(filename, "w")
+        f4.write("#kpath(2pi/A) k_label\n")
+        for ip in range(self.Np):
+            for ik in range(len(self.x_ticks[ip])):
+                f4.write(f"{self.x_ticks[ip][ik]:12.6f}  {self.x_labels[ip][ik]}\n")
+        f4.close()
