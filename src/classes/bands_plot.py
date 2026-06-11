@@ -112,15 +112,20 @@ class BandsPlot:
         self.write_bands()
         self.write_labels()
 
-    def write_bands(self, x=None, energy=None, filename="eigenval.dat"):
+    def write_bands(self, x=None, energy=None, filename="eigenval.dat", y_label="energy(eV)"):
         if x is None:
             x = self.x
         if energy is None:
             energy = self.energy
         f1 = open(filename, "w")
-        f1.write("#kpath(2pi/A)")
+        f1.write("# kpath(2pi/A)")
         for ispin in range(len(energy)):
-            f1.write(f" energy_{ispin}(eV)")
+            if len(energy) == 1:
+                label = y_label
+            else:
+                idx = y_label.rfind("(") if "(" in y_label else len(y_label)
+                label = f"{y_label[:idx].rstrip()}_{ispin}{y_label[idx:]}"
+            f1.write(f" {label}")
         f1.write("\n")
         for ib in range(len(energy[0])):
             for ip in range(len(x)):
@@ -136,8 +141,8 @@ class BandsPlot:
 
     def write_labels(self, filename="label.dat"):
         f4 = open(filename, "w")
-        f4.write("#kpath(2pi/A) k_label\n")
+        f4.write("# kpath(2pi/A) label\n")
         for ip in range(self.Np):
             for ik in range(len(self.x_ticks[ip])):
-                f4.write(f"{self.x_ticks[ip][ik]:12.6f}  {self.x_labels[ip][ik]}\n")
+                f4.write(f"{self.x_ticks[ip][ik]:12.6f}    {self.x_labels[ip][ik]}\n")
         f4.close()

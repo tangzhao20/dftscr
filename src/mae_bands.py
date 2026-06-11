@@ -159,5 +159,6 @@ bands_sum.add_plot(x, mae_proj_sum[0, np.newaxis, :],
                    color=bands_sum.palette["darkblue"], label="majority spin", zorder=3)
 bands_sum.add_plot(x, mae_proj_sum[1, np.newaxis, :],
                    color=bands_sum.palette["orange"], label="minority spin", zorder=2)
+bands_sum.write_bands(x=x, energy=mae_proj_sum[:, np.newaxis, :], filename="mae_k.dat", y_label="MAE_proj(eV)")
 
 bands_sum.fig.savefig("mae_bs_sum.png", dpi=1200)
