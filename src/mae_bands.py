@@ -132,6 +132,19 @@ proj_plot_size[proj_plot_size < size_thereshold] = 0
 for ispin in range(eigenval0.Ns):
     bands.add_scatter(x, energy[ispin], proj_plot_size[ispin], color=colors[ispin], zorder=3.5-ispin)
 
+f2 = open("mae_proj.dat", "w")
+f2.write("#ispin x_kpath energy(eV) mae_proj\n")
+for ispin in range(eigenval0.Ns):
+    for ib in range(eigenval0.Nb):
+        ik0 = 0
+        for ip in range(bands.Np):
+            for ik in range(len(x[ip])):
+                f2.write(f"{ispin}  {x[ip][ik]:12.6f}  {energy[ispin][ib][ik0]:12.6f}  "
+                         f"{mae_proj[ispin, ib, ik0]:12.6f}\n")
+                ik0 += 1
+        f2.write("\n")
+f2.close()
+
 bands.fig.savefig("mae_bs.png", dpi=1200)
 
 # Calculate the summation on each k-point

@@ -192,8 +192,8 @@ if is_proj:
     f2.write("#ispin x_kpath energy(eV) size\n")
     for ispin in range(eigenval1.Ns):
         for ib in range(eigenval1.Nb):
+            ik0 = 0
             for ip in range(bands.Np):
-                ik0 = 0
                 for ik in range(len(bands.x[ip])):
                     f2.write(f"{ispin}  {bands.x[ip][ik]}  {bands.energy[ispin][ib][ik0]}  " +
                              f"{proj_plot_size[ispin, ib, ik0]}\n")

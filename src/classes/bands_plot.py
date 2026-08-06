@@ -128,8 +128,8 @@ class BandsPlot:
             f1.write(f" {label}")
         f1.write("\n")
         for ib in range(len(energy[0])):
+            ik0 = 0
             for ip in range(len(x)):
-                ik0 = 0
                 for ik in range(len(x[ip])):
                     f1.write(f"{x[ip][ik]:12.6f}")
                     for ispin in range(len(energy)):
