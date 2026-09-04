@@ -19,4 +19,4 @@ angstrom = load_constant("angstrom")
 
 Js = outcar0.mag * mu_B / (poscar0.volume() * angstrom**3) * mu_0
 
-print("mag: "+str(outcar0.mag)+f" mu_B, Js: {Js:.3f} T")
+print(f"mag: {outcar0.mag:.6f} mu_B, Js: {Js:.3f} T")

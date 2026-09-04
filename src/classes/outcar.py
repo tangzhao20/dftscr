@@ -17,8 +17,8 @@ class Outcar:
 
     def __str__(self):
         str_out = "OUTCAR:\n"
-        str_out += " toten = " + str(self.toten) + "\n"
-        str_out += " mag = " + str(self.mag) + "\n"
+        str_out += f" toten = {self.toten} eV\n"
+        str_out += f" mag = {self.mag} mu_B\n"
         return str_out
 
 #######################################################################

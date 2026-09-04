@@ -808,6 +808,14 @@ class Poscar:
     def volume(self):
         return abs(np.linalg.det(self.lc))
 
+    def get_lattice_parameter(self):
+        lengths = np.linalg.norm(self.lc, axis=1)
+        i1 = [1, 2, 0]
+        i2 = [2, 0, 1]
+        cosines = (self.lc @ self.lc.T)[i1, i2] / (lengths[i1] * lengths[i2])
+        angles = np.degrees(np.arccos(np.clip(cosines, -1.0, 1.0)))
+        return lengths, angles
+
     def cartesian(self, shift=None, factor=1.0):
         if shift is None:
             if self.Ndim == 3:
