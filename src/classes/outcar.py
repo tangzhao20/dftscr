@@ -1,4 +1,7 @@
+import sys
+import os
 import subprocess
+import xml.etree.ElementTree as ET
 from load_data import load_constant
 
 
@@ -29,3 +32,27 @@ class Outcar:
 
         cmd = "grep 'number of electron' " + file_name + " | tail -n 1 | awk '{print $NF}'"
         self.mag = float(subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip())
+
+    def read_xml(self, filename=""):
+
+        if filename == "":
+            # find a .xml file
+            files = os.listdir()
+            for f in files:
+                if f.endswith('.xml'):
+                    filename = f
+                    break
+        if filename == "":
+            print("Error: .xml file is not found")
+            sys.exit()
+
+        Ha = load_constant("rydberg")*2.0
+
+        tree = ET.parse(filename)
+        output = tree.getroot().find("output")
+
+        toten = float(output.find("total_energy").find("etot").text)
+        demet = float(output.find("total_energy").find("demet").text)
+        self.toten = (toten - demet) * Ha
+
+        self.mag = float(output.find("magnetization").find("total").text)
