@@ -36,12 +36,12 @@ if package in package_name["vasp"]+package_name["vaspproj"]:
     kpoints1.read_vasp()
 
     if eigenval1.is_semic == True:
-        eigenval1.eigshift(eigenval1.vbm)
+        eigenval1.eig -= eigenval1.vbm
         eigenval1.writegap(kpoints1)
     else:
         doscar1 = Doscar()
         doscar1.read_vasp()
-        eigenval1.eigshift(doscar1.ef)
+        eigenval1.eig -= doscar1.ef
 
 elif package in package_name["qe"]+package_name["qeproj"]:
     # Input: *.xml, kpath.in
@@ -55,12 +55,12 @@ elif package in package_name["qe"]+package_name["qeproj"]:
     kpoints1.read_kpathin()
 
     if eigenval1.is_semic == True:
-        eigenval1.eigshift(eigenval1.vbm)
+        eigenval1.eig -= eigenval1.vbm
         eigenval1.writegap(kpoints1)
     else:
         doscar1 = Doscar()
         doscar1.read_xml()
-        eigenval1.eigshift(doscar1.ef)
+        eigenval1.eig -= doscar1.ef
 
 elif package in package_name["wannier90"]:
     # Input : nscf.in, ../bands/*.xml, *_band.kpt, *_band.dat, kpath.in
@@ -90,27 +90,19 @@ elif package in package_name["wannier90"]:
 
     if fsecond:
         eigenval2 = Eigenval()
-        eigenval2.read_qexml("../bands/"+filename)
+        eigenval2.read_qexml("../bands/" + filename)
 
-        eigenval2.gap()
-        eigenval2.eigshift(eigenval2.vbm)
+        eigenval2.eig -= eigenval2.vbm
         if eigenval2.is_semic == True:
             eigenval1.is_semic = True
 
-    eigenval1.occ = []
-    for ik in range(eigenval1.Nk):
-        occ0 = []
-        for ib in range(eigenval2.Nvb[0]-pad):
-            occ0.append([1.0])
-        if fsecond:
-            for ib in range(eigenval2.Nvb[0]-pad, eigenval1.Nb):
-                occ0.append([0.0])
-            eigenval1.occ.append(occ0)
+    eigenval1.occ = np.zeros((eigenval1.Ns, eigenval1.Nk, eigenval1.Nb))
+    eigenval1.occ[:, :, :eigenval2.Nvb[0] - pad] = 1.0
 
+    eigenval1.calculate_gap()
     if eigenval1.is_semic == True:
-        eigenval1.gap()
+        eigenval1.eig -= eigenval1.vbm
         eigenval1.writegap(kpoints1)
-        eigenval1.eigshift(eigenval1.vbm)
     else:
         print("Metal band structure are not shifted")
 
@@ -125,9 +117,8 @@ elif package in package_name["parsec"]:
     kpoints1.read_kpathin()
 
     if eigenval1.is_semic == True:
-        eigenval1.gap()
+        eigenval1.eig -= eigenval1.vbm
         eigenval1.writegap(kpoints1)
-        eigenval1.eigshift(eigenval1.vbm)
     else:
         print("Metal band structure are not shifted")
 
@@ -205,7 +196,7 @@ if is_proj:
 # Second band structure plot (for wannier)
 if fsecond:
     x2 = eigenval2.eig_x(kp=kpoints1, rlc=rlc)
-    energy2 = eigenval2.eigtrans()
+    energy2 = eigenval2.eig.swapaxes(1, 2)  # (Ns, Nk, Nb) -> (Ns, Nb, Nk)
     bands.add_plot(x2, energy2[0], color=bands.palette["orange"], label="Wannier", zorder=2)
     bands.write_bands(x=x2, energy=energy2, filename="eigenval_wan.dat")
 

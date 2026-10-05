@@ -43,12 +43,12 @@ else:
     sys.exit()
 
 if eigenval1.is_semic == True:
-    eigenval1.eigshift(eigenval1.vbm)
+    eigenval1.eig -= eigenval1.vbm
 else:
     if package in package_name["qe"]:
         doscar1 = Doscar()
         doscar1.read_xml()
-        eigenval1.eigshift(doscar1.ef)
+        eigenval1.eig -= doscar1.ef
     else:
         print("Error: only semiconductor with bandgap is supported")
         sys.exit()
@@ -94,11 +94,11 @@ for ispin in range(eigenval1.Ns):
     ax[ispin].axhline(linewidth=1, color=palette["gray"], zorder=0)
 
     for ib in range(eigenval1.Nb):
-        if eigenval1.occ[ik_gamma][ib][ispin] > 0.5:
+        if eigenval1.occ[ispin, ik_gamma, ib] > 0.5:
             linestyle = "solid"
         else:
             linestyle = "dashed"
-        ax[ispin].axhline(y=eigenval1.eig[ik_gamma][ib][ispin], linestyle=linestyle,
+        ax[ispin].axhline(y=eigenval1.eig[ispin, ik_gamma, ib], linestyle=linestyle,
                           linewidth=1, color=palette[linecolor[ispin]], zorder=2)
 
 outputname = "eig0.png"

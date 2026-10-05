@@ -100,7 +100,7 @@ class BandsPlot:
     def plot_bands(self, eigenval1, kpoints1, rlc):
 
         self.x = eigenval1.eig_x(kp=kpoints1, rlc=rlc)
-        self.energy = eigenval1.eigtrans()
+        self.energy = eigenval1.eig.swapaxes(1, 2)  # (Ns, Nk, Nb) -> (Ns, Nb, Nk)
 
         spin_label = ["majority spin", "minority spin"]
         line_color = ["darkblue", "orange"]

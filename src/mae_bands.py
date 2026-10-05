@@ -30,15 +30,15 @@ procar0 = Procar()
 procar0.read_vasp()
 
 if eigenval0.is_semic == True:
-    eigenval0.eigshift(eigenval0.vbm)
+    eigenval0.eig -= eigenval0.vbm
     eigenval0.writegap(kpoints0)
 else:
     doscar0 = Doscar()
     doscar0.read_vasp()
-    eigenval0.eigshift(doscar0.ef)
+    eigenval0.eig -= doscar0.ef
 
 x = eigenval0.eig_x(kp=kpoints0, rlc=rlc)
-energy = eigenval0.eigtrans()
+energy = eigenval0.eig.swapaxes(1, 2)  # (Ns, Nk, Nb) -> (Ns, Nb, Nk)
 
 x_ticks = kpoints0.x_ticks_out(rlc)
 x_labels = kpoints0.x_labels_out()

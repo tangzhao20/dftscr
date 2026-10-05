@@ -34,7 +34,7 @@ for i in range(N):
         energy0 = []
         for ispin in range(2):
             for ib in range(140, 145):
-                energy0.append(eigenval_1.eig[0][ib][ispin])
+                energy0.append(eigenval_1.eig[ispin, 0, ib])
         energy.append(energy0)
         del energy0
 
