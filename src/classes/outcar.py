@@ -33,7 +33,7 @@ class Outcar:
         cmd = "grep 'number of electron' " + file_name + " | tail -n 1 | awk '{print $NF}'"
         self.mag = float(subprocess.run(cmd, shell=True, capture_output=True, text=True).stdout.strip())
 
-    def read_xml(self, filename=""):
+    def read_qe(self, filename=""):
 
         if filename == "":
             # find a .xml file

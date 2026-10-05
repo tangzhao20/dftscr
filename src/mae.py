@@ -3,7 +3,7 @@
 import sys
 import time
 import numpy as np
-from classes import Poscar, Procar
+from classes import Poscar, Eigenval
 from load_data import load_constant
 
 start_time = time.time()
@@ -11,10 +11,10 @@ start_time = time.time()
 poscar0 = Poscar()
 poscar0.read_vasp(filename="CONTCAR")
 
-procar0 = Procar()
-procar0.read_vasp()
+eigenval0 = Eigenval()
+eigenval0.read_vasp_procar()
 
-Nb = procar0.Nb
+Nb = eigenval0.Nb
 for w in sys.argv:
     if w[0:3] == "Nb=":
         Nb = int(w[3:])
@@ -22,8 +22,8 @@ for w in sys.argv:
 
 # Identify the highest occupied state and the lowest hole state
 occ_tol = 1e-3
-occ_min = np.min(procar0.occ, axis=1)
-occ_max = np.max(procar0.occ, axis=1)
+occ_min = np.min(eigenval0.occ, axis=1)
+occ_max = np.max(eigenval0.occ, axis=1)
 cb = [0, 0]  # non-full bands: [cb:Nb]
 vb = [0, 0]  # non-empty bands: [0:vb]
 for ispin in range(2):
@@ -80,22 +80,22 @@ Ld[2, 4, 0] = 2.0
 eta = 0.0001
 
 e_i = np.zeros(3)
-for ik in range(procar0.Nk):
-    weight = procar0.weight[ik]
+for ik in range(eigenval0.Nk):
+    weight = eigenval0.weight[ik]
     for ispin1 in range(2):
         for ispin2 in range(2):
             # vectorization over bands
-            e_diff = procar0.eig[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] - \
-                procar0.eig[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :]
+            e_diff = eigenval0.eig[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] - \
+                eigenval0.eig[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :]
             e = e_diff / (e_diff**2 + eta**2)
-            f = procar0.occ[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] * \
-                (1 - procar0.occ[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :])
-            # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
+            f = eigenval0.occ[ispin1, ik, 0:vb[ispin1]][:, np.newaxis] * \
+                (1 - eigenval0.occ[ispin2, ik, cb[ispin2]:Nb][np.newaxis, :])
+            # f = eigenval0.occ[ispin1, ik, :][:, np.newaxis] - eigenval0.occ[ispin2, ik, :][np.newaxis, :]
             e = e[np.newaxis, :, :]
             f = f[np.newaxis, :, :]
-
-            c1 = procar0.complex[ispin1, ik, 0:vb[ispin1], atom_mask, 4:9].conj()  # numpy move the masked axis to front
-            c2 = procar0.complex[ispin2, ik, cb[ispin2]:Nb, atom_mask, 4:9]
+            # numpy move the masked axis to front
+            c1 = eigenval0.complex[ispin1, ik, 0:vb[ispin1], atom_mask, 4:9].conj()
+            c2 = eigenval0.complex[ispin2, ik, cb[ispin2]:Nb, atom_mask, 4:9]
 
             # a: atoms; i,j: bands; x: directions; m,n: orbitals
             m_soc = np.einsum("a, aim, xmn, ajn -> xij", soc_factors, c1, Ld, c2)

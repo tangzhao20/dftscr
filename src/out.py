@@ -28,8 +28,8 @@ if package in package_name["vasp"]:
     poscar0.read_vasp("CONTCAR")
 elif package in package_name["qe"]:
     # Input: *.xml
-    outcar0.read_xml()
-    poscar0.read_xml()
+    outcar0.read_qe()
+    poscar0.read_qe_xml()
 else:
     print("Package \""+package+"\" is not supported yet.")
     print("Usage: python out.py package [prop1 prop2 ...]")

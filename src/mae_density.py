@@ -11,7 +11,7 @@
 
 import sys
 import numpy as np
-from classes import Poscar, Procar, Doscar
+from classes import Poscar, Eigenval, Doscar
 from load_data import load_palette
 
 import matplotlib as mpl
@@ -33,12 +33,12 @@ elif len(sys.argv) == 4:
 poscar0 = Poscar()
 poscar0.read_vasp(filename="CONTCAR")
 
-procar0 = Procar()
-procar0.read_vasp()
+eigenval0 = Eigenval()
+eigenval0.read_vasp_procar()
 
 doscar0 = Doscar()  # for Fermi level
 doscar0.read_vasp()
-procar0.eig = procar0.eig - doscar0.ef
+eigenval0.eig = eigenval0.eig - doscar0.ef
 
 atom_list = poscar0.atom_list()
 
@@ -82,8 +82,8 @@ mae_d = np.zeros((2, Ne))  # spin, energy
 sigma = 0.05  # eV
 gaussian_coeff = (1 / (sigma * (2*np.pi)**0.5))
 
-for ik in range(procar0.Nk):
-    weight = procar0.weight[ik]
+for ik in range(eigenval0.Nk):
+    weight = eigenval0.weight[ik]
     for ispin1 in range(2):
         for ispin2 in range(2):
             if ispin1 == ispin2:
@@ -92,15 +92,15 @@ for ik in range(procar0.Nk):
                 sign = -1
 
             # vectorization over bands
-            e1 = procar0.eig[ispin1, ik, :]
-            e2 = procar0.eig[ispin2, ik, :]
+            e1 = eigenval0.eig[ispin1, ik, :]
+            e2 = eigenval0.eig[ispin2, ik, :]
             e_diff = e1[:, np.newaxis] - e2[np.newaxis, :]
             e = e_diff / (e_diff**2 + eta**2)
-            f = procar0.occ[ispin1, ik, :][:, np.newaxis] * (1 - procar0.occ[ispin2, ik, :][np.newaxis, :])
-            # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
+            f = eigenval0.occ[ispin1, ik, :][:, np.newaxis] * (1 - eigenval0.occ[ispin2, ik, :][np.newaxis, :])
+            # f = eigenval0.occ[ispin1, ik, :][:, np.newaxis] - eigenval0.occ[ispin2, ik, :][np.newaxis, :]
 
-            c1 = procar0.complex[ispin1, ik, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
-            c2 = procar0.complex[ispin2, ik, :, atom_mask, 4:9]
+            c1 = eigenval0.complex[ispin1, ik, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
+            c2 = eigenval0.complex[ispin2, ik, :, atom_mask, 4:9]
 
             # L matrix [Nb, Nb]
             L = np.abs(np.einsum("a, aim, mn, ajn -> ij", soc_factors, c1, L_med, c2))**2 - \

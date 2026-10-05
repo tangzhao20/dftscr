@@ -36,9 +36,9 @@ if package1 in package_name["vasp"]:
 elif package1 in package_name['qe']:
     poscar1.read_qe(filename1)
 elif package1 in package_name['qexml']:
-    poscar1.read_xml(filename1)
+    poscar1.read_qe_xml(filename1)
 elif package1 in package_name['prt']:
-    poscar1.read_prt(filename1)
+    poscar1.read_paratec(filename1)
 elif package1 in package_name['parsec']:
     poscar1.read_parsec(filename1)
 elif package1 in package_name['xyz']:

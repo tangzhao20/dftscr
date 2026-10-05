@@ -52,7 +52,7 @@ class Doscar:
             if self.Ns == 2:
                 self.dos[1][il] = float(word[2])
 
-    def read_xml(self, filename=""):
+    def read_qe_xml(self, filename=""):
         # read dos from .xml file
         Ha = load_constant("rydberg")*2.0
 
@@ -92,7 +92,7 @@ class Doscar:
             if self.Ns == 2:
                 self.dos[1].append(float(word[2]))
 
-    def readpdos_qe(self):
+    def read_qe_pdos(self):
         # pdos[Ns][Nepdos][Na][Norb]
         # x_pdos[Nepdos]
         # atomtype[Ntype]
@@ -179,7 +179,7 @@ class Doscar:
             for ie in range(self.Nepdos):
                 self.energy_pdos[ie] = self.energy_pdos[ie] - ezero
 
-    def plot(self, atom_flag, orb_flag):
-        # plot_proj[Ns, Ne]
+    def plot_pdos(self, atom_flag, orb_flag):
+        # plot_pdos[Ns, Ne]
         plot_pdos = self.pdos[:, :, atom_flag, :][:, :, :, orb_flag].sum(axis=(2, 3))
         return plot_pdos

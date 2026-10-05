@@ -26,8 +26,7 @@ eigenval0.read_vasp()
 
 kpoints0.read_vasp()
 
-procar0 = Procar()
-procar0.read_vasp()
+eigenval0.read_vasp_procar()
 
 if eigenval0.is_semic == True:
     eigenval0.eig -= eigenval0.vbm
@@ -101,13 +100,13 @@ for ispin1 in range(2):
         else:
             sign = -1
         # vectorization over bands [ik, ib1, ib2]
-        e_diff = procar0.eig[ispin1, :, :][:, :, np.newaxis] - procar0.eig[ispin2, :, :][:, np.newaxis, :]
+        e_diff = eigenval0.eig[ispin1, :, :][:, :, np.newaxis] - eigenval0.eig[ispin2, :, :][:, np.newaxis, :]
         e = e_diff / (e_diff**2 + eta**2)
-        f = procar0.occ[ispin1, :, :][:, :, np.newaxis] * (1 - procar0.occ[ispin2, :, :][:, np.newaxis, :])
-        # f = procar0.occ[ispin1, ik, :][:, np.newaxis] - procar0.occ[ispin2, ik, :][np.newaxis, :]
+        f = eigenval0.occ[ispin1, :, :][:, :, np.newaxis] * (1 - eigenval0.occ[ispin2, :, :][:, np.newaxis, :])
+        # f = eigenval0.occ[ispin1, ik, :][:, np.newaxis] - eigenval0.occ[ispin2, ik, :][np.newaxis, :]
 
-        c1 = procar0.complex[ispin1, :, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
-        c2 = procar0.complex[ispin2, :, :, atom_mask, 4:9]
+        c1 = eigenval0.complex[ispin1, :, :, atom_mask, 4:9].conj()  # numpy move the masked axis to front
+        c2 = eigenval0.complex[ispin2, :, :, atom_mask, 4:9]
         # a: atoms; i,j: bands; x: directions; m,n: orbitals
         L = np.abs(np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_med, c2))**2 - \
             np.abs(np.einsum("a, akim, mn, akjn -> kij", soc_factors, c1, L_easy, c2))**2

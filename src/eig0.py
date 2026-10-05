@@ -31,7 +31,7 @@ if package in package_name["vasp"]:
 
 elif package in package_name["qe"]:
     # Input: *.xml
-    eigenval1.read_qexml()
+    eigenval1.read_qe()
 
 elif package in package_name["parsec"]:
     # Input: bands.dat
@@ -47,7 +47,7 @@ if eigenval1.is_semic == True:
 else:
     if package in package_name["qe"]:
         doscar1 = Doscar()
-        doscar1.read_xml()
+        doscar1.read_qe_xml()
         eigenval1.eig -= doscar1.ef
     else:
         print("Error: only semiconductor with bandgap is supported")

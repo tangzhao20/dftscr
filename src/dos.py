@@ -20,7 +20,7 @@ import os
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from classes import Doscar, Poscar, Procar
+from classes import Doscar, Poscar, Eigenval
 from load_data import load_package_name, load_palette
 
 is_vertical = False
@@ -61,7 +61,7 @@ elif package in package_name["qe"]+package_name["qeproj"]:
     doscar0.read_qe(filename)
     if fxml:
         print("EFermi read from .xml file")
-        doscar0.read_xml(xmlname)
+        doscar0.read_qe_xml(xmlname)
 else:
     print("Package \""+package+"\" is not supported yet.")
     print("python dos.py (v) package (Emin) (Emax)")
@@ -86,20 +86,20 @@ else:
 
 if is_proj:
     poscar0 = Poscar()
-    procar0 = Procar()
+    eigenval0 = Eigenval()
     if package in package_name["vaspproj"]:
         sigma = 0.05
         poscar0.read_vasp()
-        procar0.read_vasp()
+        eigenval0.read_vasp_procar()
         doscar0.Nepdos = 1000
         doscar0.energy_pdos = np.linspace(xmin+doscar0.ef, xmax+doscar0.ef, doscar0.Nepdos)
-        doscar0.pdos = procar0.calculate_pdos(doscar0.energy_pdos, sigma)
+        doscar0.pdos = eigenval0.calculate_pdos(doscar0.energy_pdos, sigma)
         doscar0.has_pdos = True
 
     if package in package_name["qeproj"]:
         # qe support is broken in this commit
-        # procar and poscar should be initialized here
-        doscar0.readpdos_qe()
+        # eigenval and poscar should be initialized here
+        doscar0.read_qe_pdos()
 
     atom_list = sys.argv[2]
     del sys.argv[2]
@@ -107,9 +107,9 @@ if is_proj:
 
     orb_list = sys.argv[2]
     del sys.argv[2]
-    orb_flag = procar0.read_orb_list(orb_list)
+    orb_flag = eigenval0.read_orb_list(orb_list)
 
-    pdos = doscar0.plot(atom_flag, orb_flag)
+    pdos = doscar0.plot_pdos(atom_flag, orb_flag)
 
 # The following plotting section should be generalized, not code-specific
 

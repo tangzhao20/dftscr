@@ -47,10 +47,10 @@ elif package in package_name["qe"]+package_name["qeproj"]:
     # Input: *.xml, kpath.in
     # No need to run bands.x
 
-    poscar1.read_xml()
+    poscar1.read_qe_xml()
     rlc = poscar1.rlc()
 
-    eigenval1.read_qexml()
+    eigenval1.read_qe()
 
     kpoints1.read_kpathin()
 
@@ -59,7 +59,7 @@ elif package in package_name["qe"]+package_name["qeproj"]:
         eigenval1.writegap(kpoints1)
     else:
         doscar1 = Doscar()
-        doscar1.read_xml()
+        doscar1.read_qe_xml()
         eigenval1.eig -= doscar1.ef
 
 elif package in package_name["wannier90"]:
@@ -76,7 +76,7 @@ elif package in package_name["wannier90"]:
             sys.argv.remove(w)
             break
 
-    eigenval1.read_wan(Nb_pad=pad)
+    eigenval1.read_wannier90(Nb_pad=pad)
 
     kpoints1.read_kpathin()
 
@@ -90,7 +90,7 @@ elif package in package_name["wannier90"]:
 
     if fsecond:
         eigenval2 = Eigenval()
-        eigenval2.read_qexml("../bands/" + filename)
+        eigenval2.read_qe("../bands/" + filename)
 
         eigenval2.eig -= eigenval2.vbm
         if eigenval2.is_semic == True:
@@ -132,20 +132,19 @@ is_proj = False
 if package in package_name["vaspproj"]+package_name["qeproj"]:
     is_proj = True
 
-    procar1 = Procar()
     if package in package_name["vaspproj"]:
         # Input: PROCAR
-        procar1.read_vasp()
+        eigenval1.read_vasp_procar()
     elif package in package_name["qeproj"]:
         # Input: projwfc.out
-        procar1.read_qe()
+        eigenval1.read_qe_projwfc()
 
     atom_list = sys.argv[2]
     del sys.argv[2]
     atom_flag = poscar1.read_atom_list(atom_list)
     orb_list = sys.argv[2]
     del sys.argv[2]
-    orb_flag = procar1.read_orb_list(orb_list)
+    orb_flag = eigenval1.read_orb_list(orb_list)
 
 # The following plotting section should be generalized, not code-specific
 
@@ -172,7 +171,7 @@ if is_proj:
     else:
         proj_color = ["blue", "beige"]
     dot_size = 50.0
-    proj_plot_size = procar1.plot(atom_flag, orb_flag) * dot_size
+    proj_plot_size = eigenval1.plot_proj(atom_flag, orb_flag) * dot_size
     for ispin in range(eigenval1.Ns):
         bands.add_scatter(bands.x, bands.energy[ispin], proj_plot_size[ispin, :, :],
                           color=bands.palette[proj_color[ispin]], zorder=2.5-ispin)

@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import numpy as np
 import xml.etree.ElementTree as ET
 from load_data import load_constant
@@ -7,7 +8,7 @@ from load_data import load_constant
 
 class Eigenval:
     """
-    Parses and analyzes band structure eigenvalue data.
+    Parses and analyzes band structure eigenvalue data and orbital projections.
 
     Attributes:
         Ns (int): The number of spins.
@@ -23,6 +24,11 @@ class Eigenval:
         cbm (float): Conduction band minimum energy.
         edg (float): Direct band gap.
         eindg (float): Indirect band gap.
+        Na (int): The number of atoms.
+        Norb (int): The number of orbitals.
+        proj[Ns, Nk, Nb, Na, Norb] (numpy.ndarray): Orbital projections.
+        complex[Ns, Nk, Nb, Na, Norb] (numpy.ndarray): Complex projections with phase.
+        orb_name[Norb] (list of str): Names of the orbitals.
     """
 
     def __init__(self):
@@ -35,12 +41,24 @@ class Eigenval:
         self.occ = None
         self.is_semic = False
         self.Nvb = None
+        # Projection attributes
+        self.Na = 0
+        self.Norb = 0
+        self.proj = None
+        self.complex = None
+        self.orb_name = []
 
     def __str__(self):
         str_out = "EIGENVAL:\n"
-        str_out += " Nk = " + str(self.Nk) + "\n"
-        str_out += " Nb = " + str(self.Nb) + "\n"
-        str_out += " Ns = " + str(self.Ns) + "\n"
+        str_out += f" Nk = {self.Nk}\n"
+        str_out += f" Nb = {self.Nb}\n"
+        str_out += f" Ns = {self.Ns}\n"
+        if self.proj is not None or self.complex is not None:
+            str_out += " Contains projections\n"
+            str_out += f" Na = {self.Na}\n"
+            str_out += f" Norb = {self.Norb}\n"
+        else:
+            str_out += " Does not contain projections\n"
         if self.is_semic:
             str_out += " is_semic = True\n"
             str_out += f" vbm = {self.vbm:.2f} eV\n"
@@ -94,7 +112,94 @@ class Eigenval:
 
         self.calculate_gap()
 
-    def read_qexml(self, filename=""):
+    def read_vasp_procar(self, filename="PROCAR", update_eig=None):
+        with open(filename, "r") as f0:
+            line = f0.readlines()
+
+        word = line[0].split()
+        has_complex = False
+        if len(word) >= 5 and word[4].startswith("phase"):
+            has_complex = True
+
+        word = line[1].split()
+        Nk = int(word[3])
+        Nb = int(word[7])
+        self.Na = int(word[11])
+
+        Ns = 1
+        if not has_complex and len(line) > (((self.Na + 5) * Nb + 3) * Nk + 1) * 1.5:
+            # the file length should be (((Na+5)Nb+3)Nk+1)Ns+1
+            Ns = 2
+        if has_complex and len(line) > (((2 * self.Na + 7) * Nb + 3) * Nk + 1) * 1.5:
+            # the file length should be (((2*Na+7)Nb+3)Nk+1)Ns+1
+            Ns = 2
+
+        word = line[7].split()
+        self.Norb = len(word) - 2
+
+        print(f"Ns: {Ns}  Na: {self.Na}  Nk: {Nk}  Nb: {Nb}  Norb: {self.Norb}")
+
+        if update_eig is not None:
+            should_update_eig = update_eig
+        else:
+            should_update_eig = self.eig is None
+
+        if should_update_eig:
+            self.Ns = Ns
+            self.Nk = Nk
+            self.Nb = Nb
+            self.kp = np.zeros((self.Nk, 3))
+            self.weight = np.zeros(self.Nk)
+            self.eig = np.zeros((self.Ns, self.Nk, self.Nb))
+            self.occ = np.zeros((self.Ns, self.Nk, self.Nb))
+
+        self.proj = np.zeros((Ns, Nk, Nb, self.Na, self.Norb))
+        if has_complex:
+            self.complex = np.zeros((Ns, Nk, Nb, self.Na, self.Norb), dtype=np.complex128)
+
+        ispin = -1
+        for this_line in line:
+            word = this_line.split()
+            if len(word) == 0 or word[0][0] == "!":
+                continue
+            if len(word) >= 9 and word[0] == "#" and word[2] == "k-points:":
+                ispin += 1
+            elif word[0] == "k-point":
+                ik = int(word[1]) - 1
+                if should_update_eig:
+                    self.weight[ik] = float(word[-1])
+                    if len(word) >= 6 and word[2] == ":":
+                        self.kp[ik] = [float(word[3]), float(word[4]), float(word[5])]
+            elif word[0] == "band":
+                ib = int(word[1]) - 1
+                if should_update_eig:
+                    self.eig[ispin, ik, ib] = float(word[4])
+                    self.occ[ispin, ik, ib] = float(word[7])
+            elif word[0].isdigit():
+                ia = int(word[0]) - 1
+                if self.complex is not None and len(word) > 2 * self.Norb:
+                    for iorb in range(self.Norb):
+                        self.complex[ispin, ik, ib, ia, iorb] = complex(
+                            float(word[iorb * 2 + 1]),
+                            float(word[iorb * 2 + 2])
+                        )
+                else:
+                    for iorb in range(self.Norb):
+                        self.proj[ispin, ik, ib, ia, iorb] = float(word[iorb + 1])
+
+        if self.Norb == 9:
+            self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
+        elif self.Norb == 16:
+            self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz",
+                             "x2-y2", "fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
+        else:
+            print(f"Norb = {self.Norb} is not support yet")
+            sys.exit()
+
+        if should_update_eig:
+            self.calculate_gap()
+
+    def read_qe(self, filename=""):
 
         if filename == "":
             # find a .xml file
@@ -142,7 +247,82 @@ class Eigenval:
 
         self.calculate_gap()
 
-    def read_wan(self, Nb_pad=0):
+    def read_qe_projwfc(self, filename="projwfc.out"):
+        with open(filename, "r") as f0:
+            line = f0.readlines()
+
+        l_map = []
+        orb_map = []
+        atom_map = []
+        is_proj = False
+        is_first_k = True
+        Ns = 1
+        for this_line in line:
+            word = this_line.split()
+            if len(word) == 0 or word[0][0] == "#" or word[0][0] == "!":
+                continue
+            if word[0] == "state":
+                match = re.search(r"atom\s+(\d+).*l=(\d+)\s+m=\s*(\d+)", this_line)
+                ia = int(match.group(1)) - 1
+                il = int(match.group(2))
+                im = int(match.group(3))
+                l_map.append(il)
+                orb_map.append(il**2 + im - 1)
+                atom_map.append(ia)
+            elif word[0] == "natomwfc":
+                Nproj = int(word[2])
+            elif word[0] == "nkstot":
+                Nk = int(word[2])
+            elif word[0] == "nbnd":
+                Nb = int(word[2])
+            elif word[0] == "k":
+                k_point = np.array(word[2:5], dtype=float)
+                if is_first_k:
+                    is_first_k = False
+                    self.Na = max(atom_map) + 1
+                    first_k_point = k_point.copy()
+                    self.Norb = (max(l_map) + 1)**2
+                    proj0 = np.zeros((Nk, Nb, self.Na, self.Norb))
+                    ik = -1
+                ik += 1
+                ib = -1
+            elif word[0] == "psi":
+                ib += 1
+                is_proj = True
+            elif word[0] == "|psi|^2":
+                is_proj = False
+            elif len(word) >= 2 and word[0] == "spin" and word[1] == "down":
+                Ns = 2
+
+            if is_proj:
+                number = re.findall(r"[-+]?(?:\d*\.*\d+)", this_line)  # find all numbers
+                for ii in range(0, len(number), 2):
+                    # proj0[k][b][a][orb]
+                    proj0[ik, ib, atom_map[int(number[ii + 1]) - 1],
+                          orb_map[int(number[ii + 1]) - 1]] += float(number[ii])
+
+        Nk = Nk // Ns
+        print(f"Ns: {Ns}  Na: {self.Na}  Nk: {Nk}  Nb: {Nb}  Norb: {self.Norb}")
+        if Ns == 1:
+            self.proj = proj0[np.newaxis, :, :, :, :]
+        else:
+            self.proj = np.zeros((Ns, Nk, Nb, self.Na, self.Norb))
+            self.proj[0, :, :, :, :] = proj0[:Nk, :, :, :]
+            self.proj[1, :, :, :, :] = proj0[Nk:, :, :, :]
+            del proj0
+
+        if self.Norb == 4:
+            self.orb_name = ["s", "pz", "px", "py"]
+        elif self.Norb == 9:
+            self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2", "dxy"]
+        elif self.Norb == 16:
+            self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2",
+                             "dxy", "fz3", "fxz2", "fyz2", "fzx2", "fxyz", "fx3", "fy3x2"]
+        else:
+            print(f"Norb = {self.Norb} is not support yet")
+            sys.exit()
+
+    def read_wannier90(self, Nb_pad=0):
         # only support Ns=1 and semiconductor
         files = os.listdir()
 
@@ -157,7 +337,7 @@ class Eigenval:
         self.kp = np.zeros((self.Nk, 3))
         self.weight = np.zeros(self.Nk)
         for ik in range(self.Nk):
-            word = line[ik+1].split()
+            word = line[ik + 1].split()
             self.kp[ik] = [float(word[0]), float(word[1]), float(word[2])]
             self.weight[ik] = float(word[3])
 
@@ -214,7 +394,7 @@ class Eigenval:
         ef = float(word[3]) * rydberg
         self.Nk = 0
         for ip in range(Np):
-            word = line[ip+3].split()
+            word = line[ip + 3].split()
             self.Nk += int(word[1])
 
         self.eig = np.zeros((self.Ns, self.Nk, self.Nb))
@@ -287,11 +467,11 @@ class Eigenval:
                 else:
                     print("Error: number of columns in eigen.dat should be 7 or 8")
                     sys.exit()
-            ik = int(word[5])-1
+            ik = int(word[5]) - 1
             if ik > 0:
                 continue
-            ib = int(word[0])-1
-            eig0 = float(word[1])*rydberg
+            ib = int(word[0]) - 1
+            eig0 = float(word[1]) * rydberg
             occ0 = float(word[3])
             if self.Ns == 2 and word[7] == "dn":
                 eig_list[1].append(eig0)
@@ -319,19 +499,20 @@ class Eigenval:
         if rlc is None:
             rlc = np.eye(3)
         kpc = self.kp @ rlc.T
-        kplabelold = ""
-        kpout = []
+        kp_label_old = ""
+        kp_out = []
         for ik in range(self.Nk):
-            kplabel = kp.findlabel(self.kp[ik], dim=0)
-            if kplabel != "elsewhere" and kplabel != kplabelold and (
-                kplabelold != "elsewhere" or np.max(np.abs(self.kp[ik] - self.kp[ik-1])) > 0.1
-            ):
-                kpout.append([0.0])
+            kp_label = kp.findlabel(self.kp[ik], dim=0)
+            is_new_label = (kp_label != "elsewhere") and (kp_label != kp_label_old)
+            is_jump = (kp_label_old != "elsewhere") or (np.max(np.abs(self.kp[ik] - self.kp[ik - 1])) > 0.1)
+
+            if is_new_label and is_jump:
+                kp_out.append([0.0])
             else:
-                dkpc = float(np.linalg.norm(kpc[ik] - kpc[ik-1]))
-                kpout[-1].append(kpout[-1][-1] + dkpc)
-            kplabelold = kplabel
-        return kpout
+                dkpc = float(np.linalg.norm(kpc[ik] - kpc[ik - 1]))
+                kp_out[-1].append(kp_out[-1][-1] + dkpc)
+            kp_label_old = kp_label
+        return kp_out
 
     def writegap(self, kp):
         with open("gap.txt", "w") as f0:
@@ -402,3 +583,54 @@ class Eigenval:
                 self.edg_s = ispin
 
         self.eindg = self.cbm - self.vbm
+
+    def plot_proj(self, atom_flag, orb_flag):
+        # plot_proj[Ns][Nb][Nk]  # numpy
+        if self.proj is None:
+            print("Error: proj data not loaded.")
+            return None
+        plot_proj = self.proj[:, :, :, atom_flag, :][:, :, :, :, orb_flag].sum(axis=(3, 4)).swapaxes(1, 2)
+        return plot_proj
+
+    def read_orb_list(self, orb_string):
+        orb_list = []
+        orb_flag = np.zeros(self.Norb, dtype=bool)
+        for orb in orb_string.split("+"):
+            if orb in self.orb_name:
+                orb_list.append(orb)
+            elif orb == "p":
+                orb_list += ["px", "py", "pz"]
+            elif orb == "d":
+                orb_list += ["dxy", "dyz", "dz2", "dxz", "x2-y2"]
+            elif orb == "f":
+                orb_list += ["fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
+            elif orb == "dx2-y2":
+                orb_list.append("x2-y2")
+            elif orb == "all":
+                orb_list += self.orb_name
+            else:
+                print(f"projector {orb} does not exist")
+
+        for orb in orb_list:
+            if orb in self.orb_name:
+                orb_flag[self.orb_name.index(orb)] = True
+            else:
+                print(f"projector {orb} does not exist")
+
+        return orb_flag
+
+    def calculate_pdos(self, e_pdos, sigma):
+        # pdos[Ns, Ne, Na, Norb]
+        if self.proj is None:
+            print("Error: proj data not loaded.")
+            return None
+
+        gaussian_coeff = (1 / (sigma * np.sqrt(2 * np.pi)))
+        delta = (e_pdos[None, :, None, None] - self.eig[:, None, :, :]) / sigma  # [Ns, Ne, Nk, Nb]
+        smearing = gaussian_coeff * np.exp(-0.5 * delta**2)
+
+        weighted_proj = self.proj * self.weight[None, :, None, None, None]
+
+        pdos = np.einsum('sekb,skbao->seao', smearing, weighted_proj)
+
+        return pdos

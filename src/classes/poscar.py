@@ -91,8 +91,6 @@ class Poscar:
             if self.seldyn is not None:
                 self.seldyn.append([bool(word[3]), bool(word[4]), bool(word[5])])
         self.wrap_to_cell()
-        del line
-        del word
 
     def read_qe(self, filename=""):
 
@@ -159,7 +157,7 @@ class Poscar:
 
         self.wrap_to_cell()
 
-    def read_xml(self, filename=""):
+    def read_qe_xml(self, filename=""):
 
         if filename == "":
             # find a .xml file
@@ -198,7 +196,7 @@ class Poscar:
         self.Natom = len(self.ap)
         self.Ntype = len(self.atomtype)
 
-    def read_prt(self, filename=""):
+    def read_paratec(self, filename=""):
 
         if filename == "":
             filename = "input"
