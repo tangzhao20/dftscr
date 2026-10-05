@@ -13,3 +13,6 @@ __pycache__
 
 # Virtual environments
 venv
+
+# VSCode
+.vscode
