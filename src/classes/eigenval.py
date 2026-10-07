@@ -247,8 +247,15 @@ class Eigenval:
 
         self.calculate_gap()
 
-    def read_qe_projwfc(self, filename="projwfc.out"):
-        with open(filename, "r") as f0:
+    def read_qe_projwfc(self, filename_out=None, has_complex=False, filename_xml=None):
+
+        if filename_out is None:
+            filename_out = "projwfc.out"
+
+        if has_complex and filename_xml is None:
+            filename_xml = "pwscf.save/atomic_proj.xml"
+
+        with open(filename_out, "r") as f0:
             line = f0.readlines()
 
         l_map = []
@@ -272,7 +279,7 @@ class Eigenval:
             elif word[0] == "natomwfc":
                 Nproj = int(word[2])
             elif word[0] == "nkstot":
-                Nk = int(word[2])
+                nkstot = int(word[2])  # nkstot = Ns * Nk (total number of k-states)
             elif word[0] == "nbnd":
                 Nb = int(word[2])
             elif word[0] == "k":
@@ -282,7 +289,8 @@ class Eigenval:
                     self.Na = max(atom_map) + 1
                     first_k_point = k_point.copy()
                     self.Norb = (max(l_map) + 1)**2
-                    proj0 = np.zeros((Nk, Nb, self.Na, self.Norb))
+                    if not has_complex:
+                        proj0 = np.zeros((nkstot, Nb, self.Na, self.Norb))
                     ik = -1
                 ik += 1
                 ib = -1
@@ -294,22 +302,38 @@ class Eigenval:
             elif len(word) >= 2 and word[0] == "spin" and word[1] == "down":
                 Ns = 2
 
-            if is_proj:
+            if not has_complex and is_proj:
                 number = re.findall(r"[-+]?(?:\d*\.*\d+)", this_line)  # find all numbers
                 for ii in range(0, len(number), 2):
                     # proj0[k][b][a][orb]
                     proj0[ik, ib, atom_map[int(number[ii + 1]) - 1],
                           orb_map[int(number[ii + 1]) - 1]] += float(number[ii])
 
-        Nk = Nk // Ns
+        Nk = nkstot // Ns
         print(f"Ns: {Ns}  Na: {self.Na}  Nk: {Nk}  Nb: {Nb}  Norb: {self.Norb}")
-        if Ns == 1:
-            self.proj = proj0[np.newaxis, :, :, :, :]
+        if self.Nk == 0:
+            self.Ns = Ns
+            self.Nk = Nk
+            self.Nb = Nb
+
+        if not has_complex:
+            self.proj = proj0.reshape(Ns, Nk, Nb, self.Na, self.Norb)
         else:
-            self.proj = np.zeros((Ns, Nk, Nb, self.Na, self.Norb))
-            self.proj[0, :, :, :, :] = proj0[:Nk, :, :, :]
-            self.proj[1, :, :, :, :] = proj0[Nk:, :, :, :]
-            del proj0
+            root = ET.parse(filename_xml).getroot()
+            all_projs = root.find("EIGENSTATES").findall("PROJS")
+
+            self.complex = np.zeros((Ns, Nk, Nb, self.Na, self.Norb), dtype=np.complex128)
+            for igroup, projs in enumerate(all_projs):
+                ispin = igroup // Nk
+                ik = igroup % Nk
+                for wfc in projs:
+                    iwfc = int(wfc.get("index")) - 1
+                    ia = atom_map[iwfc]
+                    iorb = orb_map[iwfc]
+                    cvals = np.fromstring(wfc.text, sep=" ").view(np.complex128)
+                    self.complex[ispin, ik, :, ia, iorb] = cvals
+
+            self.proj = np.abs(self.complex)**2
 
         if self.Norb == 4:
             self.orb_name = ["s", "pz", "px", "py"]
