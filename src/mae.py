@@ -4,15 +4,29 @@ import sys
 import time
 import numpy as np
 from classes import Poscar, Eigenval
-from load_data import load_constant
+from load_data import load_constant, load_package_name
 
 start_time = time.time()
 
-poscar0 = Poscar()
-poscar0.read_vasp(filename="CONTCAR")
+if len(sys.argv) <= 1:
+    print("python mae.py package [Nb=<int>]")
+    sys.exit()
+package = sys.argv[1]
 
+package_name = load_package_name()
+poscar0 = Poscar()
 eigenval0 = Eigenval()
-eigenval0.read_vasp_procar()
+
+if package in package_name["vasp"]:
+    poscar0.read_vasp(filename="CONTCAR")
+    eigenval0.read_vasp_procar()
+elif package in package_name["qe"]:
+    poscar0.read_qe_xml()
+    eigenval0.read_qe()
+    eigenval0.read_qe_projwfc(has_complex=True)
+else:
+    print(f"Package \"{package}\" is not supported yet.")
+    sys.exit()
 
 Nb = eigenval0.Nb
 for w in sys.argv:

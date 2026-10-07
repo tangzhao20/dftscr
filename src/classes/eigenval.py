@@ -187,14 +187,14 @@ class Eigenval:
                     for iorb in range(self.Norb):
                         self.proj[ispin, ik, ib, ia, iorb] = float(word[iorb + 1])
 
-        if self.Norb == 9:
-            self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "x2-y2"]
-        elif self.Norb == 16:
-            self.orb_name = ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz",
-                             "x2-y2", "fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"]
-        else:
+        if self.Norb not in [4, 9, 16]:
             print(f"Norb = {self.Norb} is not support yet")
             sys.exit()
+
+        self.orb_name = [
+            "s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz",
+            "x2-y2", "fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"
+        ][:self.Norb]
 
         if should_update_eig:
             self.calculate_gap()
@@ -335,16 +335,25 @@ class Eigenval:
 
             self.proj = np.abs(self.complex)**2
 
-        if self.Norb == 4:
-            self.orb_name = ["s", "pz", "px", "py"]
-        elif self.Norb == 9:
-            self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2", "dxy"]
-        elif self.Norb == 16:
-            self.orb_name = ["s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2",
-                             "dxy", "fz3", "fxz2", "fyz2", "fzx2", "fxyz", "fx3", "fy3x2"]
-        else:
+        if self.Norb not in [4, 9, 16]:
             print(f"Norb = {self.Norb} is not support yet")
             sys.exit()
+
+        qe_order = [
+            "s", "pz", "px", "py", "dz2", "dxz", "dyz", "x2-y2",
+            "dxy", "fz3", "fxz2", "fyz2", "fzx2", "fxyz", "fx3", "fy3x2"
+        ][:self.Norb]
+        std_order = [
+            "s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz",
+            "x2-y2", "fy3x2", "fxyz", "fyz2", "fz3", "fxz2", "fzx2", "fx3"
+        ][:self.Norb]
+
+        # Reorder orbitals to match the standard (VASP) order
+        perm = [qe_order.index(orb) for orb in std_order]
+        self.proj = self.proj[..., perm]
+        if self.complex is not None:
+            self.complex = self.complex[..., perm]
+        self.orb_name = std_order
 
     def read_wannier90(self, Nb_pad=0):
         # only support Ns=1 and semiconductor
